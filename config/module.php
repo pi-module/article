@@ -19,7 +19,7 @@
 return array(
     // Module meta
     'meta'         => array(
-        'title'         => __('Article'),
+        'title'         => __('Content Management'),
         'description'   => __('General module for content management.'),
         'version'       => '1.0.1-beta.1',
         'license'       => 'New BSD',
