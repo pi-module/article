@@ -42,6 +42,7 @@ return array(
         'resource'      => array(
             // Database meta
             'navigation'    => 'navigation.php',
+            'block'         => 'block.php',
         ),
     ),
 );
