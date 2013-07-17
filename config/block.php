@@ -76,7 +76,7 @@ return array(
                 'title'        => __('Category'),
                 'description'  => __('Which category article want to list'),
                 'edit'         => array(
-                    'type'        => 'Module\Article\Form\Element\Categories',
+                    'type'        => 'Module\Article\Form\Element\Category',
                 ),
                 'filter'       => 'string',
                 'value'        => 0,
@@ -85,7 +85,7 @@ return array(
                 'title'        => __('Topic'),
                 'description'  => __('Which topic article want to list'),
                 'edit'         => array(
-                    'type'        => 'Module\Article\Form\Element\Topics',
+                    'type'        => 'Module\Article\Form\Element\Topic',
                 ),
                 'filter'       => 'string',
                 'value'        => 0,

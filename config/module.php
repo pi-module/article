@@ -43,6 +43,7 @@ return array(
             // Database meta
             'navigation'    => 'navigation.php',
             'block'         => 'block.php',
+            'config'        => 'config.php',
         ),
     ),
 );
