@@ -40,6 +40,18 @@ return array(
     // Maintenance actions
     'maintenance'   => array(
         'resource'      => array(
+            'database'      => array(
+                'sqlfile'      => 'sql/mysql.sql',
+                'schema'       => array(
+                    'article'       => 'table',
+                    'draft'         => 'table',
+                    'related'       => 'table',
+                    'visit'         => 'table',
+                    'category'      => 'table',
+                    'author'        => 'table',
+                    'statistics'    => 'table',
+                ),
+            ),
             // Database meta
             'navigation'    => 'navigation.php',
             'block'         => 'block.php',
