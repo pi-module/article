@@ -41,6 +41,7 @@ return array(
     'maintenance'   => array(
         'resource'      => array(
             // Database meta
+            'navigation'    => 'navigation.php',
         ),
     ),
 );
