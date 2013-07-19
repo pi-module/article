@@ -1,0 +1,107 @@
+/* Article list */
+.article-title-box {
+    line-height: 24px;
+    height: 24px;
+    *height: 22px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+.article-title-box .pull-right {
+    margin-left: 26px;
+}
+.article-box {
+    border-bottom: 1px dashed #d6d6d6;
+    padding: 15px 0;
+}
+.article-box p {
+    overflow: hidden;
+    margin-bottom: 0;
+    font-size: 14px;
+    line-height: 24px;
+}
+.link-img-right {
+    float: right;
+    display: block;
+    margin: 4px 0 0 10px;
+}
+/* Article detail */
+.article-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #b4c8da;
+}
+.article-header .headline {
+    font: bold 24px/28px sans-serif;
+    margin: 20px 0;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.article-header .byline {
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.article-body {
+    font-size: 14px;
+    line-height: 24px;
+    margin-bottom: 20px;
+    word-break: break-word;
+}
+.article-body h1 {
+    font-size: 18px;
+    line-height: 28px;
+}
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+    font-size: 16px;
+    line-height: 22px;
+}
+.article-body ol,
+.article-body ul,
+.article-body p,
+.article-body div{
+    margin-bottom: 3px;
+}
+.article-body ul li {
+    list-style-type: disc;
+    list-style-position: inside;
+}
+.article-body ol li {
+    list-style-type: decimal;
+    list-style-position: inside;
+}
+.article-body a {
+    color: #085A99;
+    text-decoration: underline;
+}
+.article-body img {
+     max-width: 500px;
+}
+.thumb {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px dashed #d6d6d6;
+}
+.thumb p {
+    line-height: 20px;
+    font-size: 14px;
+}
+.thumb .title {
+    font-size: 18px;
+}
+.summary {
+    text-align: justify;
+    background: #fff;
+    margin: 15px 0 0;
+    padding: 10px 5px;
+    line-height: 23px;
+    font-size: 14px;
+    text-indent: 2em;
+    border: 1px solid #dcdddd;
+}
+.img-text-wrapper .author-desc,
+.author-desc {
+    font: normal 14px/20px "KaiTi","KaiTi_GB2312","BiauKai";
+    color: #555;
+}
