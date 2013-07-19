@@ -44,6 +44,9 @@ return array(
                 'sqlfile'      => 'sql/mysql.sql',
                 'schema'       => array(
                     'article'       => 'table',
+                    'extended'      => 'table',
+                    'field'         => 'table',
+                    'compiled'      => 'table',
                     'draft'         => 'table',
                     'related'       => 'table',
                     'visit'         => 'table',

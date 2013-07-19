@@ -22,7 +22,7 @@ CREATE TABLE `{article}` (
   KEY `author`                    (`author`),
   KEY `publish_category`          (`time_publish`, `category`),
   KEY `submit_category`           (`time_submit`, `category`),
-  KEY `subject`                   (`subject`),
+  KEY `subject`                   (`subject`)
 );
 
 CREATE TABLE `{extended}` (
