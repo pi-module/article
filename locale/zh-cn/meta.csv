@@ -1,4 +1,4 @@
-Content Management,内容管理
+﻿Content Management,内容管理
 General module for content management.,内容管理系统
 Article site navigation,文章系统导航
 Article Homepage,文章首页
@@ -59,3 +59,12 @@ Newest Topic,最新专题
 Listing the newest topic,列出最新添加的专题
 Hot Articles,热点文章列表
 Listing the hotest articles,列出热点文章
+General,常规
+Autosave,自动保存
+SEO,搜索引擎优化
+Summary and subject,摘要和标题
+Media,多媒体
+Article List Page Limit,文章列表数
+Maximum count of articles in a front page.,文章列表页允许最大的文章数
+Topic Article List Page Limit,专题文章列表数
+Maximum count of topic articles in a front page.,专题文章列表页允许的最大文章数

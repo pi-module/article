@@ -2,35 +2,58 @@ CREATE TABLE `{article}` (
   `id`              int(10) UNSIGNED                NOT NULL AUTO_INCREMENT,
   `subject`         varchar(255)                    NOT NULL DEFAULT '',
   `subtitle`        varchar(255)                    NOT NULL DEFAULT '',
-  `summary`         varchar(255)                    NOT NULL DEFAULT '',
+  `summary`         text                            NOT NULL DEFAULT '',
   `content`         longtext                        NOT NULL DEFAULT '',
-  `markup`          ENUM('html','text','markdown')  NOT NULL DEFAULT 'html',
+  `markup`          varchar(64)                     NOT NULL DEFAULT 'html',
   `image`           varchar(255)                    NOT NULL DEFAULT '',
-  `user`            int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `uid`             int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `author`          int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `source`          varchar(255)                    NOT NULL DEFAULT '',
-  `seo_title`       varchar(255)                    NOT NULL DEFAULT '',
-  `seo_keywords`    varchar(255)                    NOT NULL DEFAULT '',
-  `seo_description` varchar(255)                    NOT NULL DEFAULT '',
-  `slug`            varchar(255)                    DEFAULT NULL,
-  `related_type`    tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `pages`           tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `category`        int(10) UNSIGNED                NOT NULL DEFAULT 0,
-  `topic`           int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `status`          tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `active`          tinyint(1) UNSIGNED             NOT NULL DEFAULT 0,
-  `recommended`     tinyint(1) UNSIGNED             NOT NULL DEFAULT 0,
-  `time_create`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `time_submit`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_publish`    int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
 
   PRIMARY KEY                     (`id`),
-  KEY `user`                      (`user`),
+  KEY `uid`                       (`uid`),
   KEY `author`                    (`author`),
   KEY `publish_category`          (`time_publish`, `category`),
-  KEY `create_category`           (`time_create`, `category`),
+  KEY `submit_category`           (`time_submit`, `category`),
   KEY `subject`                   (`subject`),
-  UNIQUE KEY `slug`               (`slug`)
+);
+
+CREATE TABLE `{extended}` (
+  `id`              int(10) UNSIGNED                NOT NULL AUTO_INCREMENT,
+  `article`         int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `seo_title`       varchar(255)                    NOT NULL DEFAULT '',
+  `seo_keywords`    varchar(255)                    NOT NULL DEFAULT '',
+  `seo_description` varchar(255)                    NOT NULL DEFAULT '',
+  `slug`            varchar(255)                    DEFAULT NULL,
+
+  PRIMARY KEY                     (`id`),
+  UNIQUE KEY                      (`article`)
+);
+
+CREATE TABLE `{field}` (
+  `id`              int(10) UNSIGNED                NOT NULL AUTO_INCREMENT,
+  `name`            varchar(64)                     NOT NULL DEFAULT '',
+  `title`           varchar(255)                    NOT NULL DEFAULT '',
+
+  PRIMARY KEY                     (`id`),
+  UNIQUE KEY                      (`name`)
+);
+
+CREATE TABLE `{compiled}` (
+  `id`              int(10) UNSIGNED                NOT NULL AUTO_INCREMENT,
+  `article`         int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `type`            varchar(64)                     NOT NULL DEFAULT '',
+  `content`         longtext                        NOT NULL DEFAULT '',
+
+  PRIMARY KEY                     (`id`),
+  KEY `article_type`              (`article`, `type`)
 );
 
 CREATE TABLE `{draft}` (
@@ -38,31 +61,30 @@ CREATE TABLE `{draft}` (
   `article`         int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `subject`         varchar(255)                    NOT NULL DEFAULT '',
   `subtitle`        varchar(255)                    NOT NULL DEFAULT '',
-  `summary`         varchar(255)                    NOT NULL DEFAULT '',
+  `summary`         text                            NOT NULL DEFAULT '',
   `content`         longtext                        NOT NULL DEFAULT '',
-  `markup`          ENUM('html','text','markdown')  NOT NULL DEFAULT 'html',
+  `markup`          varchar(64)                     NOT NULL DEFAULT 'html',
   `image`           varchar(255)                    NOT NULL DEFAULT '',
-  `user`            int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `uid`             int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `author`          int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `source`          varchar(255)                    NOT NULL DEFAULT '',
   `pages`           tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `category`        int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `tag`             varchar(255)                    NOT NULL DEFAULT '',
-  `related_type`    tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `seo_title`       varchar(255)                    NOT NULL DEFAULT '',
   `seo_keywords`    varchar(255)                    NOT NULL DEFAULT '',
   `seo_description` varchar(255)                    NOT NULL DEFAULT '',
   `slug`            varchar(255)                    DEFAULT NULL,
+  `time_submit`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_publish`    int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `status`          tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `recommended`     tinyint(1) UNSIGNED             NOT NULL DEFAULT 0,
-  `topic`           int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_save`       int(10) UNSIGNED                NOT NULL DEFAULT 0,
 
   PRIMARY KEY           (`id`),
   KEY `article`         (`article`),
-  KEY `usrer`           (`user`),
+  KEY `uid`             (`uid`),
   KEY `time_save`       (`time_save`)
 );
 
@@ -79,12 +101,13 @@ CREATE TABLE `{related}` (
 CREATE TABLE `{visit}` (
   `id`              int(10) UNSIGNED      NOT NULL AUTO_INCREMENT,
   `article`         int(10) UNSIGNED      NOT NULL DEFAULT 0,
-  `date`            int(10) UNSIGNED      NOT NULL DEFAULT 0,
-  `count`           int(10) UNSIGNED      NOT NULL DEFAULT 0,
+  `time`            int(10) UNSIGNED      NOT NULL DEFAULT 0,
+  `ip`              varchar(255)          NOT NULL DEFAULT '',
+  `uid`             int(10) UNSIGNED      NOT NULL DEFAULT 0,
 
   PRIMARY KEY                 (`id`),
-  UNIQUE KEY `article_date`   (`article`,`date`),
-  KEY        `date`           (`date`)
+  UNIQUE KEY `article_time`   (`article`,`time`),
+  KEY        `time`           (`time`)
 );
 
 CREATE TABLE `{category}` (
@@ -117,10 +140,8 @@ CREATE TABLE `{statistics}` (
   `id`              int(10) UNSIGNED      NOT NULL AUTO_INCREMENT,
   `article`         int(10) UNSIGNED      NOT NULL DEFAULT 0,
   `visits`          int(10) UNSIGNED      NOT NULL DEFAULT 0,
-  `vote`            varchar(255)          NOT NULL DEFAULT '',
 
   PRIMARY KEY           (`id`),
   UNIQUE KEY `article`  (`article`),
   KEY `article_visits`  (`article`, `visits`),
-  KEY `article_vote`    (`article`, `vote`)
 );

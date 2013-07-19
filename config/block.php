@@ -90,7 +90,7 @@ return array(
                 'filter'       => 'string',
                 'value'        => 0,
             ),
-            'template-style'   => array(
+            'block-style'      => array(
                 'title'        => __('Template Style'),
                 'description'  => __('The template style of list'),
                 'edit'         => array(
@@ -156,7 +156,7 @@ return array(
                 ),
                 'filter'       => 'number_int',
             ),
-            'template-style'   => array(
+            'block-style'      => array(
                 'title'        => __('Template Style'),
                 'description'  => __('The template style of list'),
                 'edit'         => array(
@@ -222,7 +222,7 @@ return array(
                 ),
                 'filter'       => 'number_int',
             ),
-            'template-style'   => array(
+            'block-style'      => array(
                 'title'        => __('Template Style'),
                 'description'  => __('The template style of list'),
                 'edit'         => array(
@@ -378,7 +378,7 @@ return array(
                 ),
                 'filter'       => 'number_int',
             ),
-            'template-style'   => array(
+            'block-style'      => array(
                 'title'        => __('Template Style'),
                 'description'  => __('The template style of list'),
                 'edit'         => array(
