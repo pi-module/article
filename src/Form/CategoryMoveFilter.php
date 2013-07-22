@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
@@ -22,8 +22,14 @@ namespace Module\Article\Form;
 use Pi;
 use Zend\InputFilter\InputFilter;
 
+/**
+ * Class for verfying and filtering form 
+ */
 class CategoryMoveFilter extends InputFilter
 {
+    /**
+     * Initializing validator and filter 
+     */
     public function __construct()
     {
         $this->add(array(

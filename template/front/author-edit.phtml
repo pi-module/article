@@ -19,19 +19,20 @@ $this->Backbone();
 
 <?php include $this->templateComponent('form'); ?>
 <script id="temp-upload" type="text/template">
-<div id="jsUpload">
-    <div class="upload-image-bg">
-        <?php $src= $form->get('photo')->getValue();if($src) { ?>
-             <div class="black-bg"><i class="icon-remove"></i></div>    
-             <img src="<?php echo Pi::url($src); ?>">
-             <?php }else { ?>    
-             <i class="icon-user"></i>
-       <?php } ?>
+    <div id="jsUpload">
+        <div class="upload-image-bg">
+            <?php $src = $form->get('photo')->getValue(); ?>
+            <?php if ($src) { ?>
+                <div class="black-bg"><i class="icon-remove"></i></div>    
+                <img src="<?php echo Pi::url($src); ?>">
+            <?php } else { ?>    
+                <i class="icon-user"></i>
+            <?php } ?>
+        </div>
+        <span class="btn upload fileinput-button">
+            <?php _e('Upload'); ?><input type="file" name="upload">
+        </span>
     </div>
-    <span class="btn upload fileinput-button">
-        <?php _e('Upload'); ?><input type="file" name="upload">
-    </span>
-</div>    
 </script>
 <script>
 (function($){
