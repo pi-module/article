@@ -33,7 +33,7 @@ use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 
 /**
- * Public action controller 
+ * Public action controller for operating category
  */
 class CategoryController extends ActionController
 {
@@ -203,7 +203,7 @@ class CategoryController extends ActionController
             'title'                 => __('Add Category Info'),
             'form'                  => $form,
         ));
-        $this->view()->setTemplate('category-form-edit');
+        $this->view()->setTemplate('category-edit');
         
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
@@ -234,9 +234,8 @@ class CategoryController extends ActionController
     public function editAction()
     {
         $this->view()->assign('title', __('Edit Category Info'));
-        $this->view()->setTemplate('category-form-edit');
         
-        $form   = $this->getCategoryForm('edit');
+        $form = $this->getCategoryForm('edit');
         
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
