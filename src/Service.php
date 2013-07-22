@@ -28,6 +28,9 @@ use Module\Article\Upload;
 use Module\Article\Cache;
 use Pi\Mvc\Controller\ActionController;
 
+/**
+ * Public APIs for article module itself 
+ */
 class Service
 {
     protected static $module = 'article';

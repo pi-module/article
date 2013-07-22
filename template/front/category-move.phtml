@@ -1,7 +1,7 @@
 <?php
 $this->css($this->assetModule('script/article.css'));
 ?>
-<h2 class="article-admin-title"><?php echo $title; ?></h2>
+<h2 class="article-admin-title"><?php echo $this->escape($title) ?></h2>
 
 <?php if (isset($error)) { ?>
 <div class="alert alert-error">

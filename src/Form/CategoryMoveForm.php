@@ -22,8 +22,14 @@ namespace Module\Article\Form;
 use Pi;
 use Pi\Form\Form as BaseForm;
 
+/**
+ * Class for initializing form 
+ */
 class CategoryMoveForm extends BaseForm
 {
+    /**
+     * Initializing form element
+     */
     public function init()
     {
         $this->add(array(

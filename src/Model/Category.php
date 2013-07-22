@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
@@ -23,11 +23,21 @@ use Pi\Application\Model\Nest as Nest;
 
 class Category extends Nest
 {
+    /**
+     * Getting available fields
+     * 
+     * @return array 
+     */
     public static function getAvailableFields()
     {
         return array('id', 'parent', 'name', 'slug', 'title', 'description', 'image');
     }
 
+    /**
+     * Getting default columns
+     * 
+     * @return array 
+     */
     public static function getDefaultColumns()
     {
         return array('id', 'slug', 'title', 'image', 'depth');
@@ -281,6 +291,12 @@ class Category extends Nest
         return $result;
     }
 
+    /**
+     * Changing category slug to cagetory id
+     * 
+     * @param string  $slug  Category unique flag
+     * @return int 
+     */
     public function slugToId($slug)
     {
         $result = false;

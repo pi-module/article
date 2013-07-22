@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
@@ -22,8 +22,16 @@ namespace Module\Article\Form\Element;
 use Pi;
 use Zend\Form\Element\Select;
 
+/**
+ * Class for creating category select with root 
+ */
 class CategoryWithRoot extends Select
 {
+    /**
+     * Reading category from database
+     * 
+     * @return array 
+     */
     public function getValueOptions()
     {
         if (empty($this->valueOptions)) {
