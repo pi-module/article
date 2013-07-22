@@ -19,7 +19,7 @@
 return array(
     'meta'  => array(
         'cms'    => array(
-            'title'     => __('Article site navigation'),
+            'title'     => _t('Article site navigation'),
             'section'   => 'front',
         ),
     ),
@@ -27,19 +27,19 @@ return array(
         // Default front navigation
         'front'   => array(
             'article-homepage'  => array(
-                'label'         => __('Article Homepage'),
+                'label'         => _t('Article Homepage'),
                 'route'         => 'default',
                 'controller'    => 'index',
                 'action'        => 'index',
             ),
             'topic-homepage'    => array(
-                'label'         => __('Topic Homepage'),
+                'label'         => _t('Topic Homepage'),
                 'route'         => 'default',
                 'controller'    => 'topic',
                 'action'        => 'index',
             ),
             'my'                => array(
-                'label'         => __('My Article'),
+                'label'         => _t('My Article'),
                 'route'         => 'default',
                 'controller'    => 'my',
                 'action'        => 'index',
@@ -49,7 +49,7 @@ return array(
         // Default admin navigation
         'admin'   => array(
             'article'           => array(
-                'label'         => __('All Articles'),
+                'label'         => _t('All Articles'),
                 'route'         => 'admin',
                 'controller'    => 'article',
                 'resource'      => array(
@@ -58,7 +58,7 @@ return array(
             ),
             
             'topic'             => array(
-                'label'         => __('Topic'),
+                'label'         => _t('Topic'),
                 'route'         => 'admin',
                 'controller'    => 'topic',
                 'resource'      => array(
@@ -67,7 +67,7 @@ return array(
             ),
             
             'media'             => array(
-                'label'         => __('Media'),
+                'label'         => _t('Media'),
                 'route'         => 'admin',
                 'controller'    => 'media',
                 'resource'      => array(
@@ -76,7 +76,7 @@ return array(
             ),
 
             'author'            => array(
-                'label'         => __('Author'),
+                'label'         => _t('Author'),
                 'route'         => 'admin',
                 'controller'    => 'author',
                 'resource'      => array(
@@ -85,7 +85,7 @@ return array(
             ),
 
             'category'          => array(
-                'label'         => __('Category'),
+                'label'         => _t('Category'),
                 'route'         => 'admin',
                 'controller'    => 'category',
                 'resource'      => array(
@@ -94,7 +94,7 @@ return array(
             ),
             
             'permission'        => array(
-                'label'         => __('Permission'),
+                'label'         => _t('Permission'),
                 'route'         => 'admin',
                 'controller'    => 'permission',
                 'resource'      => array(
@@ -103,7 +103,7 @@ return array(
             ),
 
             'analysis'          => array(
-                'label'         => __('Statistics'),
+                'label'         => _t('Statistics'),
                 'route'         => 'admin',
                 'controller'    => 'statistics',
                 'resource'      => array(
@@ -115,17 +115,17 @@ return array(
         // Custom front navigation, need setup at backend
         'cms'     => array(
             'article-homepage'  => array(
-                'label'         => __('Article Homepage'),
+                'label'         => _t('Article Homepage'),
                 'route'         => 'default',
                 'controller'    => 'index',
             ),
             'topic-homepage'    => array(
-                'label'         => __('Topic Homepage'),
+                'label'         => _t('Topic Homepage'),
                 'route'         => 'default',
                 'controller'    => 'topic',
             ),
             'my'                => array(
-                'label'         => __('My Article'),
+                'label'         => _t('My Article'),
                 'route'         => 'default',
                 'controller'    => 'my',
             ),

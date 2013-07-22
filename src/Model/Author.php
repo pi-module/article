@@ -21,13 +21,26 @@ namespace Module\Article\Model;
 use Pi;
 use Pi\Application\Model\Model;
 
+/**
+ * Model class for operating author table 
+ */
 class Author extends Model
 {
+    /**
+     * Getting available fields
+     * 
+     * @return array 
+     */
     public static function getAvailableFields()
     {
         return array('id', 'name', 'photo', 'description');
     }
 
+    /**
+     * Getting author name
+     * 
+     * @return array 
+     */
     public function getSelectOptions()
     {
         $result = array('0' => '');
