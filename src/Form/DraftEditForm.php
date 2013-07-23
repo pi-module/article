@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
@@ -22,9 +22,16 @@ namespace Module\Article\Form;
 use Pi;
 use Pi\Form\Form as BaseForm;
 use Module\Article\Model\Article;
+use Module\Article\Controller\Admin\ConfigController as Config;
 
+/**
+ * Class for initializing form element 
+ */
 class DraftEditForm extends BaseForm
 {
+    /**
+     * Initializing form element 
+     */
     public function init()
     {
         $module = Pi::service('module')->current();
@@ -55,7 +62,7 @@ class DraftEditForm extends BaseForm
         ));
 
         $this->add(array(
-            'name' => 'user',
+            'name' => 'uid',
             'options'    => array(
                 'label' => __('Submitter'),
             ),
@@ -65,7 +72,7 @@ class DraftEditForm extends BaseForm
             ),
         ));
 
-        if ($config['enable_summary']) {
+        if (!empty($config['enable_summary'])) {
             $this->add(array(
                 'name' => 'summary',
                 'options' => array(
@@ -119,19 +126,12 @@ class DraftEditForm extends BaseForm
             'type' => 'Module\Article\Form\Element\Category',
         ));
 
-        if ($config['enable_tag']) {
+        if ($config['enable__ag']) {
             $this->add(array(
                 'name' => 'tag',
                 'type' => "hidden"
             ));
         }
-
-        $this->add(array(
-            'name' => 'related_type',
-            'attributes' => array(
-                'value' => Article::FIELD_RELATED_TYPE_OFF,
-            ),
-        ));
 
         $this->add(array(
             'name' => 'related',
@@ -157,12 +157,12 @@ class DraftEditForm extends BaseForm
         ));
 
         $this->add(array(
-            'name' => 'seo_title',
+            'name' => 'seo__itle',
             'options' => array(
                 'label' => __('SEO title'),
             ),
             'attributes' => array(
-                'id'   => 'seo_title',
+                'id'   => 'seo__itle',
                 'type' => 'text',
             ),
         ));
@@ -223,14 +223,6 @@ class DraftEditForm extends BaseForm
         $editorConfig = Pi::config()->load("module.{$module}.ckeditor.php");
         $editor = $this->get('content');
         $editor->setOptions(array_merge($editor->getOptions(), $editorConfig));
-
-        $this->add(array(
-            'name'       => 'recommended',
-            'options'    => array(
-                'label' => __('Recommended'),
-            ),
-            'type' => 'checkbox'
-        ));
 
         $this->add(array(
             'name'  => 'id',
@@ -309,5 +301,61 @@ class DraftEditForm extends BaseForm
             ),
             'type'  => 'submit',
         ));
+    }
+    
+    /**
+     * Getting defined form element
+     * !!! The value of each field must be the name of each form
+     * 
+     * @return array 
+     */
+    public function getExistsFormElements()
+    {
+        return array(
+            'subject'         => __('Subject'),
+            'subtitle'        => __('Subtitle'),
+            'summary'         => __('Summary'),
+            'content'         => __('Content'),
+            'image'           => __('Image'),
+            'author'          => __('Author'),
+            'source'          => __('Source'),
+            'category'        => __('Category'),
+            'tag'             => __('Tag'),
+            'related'         => __('Related'),
+            'slug'            => __('Slug'),
+            'seo_title'       => __('SEO Title'),
+            'seo_keywords'    => __('SEO Keywords'),
+            'seo_description' => __('SEO Description'),
+        );
+    }
+    
+    /**
+     * Getting default elements for displaying
+     * 
+     * @return array 
+     */
+    public function getDefaultElements($mode = Config::FORM_MODE_EXTENDED)
+    {
+        $normal = array(
+            'subject',
+            'subtitle',
+            'summary',
+            'content',
+            'image',
+            'author',
+            'source',
+            'category',
+            'tag',
+        );
+        
+        $extended = array_merge($normal, array(
+            'related',
+            'slug',
+            'seo_title',
+            'seo_keywords',
+            'seo_description',
+        ));
+        
+        return (Config::FORM_MODE_NORMAL == $mode) ? $normal : $extended;
     }
 }
