@@ -23,6 +23,8 @@ use Pi;
 use Module\Article\Form\DraftCustomForm;
 use Module\Article\Form\DraftCustomFilter;
 use Module\Article\File;
+use Module\Article\Form\DraftEditForm;
+use Module\Article\Service;
 
 /**
  * Public action controller for config module
@@ -158,8 +160,7 @@ EOD;
      */
     public function formAction()
     {
-        $draftForm = new \Module\Article\Form\DraftEditForm;
-        $items     = $draftForm->getExistsFormElements();
+        $items = DraftEditForm::getExistsFormElements();
         $this->view()->assign('items', $items);
         
         $form = new DraftCustomForm('custom', array('elements' => $items));
@@ -168,6 +169,17 @@ EOD;
             'method'  => 'post',
             'class'   => 'form-horizontal',
         ));
+        $options = Service::getFormConfig();
+        if (!empty($options)) {
+            $data['mode'] = $options['mode'];
+            if (self::FORM_MODE_CUSTOM == $data['mode']) {
+                foreach ($options['elements'] as $value) {
+                    $data[$value] = 1;
+                }
+            }
+            $form->setData($data);
+        }
+        
         $this->view()->assign('title', __('Configuration Form'));
         $this->view()->assign('form', $form);
         $this->view()->assign('custom', self::FORM_MODE_CUSTOM);
@@ -198,8 +210,8 @@ EOD;
                 $elements = $data['mode'];
             }
             $options = array(
-                self::FORM_MODE_NORMAL   => $draftForm->getDefaultElements(self::FORM_MODE_NORMAL),
-                self::FORM_MODE_EXTENDED => $draftForm->getDefaultElements(self::FORM_MODE_EXTENDED),
+                self::FORM_MODE_NORMAL   => DraftEditForm::getDefaultElements(self::FORM_MODE_NORMAL),
+                self::FORM_MODE_EXTENDED => DraftEditForm::getDefaultElements(self::FORM_MODE_EXTENDED),
             );
             $result  = $this->saveFormConfig($elements, $items, $options);
             if (!$result) {
