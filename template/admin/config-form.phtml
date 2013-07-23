@@ -1,0 +1,52 @@
+<?php
+$this->Backbone();
+?>
+<h2 class="page-header"><?php echo $this->escape($title); ?></h2>
+
+<?php if (isset($error)) { ?>
+<div class="alert alert-error">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($error) ?>
+</div>
+<?php } elseif (isset($message)) { ?>
+<div class="alert alert-success">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($message) ?>
+</div>
+<?php } ?>
+
+<?php echo $this->form()->openTag($form) ?>
+<div>
+<?php $element = $form->get('mode'); ?>
+    <div><?php echo $this->formLabel($element) ?></div>
+    <div><?php
+        echo $this->formElement($element);
+        echo $this->formElementErrors($element); ?>
+    </div>
+</div>
+
+<div id="article-config-form-elements" <?php if ($custom != $form->get('mode')->getValue()) echo 'style="display: none"' ?>>
+    <div class="span12 page-header"><?php echo __('Form Elements') ?></div>
+    <?php foreach ($items as $name => $item) { ?>
+        <div class="span12">
+        <?php $element = $form->get($name); ?>
+            <div><?php echo $this->formElement($element) ?></div>
+        </div>
+    <?php } ?>
+</div>
+
+<div class="span12">
+<?php $element = $form->get('submit'); ?>
+    <div><?php echo $this->formElement($element) ?></div>
+</div>
+<?php echo $this->form()->closeTag() ?>
+
+<script>
+    $('input[name="mode"]').change(function() {
+        if ('custom' == $(this).val()) {
+            $('#article-config-form-elements').css('display', 'block');
+        } else {
+            $('#article-config-form-elements').css('display', 'none');
+        }
+    });
+</script>
