@@ -71,6 +71,7 @@ CREATE TABLE `{draft}` (
   `pages`           tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `category`        int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `tag`             varchar(255)                    NOT NULL DEFAULT '',
+  `related`         varchar(255)                    NOT NULL DEFAULT '',
   `seo_title`       varchar(255)                    NOT NULL DEFAULT '',
   `seo_keywords`    varchar(255)                    NOT NULL DEFAULT '',
   `seo_description` varchar(255)                    NOT NULL DEFAULT '',
@@ -80,6 +81,7 @@ CREATE TABLE `{draft}` (
   `time_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `status`          tinyint(3) UNSIGNED             NOT NULL DEFAULT 0,
   `time_save`       int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `reject_reason`   varchar(255)                    NOT NULL DEFAULT '',
 
   PRIMARY KEY           (`id`),
   KEY `article`         (`article`),

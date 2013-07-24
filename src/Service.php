@@ -29,6 +29,7 @@ use Module\Article\Cache;
 use Pi\Mvc\Controller\ActionController;
 use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
+use Module\Article\Model\Draft;
 
 /**
  * Public APIs for article module itself 
@@ -417,12 +418,11 @@ class Service
 
     public static function getDraftPage($where, $page, $limit, $columns = null, $order = null, $module = null)
     {
-        $offset = ($limit && $page) ? $limit * ($page - 1) : null;
+        $offset     = ($limit && $page) ? $limit * ($page - 1) : null;
 
-        $module = $module ?: self::$module;
-        $config = Pi::service('module')->config('', $module);
-        $draftIds = $userIds = $authorIds = $categoryIds = $channelIds = array();
-        $channels = $categories = $authors = $users = $tags = $urls = array();
+        $module     = $module ?: Pi::service('module')->current();
+        $draftIds   = $userIds = $authorIds = $categoryIds = array();
+        $categories = $authors = $users = $tags = $urls = array();
 
         $modelDraft     = Pi::model('draft', $module);
         $modelUser      = Pi::model('user');
@@ -438,15 +438,14 @@ class Service
                     $authorIds[] = $row['author'];
                 }
 
-                if (!empty($row['user'])) {
-                    $userIds[] = $row['user'];
+                if (!empty($row['uid'])) {
+                    $userIds[] = $row['uid'];
                 }
             }
             $authorIds = array_unique($authorIds);
             $userIds   = array_unique($userIds);
 
             $categories = Cache::getCategoryList();
-            $channels   = Cache::getChannelList();
 
             if (!empty($authorIds)) {
                 $resultsetAuthor = $modelAuthor->find($authorIds);
@@ -469,17 +468,13 @@ class Service
             }
 
             foreach ($resultset as &$row) {
-                if (empty($columns) || isset($columns['channel'])) {
-                    $row['channel_title'] = $channels[$row['channel']]['title'];
-                }
-
                 if (empty($columns) || isset($columns['category'])) {
                     $row['category_title'] = $categories[$row['category']]['title'];
                 }
 
-                if (empty($columns) || isset($columns['user'])) {
-                    if (!empty($users[$row['user']])) {
-                        $row['user_name'] = $users[$row['user']]['name'];
+                if (empty($columns) || isset($columns['uid'])) {
+                    if (!empty($users[$row['uid']])) {
+                        $row['user_name'] = $users[$row['uid']]['name'];
                     }
                 }
 
@@ -624,13 +619,20 @@ class Service
         return self::getArticlePage($where, $page, $limit, $columns, $order, $module);
     }
 
+    /**
+     * Deleting draft, along with featured image and attachment.
+     * 
+     * @param array   $ids     Draft ID
+     * @param string  $module  Current module name
+     * @return int             Affected rows
+     */
     public static function deleteDraft($ids, $module = null)
     {
         $affectedRows   = false;
-        $module         = $module ?: self::$module;
+        $module         = $module ?: Pi::service('module')->current();
 
-        $modelDraft   = Pi::model('draft', $module);
-        $modelArticle = Pi::model('article', $module);
+        $modelDraft     = Pi::model('draft', $module);
+        $modelArticle   = Pi::model('article', $module);
 
         // Delete feature image
         $resultsetFeatureImage = $modelDraft->select(array('id' => $ids));
@@ -648,7 +650,7 @@ class Service
         }
 
         // Delete assets
-        $modelDraftAsset = Pi::model('draft_asset', $module);
+        /*$modelDraftAsset = Pi::model('draft_asset', $module);
         $resultsetAsset = $modelDraftAsset->select(array(
             'draft'     => $ids,
             'published' => 0,
@@ -660,7 +662,7 @@ class Service
                 unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
             }
         }
-        $modelDraftAsset->delete(array('draft' => $ids));
+        $modelDraftAsset->delete(array('draft' => $ids));*/
 
         // Delete draft
         $affectedRows = $modelDraft->delete(array('id' => $ids));
@@ -804,5 +806,54 @@ class Service
         }
         
         return $config;
+    }
+    
+    public static function getSummary($from = 'my')
+    {
+        $module = Pi::service('module')->current();
+        
+        $result = array(
+            'published' => 0,
+            'draft'     => 0,
+            'pending'   => 0,
+            'rejected'  => 0,
+        );
+
+        $where['article < ?'] = 1;
+        if ('my' == $from) {
+            $where['uid'] = Pi::registry('user')->id;
+        }
+        $modelDraft = Pi::model('draft', $module);
+        $select     = $modelDraft->select()
+            ->columns(array('status', 'total' => new Expression('count(status)')))
+            ->where($where)
+            ->group(array('status'));
+        $resultset  = $modelDraft->selectWith($select);
+        foreach ($resultset as $row) {
+            if (Draft::FIELD_STATUS_DRAFT == $row->status) {
+                $result['draft'] = $row->total;
+            } else if (Draft::FIELD_STATUS_PENDING == $row->status) {
+                $result['pending'] = $row->total;
+            } else if (Draft::FIELD_STATUS_REJECTED == $row->status) {
+                $result['rejected'] = $row->total;
+            }
+        }
+
+        $modelArticle = Pi::model('article', $module);
+        $where        = array(
+            'status' => Article::FIELD_STATUS_PUBLISHED,
+        );
+        if ('my' == $from) {
+            $where['uid'] = Pi::registry('user')->id;
+        }
+        $select = $modelArticle->select()
+                               ->columns(array('total' => new Expression('count(id)')))
+                               ->where($where);
+        $resultset = $modelArticle->selectWith($select);
+        if ($resultset->count()) {
+            $result['published'] = $resultset->current()->total;
+        }
+
+        return $result;
     }
 }
