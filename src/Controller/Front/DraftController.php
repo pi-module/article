@@ -296,7 +296,7 @@ class DraftController extends ActionController
         // Compiled article content
         $modelCompiled   = $this->getModel('compiled');
         $compiledType    = $this->config('compiled_type') ?: 'html';
-        $compiledContent = Compiled::getContent($rowArticle->markup, $rowArticle->content, $compiledType);
+        $compiledContent = Compiled::compiled($rowArticle->markup, $rowArticle->content, $compiledType);
         $compiled        = array(
             'article'         => $articleId,
             'type'            => $compiledType,
@@ -774,6 +774,9 @@ class DraftController extends ActionController
         $from   = Service::getParam($this, 'from', 'my');
         $where  = Service::getParam($this, 'where', '');
         $where  = json_decode(urldecode($where), true);
+        if (!in_array($from, array('my', 'all'))) {
+            throw new \Exception(__('Invalid source'));
+        }
         
         $this->showDraftPage($status, $from, $where);
         
@@ -781,18 +784,22 @@ class DraftController extends ActionController
         switch ($status) {
             case Draft::FIELD_STATUS_DRAFT:
                 $title = __('Draft');
+                $name  = 'draft';
                 break;
             case Draft::FIELD_STATUS_PENDING:
                 $title = __('Pending');
+                $name  = 'pending';
                 break;
             case Draft::FIELD_STATUS_REJECTED:
                 $title = __('Rejected');
+                $name  = 'rejected';
                 break;
         }
         $flags = array(
-            'draft'    => Draft::FIELD_STATUS_DRAFT,
-            'pending'  => Draft::FIELD_STATUS_PENDING,
-            'rejected' => Draft::FIELD_STATUS_REJECTED,
+            'draft'     => Draft::FIELD_STATUS_DRAFT,
+            'pending'   => Draft::FIELD_STATUS_PENDING,
+            'rejected'  => Draft::FIELD_STATUS_REJECTED,
+            'published' => \Module\Article\Model\Article::FIELD_STATUS_PUBLISHED,
         );
 
         $this->view()->assign(array(
@@ -800,6 +807,11 @@ class DraftController extends ActionController
             'summary' => Service::getSummary($from),
             'flags'   => $flags,
         ));
+        
+        if ('all' == $from) {
+            $template = sprintf('%s-%s', 'article', $name);
+            $this->view()->setTemplate($template);
+        }
     }
     
     /**
