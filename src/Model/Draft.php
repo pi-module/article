@@ -73,7 +73,7 @@ class Draft extends Model
 
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'subtitle', 'channel', 'category', 'image', 'user', 'author', 'slug', 'source',
+        return array('id', 'subject', 'subtitle', 'category', 'image', 'uid', 'author', 'slug', 'source',
             'time_save');
     }
 

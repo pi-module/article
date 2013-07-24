@@ -24,8 +24,6 @@ use Pi;
 use Pi\Paginator\Paginator;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Form\DraftEditFilter;
-use Module\Article\Form\DraftRejectForm;
-use Module\Article\Form\DraftRejectFilter;
 use Module\Article\Model\Draft;
 use Module\Article\Model\Article;
 use Module\Article\Model\Asset;
@@ -33,7 +31,6 @@ use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Compiled;
-use Module\Article\Role;
 use Module\Article\Controller\Admin\ConfigController as Config;
 
 /**
@@ -657,7 +654,66 @@ class DraftController extends ActionController
 
         return $id;
     }
+    
+    /**
+     * Getting list articles by condition
+     * 
+     * @param int     $status   Draft status flag
+     * @param string  $from     Show all articles or my articles
+     * @param array   $options  Where condition
+     */
+    public function showDraftPage($status, $from = 'my', $options = array())
+    {
+        $where  = array();
+        $page   = Service::getParam($this, 'page', 1);
+        $limit  = Service::getParam($this, 'limit', 20);
 
+        $where['status']        = $status;
+        $where['article < ?']   = 1;
+        if ('my' == $from) {
+            $where['uid']       = Pi::registry('user')->id;
+        }
+        if (isset($options['keyword'])) {
+            $where['subject like ?'] = sprintf('%%%s%%', $options['keyword']);
+        }
+
+        $module         = $this->getModule();
+        $modelDraft     = $this->getModel('draft');
+
+        $resultsetDraft = Service::getDraftPage($where, $page, $limit, null, null, $module);
+
+        // Total count
+        $totalCount     = (int) $modelDraft->getSearchRowsCount($where);
+
+        // Paginator
+        $paginator = Paginator::factory($totalCount);
+        $paginator->setItemCountPerPage($limit)
+                  ->setCurrentPageNumber($page)
+                  ->setUrlOptions(array(
+                    'pageParam' => 'page',
+                    'router'    => $this->getEvent()->getRouter(),
+                    'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+                    'params'    => array(
+                        'module'        => $module,
+                        'controller'    => 'draft',
+                        'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                        'status'        => $status,
+                        'from'          => $from,
+                        'where'         => urlencode(json_encode($options)),
+                        'limit'         => $limit,
+                    ),
+                ));
+
+        $this->view()->assign(array(
+            'data'      => $resultsetDraft,
+            'paginator' => $paginator,
+            'status'    => $status,
+            'from'      => $from,
+            'page'      => $page,
+            'limit'     => $limit,
+        ));
+    }
+    
     /**
      * Processing article saving.
      * 
@@ -707,6 +763,43 @@ class DraftController extends ActionController
     public function indexAction()
     {
         // @todo use transaction
+    }
+    
+    /**
+     * Listing articles 
+     */
+    public function listAction()
+    {
+        $status = Service::getParam($this, 'status', Draft::FIELD_STATUS_DRAFT);
+        $from   = Service::getParam($this, 'from', 'my');
+        $where  = Service::getParam($this, 'where', '');
+        $where  = json_decode(urldecode($where), true);
+        
+        $this->showDraftPage($status, $from, $where);
+        
+        $title  = '';
+        switch ($status) {
+            case Draft::FIELD_STATUS_DRAFT:
+                $title = __('Draft');
+                break;
+            case Draft::FIELD_STATUS_PENDING:
+                $title = __('Pending');
+                break;
+            case Draft::FIELD_STATUS_REJECTED:
+                $title = __('Rejected');
+                break;
+        }
+        $flags = array(
+            'draft'    => Draft::FIELD_STATUS_DRAFT,
+            'pending'  => Draft::FIELD_STATUS_PENDING,
+            'rejected' => Draft::FIELD_STATUS_REJECTED,
+        );
+
+        $this->view()->assign(array(
+            'title'   => $title,
+            'summary' => Service::getSummary($from),
+            'flags'   => $flags,
+        ));
     }
     
     /**

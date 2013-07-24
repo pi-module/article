@@ -129,49 +129,6 @@ class MyController extends ActionController
         ));
     }
 
-    public function getSummary()
-    {
-        $result = array(
-            'published' => 0,
-            'draft'     => 0,
-            'pending'   => 0,
-            'rejected'  => 0,
-        );
-
-        $modelDraft = $this->getModel('draft');
-        $select     = $modelDraft->select()
-            ->columns(array('status', 'total' => new Expression('count(status)')))
-            ->where(array(
-                'user'          => Pi::registry('user')->id,
-                'article < ?'   => 1,
-            ))
-            ->group(array('status'));
-        $resultset  = $modelDraft->selectWith($select);
-        foreach ($resultset as $row) {
-            if (Draft::FIELD_STATUS_DRAFT == $row->status) {
-                $result['draft'] = $row->total;
-            } else if (Draft::FIELD_STATUS_PENDING == $row->status) {
-                $result['pending'] = $row->total;
-            } else if (Draft::FIELD_STATUS_REJECTED == $row->status) {
-                $result['rejected'] = $row->total;
-            }
-        }
-
-        $modelArticle   = $this->getModel('article');
-        $select         = $modelArticle->select()
-            ->columns(array('total' => new Expression('count(id)')))
-            ->where(array(
-                'user'   => Pi::registry('user')->id,
-                'status' => Article::FIELD_STATUS_PUBLISHED,
-            ));
-        $resultset = $modelArticle->selectWith($select);
-        if ($resultset->count()) {
-            $result['published'] = $resultset->current()->total;
-        }
-
-        return $result;
-    }
-    
     public function indexAction()
     {
         $this->redirect()->toRoute('', array(
