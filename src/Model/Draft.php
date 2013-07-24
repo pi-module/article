@@ -21,6 +21,7 @@ namespace Module\Article\Model;
 use Pi;
 use Pi\Application\Model\Model;
 use Zend\Db\Sql\Expression;
+use Module\Article\Service;
 
 class Draft extends Model
 {
@@ -53,10 +54,26 @@ class Draft extends Model
 
         return $result;
     }
+    
+    /**
+     * Getting the fields needed defines by user
+     * 
+     * @param string  $module  Module name
+     * @return array 
+     */
+    public static function getValidFields($module = null)
+    {
+        $options         = Service::getFormConfig();
+        $availableFields = self::getAvailableFields($module);
+        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit');
+        $validFields     = array_merge($remainFields, array_intersect($availableFields, $options['elements']));
+        
+        return $validFields;
+    }
 
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'subtitle', 'channel', 'category', 'image', 'user', 'author', 'slug', 'source',
+        return array('id', 'subject', 'subtitle', 'category', 'image', 'uid', 'author', 'slug', 'source',
             'time_save');
     }
 
