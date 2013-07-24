@@ -11,7 +11,6 @@
  *
  * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
@@ -30,277 +29,36 @@ use Module\Article\Controller\Admin\ConfigController as Config;
 class DraftEditForm extends BaseForm
 {
     /**
-     * Initializing form element 
+     * The mode of displaying for elements
+     * @var string 
      */
-    public function init()
+    protected $mode = Config::FORM_MODE_EXTENDED;
+    
+    /**
+     * Elements to display
+     * @var array 
+     */
+    protected $items = array();
+    
+    /**
+     * Initializing object
+     * 
+     * @param string  $name     Form name
+     * @param array   $options  Optional parameters
+     */
+    public function __construct($name, $options = array())
     {
-        $module = Pi::service('module')->current();
-        $config = Pi::service('module')->config('', $module);
-
-        $this->add(array(
-            'name'       => 'subject',
-            'options'    => array(
-                'label'  => __('Subject'),
-            ),
-            'attributes' => array(
-                'id'        => 'subject',
-                'type'      => 'text',
-                'data-size' => $config['max_subject_length'],
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'subtitle',
-            'options'    => array(
-                'label' => __('Subtitle'),
-            ),
-            'attributes' => array(
-                'id'        => 'subtitle',
-                'type'      => 'text',
-                'data-size' => $config['max_subtitle_length'],
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'uid',
-            'options'    => array(
-                'label' => __('Submitter'),
-            ),
-            'attributes' => array(
-                'id'   => 'user',
-                'type' => 'hidden',
-            ),
-        ));
-
-        if (!empty($config['enable_summary'])) {
-            $this->add(array(
-                'name' => 'summary',
-                'options' => array(
-                    'label' => __('Summary'),
-                ),
-                'attributes' => array(
-                    'type'      => 'textarea',
-                    'data-size' => $config['max_summary_length']
-                ),
-            ));
+        if (isset($options['mode'])) {
+            $this->mode = $options['mode'];
         }
-
-        $this->add(array(
-            'name' => 'image',
-            'options' => array(
-                'label' => __('Image'),
-            ),
-            'attributes' => array(
-                'id'   => 'image',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'author',
-            'options' => array(
-                'label' => __('Author'),
-            ),
-            'attributes' => array(
-                'id'   => 'author',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'source',
-            'options' => array(
-                'label' => __('Source'),
-            ),
-            'attributes' => array(
-                'id'   => 'source',
-                'type' => 'text',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'category',
-            'options' => array(
-                'label' => __('Category'),
-            ),
-            'type' => 'Module\Article\Form\Element\Category',
-        ));
-
-        if ($config['enable__ag']) {
-            $this->add(array(
-                'name' => 'tag',
-                'type' => "hidden"
-            ));
+        if (Config::FORM_MODE_CUSTOM == $this->mode) {
+            $this->items = isset($options['elements']) ? $options['elements'] : array();
+        } elseif (!empty($options['elements'])) {
+            $this->items = $options['elements'];
+        } else {
+            $this->items = $this->getDefaultElements($this->mode);
         }
-
-        $this->add(array(
-            'name' => 'related',
-            'options' => array(
-                'label' => __('Related article'),
-            ),
-            'attributes' => array(
-                'id'   => 'related',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'slug',
-            'options' => array(
-                'label' => __('Slug'),
-            ),
-            'attributes' => array(
-                'id'        => 'slug',
-                'type'      => 'text',
-                'data-size' => $config['max_subject_length'],
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'seo__itle',
-            'options' => array(
-                'label' => __('SEO title'),
-            ),
-            'attributes' => array(
-                'id'   => 'seo__itle',
-                'type' => 'text',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'seo_keywords',
-            'options' => array(
-                'label' => __('SEO keywords'),
-            ),
-            'attributes' => array(
-                'id'   => 'seo_keywords',
-                'type' => 'text',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'seo_description',
-            'options' => array(
-                'label' => __('SEO description'),
-            ),
-            'attributes' => array(
-                'id'   => 'seo_description',
-                'type' => 'textarea',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'time_publish',
-            'options' => array(
-                'label' => __('Publish time'),
-            ),
-            'attributes' => array(
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'time_update',
-            'options' => array(
-                'label' => __('Update time'),
-            ),
-            'attributes' => array(
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name' => 'content',
-            'options' => array(
-                'label' => __('Content'),
-                'editor' => 'html',
-            ),
-            'attributes' => array(
-                'id'   => 'content',
-                'type' => 'editor',
-            ),
-        ));
-        $editorConfig = Pi::config()->load("module.{$module}.ckeditor.php");
-        $editor = $this->get('content');
-        $editor->setOptions(array_merge($editor->getOptions(), $editorConfig));
-
-        $this->add(array(
-            'name'  => 'id',
-            'attributes'    => array(
-                'id'   => 'id',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'fake_id',
-            'attributes'    => array(
-                'id'   => 'fake_id',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'article',
-            'attributes'    => array(
-                'id'   => 'article',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'jump',
-            'attributes' => array(
-                'id'   => 'jump',
-                'type'  => 'hidden',
-                'value' => '',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'x',
-            'attributes' => array(
-                'id'   => 'x',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'y',
-            'attributes' => array(
-                'id'   => 'y',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'w',
-            'attributes' => array(
-                'id'   => 'w',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'h',
-            'attributes' => array(
-                'id'   => 'h',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'security',
-            'type'  => 'csrf',
-        ));
-
-        $this->add(array(
-            'name'          => 'do_submit',
-            'attributes'    => array(               
-                'value' => __('Save draft'),
-            ),
-            'type'  => 'submit',
-        ));
+        parent::__construct($name);
     }
     
     /**
@@ -309,7 +67,7 @@ class DraftEditForm extends BaseForm
      * 
      * @return array 
      */
-    public function getExistsFormElements()
+    public static function getExistsFormElements()
     {
         return array(
             'subject'         => __('Subject'),
@@ -334,7 +92,7 @@ class DraftEditForm extends BaseForm
      * 
      * @return array 
      */
-    public function getDefaultElements($mode = Config::FORM_MODE_EXTENDED)
+    public static function getDefaultElements($mode = Config::FORM_MODE_EXTENDED)
     {
         $normal = array(
             'subject',
@@ -357,5 +115,331 @@ class DraftEditForm extends BaseForm
         ));
         
         return (Config::FORM_MODE_NORMAL == $mode) ? $normal : $extended;
+    }
+    
+    /**
+     * Initializing form element 
+     */
+    public function init()
+    {
+        $module     = Pi::service('module')->current();
+        $formParams = $this->getFormParameters();
+        
+        // Initializing form defined by user
+        foreach (array_keys($formParams) as $name) {
+            if (in_array($name, $this->items)) {
+                $this->add($formParams[$name]);
+            }
+        }
+        if (isset($this->items['content'])) {
+            $editorConfig = Pi::config()->load("module.{$module}.ckeditor.php");
+            $editor       = $this->get('content');
+            $editor->setOptions(array_merge($editor->getOptions(), $editorConfig));
+        }
+
+        // Initializing needed form
+        $this->add($formParams['id']);
+        $this->add($formParams['fake_id']);
+        $this->add($formParams['uid']);
+        $this->add($formParams['time_publish']);
+        $this->add($formParams['time_update']);
+        $this->add($formParams['time_submit']);
+        $this->add($formParams['article']);
+        $this->add($formParams['jump']);
+        
+        // Initializing form for image upload
+        if (isset($this->items['image'])) {
+            $this->add($formParams['x']);
+            $this->add($formParams['y']);
+            $this->add($formParams['w']);
+            $this->add($formParams['h']);
+        }
+        
+        $this->add(array(
+            'name'       => 'security',
+            'type'       => 'csrf',
+        ));
+
+        $this->add(array(
+            'name'       => 'do_submit',
+            'attributes' => array(               
+                'value'     => __('Save draft'),
+            ),
+            'type'       => 'submit',
+        ));
+    }
+    
+    /**
+     * Getting form parameters
+     * 
+     * @return array 
+     */
+    protected function getFormParameters()
+    {
+        $module = Pi::service('module')->current();
+        $config = Pi::service('module')->config('', $module);
+
+        $parameters = array(
+            'subject'    => array(
+                'name'       => 'subject',
+                'options'    => array(
+                    'label'     => __('Subject'),
+                ),
+                'attributes' => array(
+                    'id'        => 'subject',
+                    'type'      => 'text',
+                    'data-size' => $config['max_subject_length'],
+                ),
+            ),
+            
+            'subtitle'   => array(
+                'name'       => 'subtitle',
+                'options'    => array(
+                    'label'     => __('Subtitle'),
+                ),
+                'attributes' => array(
+                    'id'        => 'subtitle',
+                    'type'      => 'text',
+                    'data-size' => $config['max_subtitle_length'],
+                ),
+            ),
+            
+            'image'      => array(
+                'name'       => 'image',
+                'options'    => array(
+                    'label'     => __('Image'),
+                ),
+                'attributes' => array(
+                    'id'        => 'image',
+                    'type'      => 'hidden',
+                ),
+            ),
+            
+            'uid'        => array(
+                'name'       => 'uid',
+                'options'    => array(
+                    'label'     => __('Submitter'),
+                ),
+                'attributes' => array(
+                    'id'        => 'user',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'author'     => array(
+                'name'       => 'author',
+                'options'    => array(
+                    'label'     => __('Author'),
+                ),
+                'attributes' => array(
+                    'id'        => 'author',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'source'     => array(
+                'name'       => 'source',
+                'options'    => array(
+                    'label'     => __('Source'),
+                ),
+                'attributes' => array(
+                    'id'        => 'source',
+                    'type'      => 'text',
+                ),
+            ),
+
+            'category'   => array(
+                'name'       => 'category',
+                'options'    => array(
+                    'label'     => __('Category'),
+                ),
+                'type'       => 'Module\Article\Form\Element\Category',
+            ),
+            
+            'related'    => array(
+                'name'       => 'related',
+                'options'    => array(
+                    'label'     => __('Related article'),
+                ),
+                'attributes' => array(
+                    'id'        => 'related',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'slug'       => array(
+                'name'       => 'slug',
+                'options'    => array(
+                    'label'     => __('Slug'),
+                ),
+                'attributes' => array(
+                    'id'        => 'slug',
+                    'type'      => 'text',
+                    'data-size' => $config['max_subject_length'],
+                ),
+            ),
+
+            'seo_title'  => array(
+                'name'       => 'seo_title',
+                'options'    => array(
+                    'label'     => __('SEO title'),
+                ),
+                'attributes' => array(
+                    'id'        => 'seo_title',
+                    'type'      => 'text',
+                ),
+            ),
+
+            'seo_keywords' => array(
+                'name'       => 'seo_keywords',
+                'options'    => array(
+                    'label'     => __('SEO keywords'),
+                ),
+                'attributes' => array(
+                    'id'        => 'seo_keywords',
+                    'type'      => 'text',
+                ),
+            ),
+
+            'seo_description' => array(
+                'name'       => 'seo_description',
+                'options'    => array(
+                    'label'     => __('SEO description'),
+                ),
+                'attributes' => array(
+                    'id'        => 'seo_description',
+                    'type'      => 'textarea',
+                ),
+            ),
+
+            'time_publish' => array(
+                'name'       => 'time_publish',
+                'options'    => array(
+                    'label'      => __('Publish time'),
+                ),
+                'attributes' => array(
+                    'type'       => 'hidden',
+                ),
+            ),
+
+            'time_update' => array(
+                'name'       => 'time_update',
+                'options'    => array(
+                    'label'     => __('Update time'),
+                ),
+                'attributes' => array(
+                    'type' => 'hidden',
+                ),
+            ),
+
+            'time_submit' => array(
+                'name'       => 'time_submit',
+                'options'    => array(
+                    'label'     => __('Submit time'),
+                ),
+                'attributes' => array(
+                    'type' => 'hidden',
+                ),
+            ),
+            
+            'content'    => array(
+                'name'       => 'content',
+                'options'    => array(
+                    'label'     => __('Content'),
+                    'editor'    => 'html',
+                ),
+                'attributes' => array(
+                    'id'        => 'content',
+                    'type'      => 'editor',
+                ),
+            ),
+        
+            'id'         => array(
+                'name'       => 'id',
+                'attributes' => array(
+                    'id'        => 'id',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'fake_id'    => array(
+                'name'       => 'fake_id',
+                'attributes' => array(
+                    'id'        => 'fake_id',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'article'    => array(
+                'name'       => 'article',
+                'attributes' => array(
+                    'id'        => 'article',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'jump'       => array(
+                'name'       => 'jump',
+                'attributes' => array(
+                    'id'        => 'jump',
+                    'type'      => 'hidden',
+                    'value'     => '',
+                ),
+            ),
+
+            'x'          => array(
+                'name'       => 'x',
+                'attributes' => array(
+                    'id'        => 'x',
+                    'type'      => 'hidden',
+                ),
+            ),
+
+            'y'          => array(
+                'name'       => 'y',
+                'attributes' => array(
+                    'id'        => 'y',
+                    'type'      => 'hidden',
+                ),
+            ),
+            
+            'w'          => array(
+                'name'       => 'w',
+                'attributes' => array(
+                    'id'        => 'w',
+                    'type'      => 'hidden',
+                ),
+            ),
+            
+            'h'          => array(
+                'name'       => 'h',
+                'attributes' => array(
+                    'id'        => 'h',
+                    'type'      => 'hidden',
+                ),
+            ),
+        );
+        
+        if (!empty($config['enable_summary'])) {
+            $parameters['summary'] = array(
+                'name'       => 'summary',
+                'options'    => array(
+                    'label'     => __('Summary'),
+                ),
+                'attributes' => array(
+                    'type'      => 'textarea',
+                    'data-size' => $config['max_summary_length'],
+                ),
+            );
+        }
+        
+        if ($config['enable_tag']) {
+            $parameters['tag'] = array(
+                'name'       => 'tag',
+                'type'       => 'hidden',
+            );
+        }
+        
+        return $parameters;
     }
 }

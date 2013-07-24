@@ -27,6 +27,8 @@ use Module\Article\Model\Asset;
 use Module\Article\Upload;
 use Module\Article\Cache;
 use Pi\Mvc\Controller\ActionController;
+use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Form\DraftEditForm;
 
 /**
  * Public APIs for article module itself 
@@ -782,5 +784,25 @@ class Service
         }
 
         return $data;
+    }
+    
+    /**
+     * Reading configuration of form to display from file define by user
+     * 
+     * @return array 
+     */
+    public static function getFormConfig()
+    {
+        $filename = Pi::path(Config::ELEMENT_EDIT_PATH);
+        if (!file_exists($filename)) {
+            return false;
+        }
+        $config   = include $filename;
+        
+        if (Config::FORM_MODE_CUSTOM != $config['mode']) {
+            $config['elements'] = DraftEditForm::getDefaultElements($config['mode']);
+        }
+        
+        return $config;
     }
 }
