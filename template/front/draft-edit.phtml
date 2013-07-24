@@ -1,6 +1,6 @@
 <?php
     $this->jQuery('extension/fileupload-min.js');
-    $this->bootstrap(array('datepicker/datepicker.css','datepicker/bootstrap-datepicker.js','datepicker/locales/bootstrap-datepicker.zh-CN.js', 'js/bootstrap-typeahead.js'));
+    $this->bootstrap(array('datepicker/datepicker.css','datepicker/bootstrap-datepicker.js','datepicker/locales/bootstrap-datepicker.zh-CN.js', 'js/bootstrap.min.js'));
     $this->css($this->assetModule('script/article-ui.css'));
     $this->Backbone();
 ?>
@@ -202,7 +202,7 @@
                                 break; 
                             case 3: _e('Rejected');
                      ?>
-                     <i class="icon-question-sign" id="jsReject" data-content="<?php echo $draft['memo'] ?>" data-placement="bottom">
+                     <i class="icon-question-sign" id="jsReject" data-content="<?php echo $draft['reject_reason'] ?>" data-placement="bottom">
                      </i>
                      <script>
                      (function($){
@@ -298,9 +298,7 @@
                     <?php } else { ?>    
                     <button class="btn btn-primary pull-right pending"><?php _e('Submit') ?></button>
                     <?php } ?>
-                    <?php if ($rules['delete']) { ?>
                     <span class="link-btn delete"><?php _e('Delete') ?></span>
-                    <?php } ?>
                 </div>
             </div>
         </div>
@@ -482,7 +480,7 @@
         <% if(_.isString(message)) { %>
             <%= message %>
             <% if(status) { %>
-            <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'form-add')); ?>"><?php _e('Add a new article'); ?></a>
+            <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>"><?php _e('Add a new article'); ?></a>
             <% } %>
         <% } else { %>    
         <% _.each(message,function(first,key1) { %>
@@ -831,11 +829,11 @@ var ReleaseProcess = Backbone.View.extend({
            fn:function(resp){
                response = resp;
                self.$(".status").html(resp.status);
-               if (!resp.approve) {
-                   btn.remove();
-               } else {
+               //if (!resp.approve) {
+               //    btn.remove();
+               //} else {
                    btn.removeAttr("disabled").html(resp.btn_value).removeClass("pending").addClass("approve");
-               }
+               //}
            },
            fail:function(){
                btn.removeAttr("disabled");

@@ -624,13 +624,20 @@ class Service
         return self::getArticlePage($where, $page, $limit, $columns, $order, $module);
     }
 
+    /**
+     * Deleting draft, along with featured image and attachment.
+     * 
+     * @param array   $ids     Draft ID
+     * @param string  $module  Current module name
+     * @return int             Affected rows
+     */
     public static function deleteDraft($ids, $module = null)
     {
         $affectedRows   = false;
-        $module         = $module ?: self::$module;
+        $module         = $module ?: Pi::service('module')->current();
 
-        $modelDraft   = Pi::model('draft', $module);
-        $modelArticle = Pi::model('article', $module);
+        $modelDraft     = Pi::model('draft', $module);
+        $modelArticle   = Pi::model('article', $module);
 
         // Delete feature image
         $resultsetFeatureImage = $modelDraft->select(array('id' => $ids));
@@ -648,7 +655,7 @@ class Service
         }
 
         // Delete assets
-        $modelDraftAsset = Pi::model('draft_asset', $module);
+        /*$modelDraftAsset = Pi::model('draft_asset', $module);
         $resultsetAsset = $modelDraftAsset->select(array(
             'draft'     => $ids,
             'published' => 0,
@@ -660,7 +667,7 @@ class Service
                 unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
             }
         }
-        $modelDraftAsset->delete(array('draft' => $ids));
+        $modelDraftAsset->delete(array('draft' => $ids));*/
 
         // Delete draft
         $affectedRows = $modelDraft->delete(array('id' => $ids));

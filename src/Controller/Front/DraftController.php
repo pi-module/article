@@ -32,6 +32,7 @@ use Module\Article\Model\Asset;
 use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
+use Module\Article\Compiled;
 use Module\Article\Role;
 use Module\Article\Controller\Admin\ConfigController as Config;
 
@@ -180,181 +181,188 @@ class DraftController extends ActionController
         return $result;
     }
 
+    /**
+     * Publishing a article, the status of article will be changed to pendding
+     * 
+     * @param int  $id  Article ID
+     * @return array 
+     */
     protected function publish($id)
     {
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_FALSE,
+            'status'    => self::RESULT_FALSE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        if ($id) {
-            $modelDraft = $this->getModel('draft');
-            $rowDraft   = $modelDraft->find($id);
-
-            if ($rowDraft && in_array($rowDraft->status, array(Draft::FIELD_STATUS_DRAFT, Draft::FIELD_STATUS_REJECTED))) {
-                if ($rowDraft->article) {
-                    $result['message'] = __('Draft has been published.');
-                } else {
-                    $rowDraft->status = Draft::FIELD_STATUS_PENDING;
-                    $rowDraft->save();
-
-                    $result['status']   = AjaxController::AJAX_RESULT_TRUE;
-                    $result['message']  = __('Draft submitted successfully.');
-                    $result['data']     = array(
-                        'id'        => $id,
-                        'status'    => __('Pending'),
-                        'btn_value' => __('Approve'),
-                    );
-                }
-            } else {
-                $result['message'] = __('Invalid draft.');
-            }
-        } else {
-            $result['message'] = __('Not enough parameter.');
+        if (!$id) {
+            return array('message' => __('Not enough parameter.'));
         }
+        
+        $modelDraft = $this->getModel('draft');
+        $rowDraft   = $modelDraft->find($id);
+
+        if (!$rowDraft->id or !in_array($rowDraft->status, array(Draft::FIELD_STATUS_DRAFT, Draft::FIELD_STATUS_REJECTED))) {
+            return array('message' => __('Invalid draft.'));
+        }
+        
+        if ($rowDraft->article) {
+            return array('message' => __('Draft has been published.'));
+        }
+        
+        $rowDraft->status = Draft::FIELD_STATUS_PENDING;
+        $rowDraft->save();
+
+        $result['status']   = self::RESULT_TRUE;
+        $result['message']  = __('Draft submitted successfully.');
+        $result['data']     = array(
+            'id'        => $id,
+            'status'    => __('Pending'),
+            'btn_value' => __('Approve'),
+        );
 
         return $result;
     }
 
-    protected function approve($id)
+    /**
+     * Approving an article, the article details will be storing into article table,
+     * status of article in article table will be changed to published, and draft will
+     * be deleted.
+     * 
+     * @param int    $id        Article ID
+     * @param array  $elements  Form elements to display
+     * @return array
+     */
+    protected function approve($id, $elements = array())
     {
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_FALSE,
+            'status'    => self::RESULT_FALSE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        if ($id) {
-            $model  = $this->getModel('draft');
-            $row    = $model->find($id);
-
-            if ($row && $row->status == Draft::FIELD_STATUS_PENDING) {
-                $result = $this->validateForm($row->toArray());
-
-                if ($result['status']) {
-                    $module         = $this->getModule();
-                    $modelArticle   = $this->getModel('article');
-
-                    // move draft to article
-                    $timestamp = time();
-                    $article = array(
-                        'subject'         => $row->subject,
-                        'subtitle'        => $row->subtitle,
-                        'summary'         => $row->summary,
-                        'content'         => $row->content,
-                        'user'            => $row->user,
-                        'author'          => $row->author,
-                        'source'          => $row->source,
-                        'pages'           => $row->pages,
-                        'category'        => $row->category,
-                        'channel'         => $row->channel,
-                        'recommended'     => $row->recommended,
-                        'status'          => Article::FIELD_STATUS_PUBLISHED,
-                        'active'          => 1,
-                        'time_create'     => $timestamp,
-                        'time_publish'    => $row->time_publish ? $row->time_publish : $timestamp,
-                        'time_update'     => $row->time_update ? $row->time_update : 0,
-                        'seo_title'       => $row->seo_title,
-                        'seo_keywords'    => $row->seo_keywords,
-                        'seo_description' => $row->seo_description,
-                        'slug'            => $row->slug ?: null,
-                        'related_type'    => $row->related_type,
-                        'image'           => $row->image,
-                    );
-                    $rowArticle = $modelArticle->createRow($article);
-                    $rowArticle->save();
-
-                    $articleId = $rowArticle->id;
-                    $refreshArticle = false;
-
-                    // Transform foreign images
-                    $content = Service::transformArticleImages($row->content, $module);
-                    if ($content) {
-                        $rowArticle->content = $content;
-                        $refreshArticle      = true;
-                    }
-
-                    // Move asset
-                    $modelDraftAsset     = $this->getModel('draft_asset');
-                    $resultsetDraftAsset = $modelDraftAsset->select(array(
-                        'draft' => $id,
-                    ));
-                    $modelAsset = $this->getModel('asset');
-                    foreach ($resultsetDraftAsset as $asset) {
-                        $data = array(
-                            'original_name' => $asset->original_name,
-                            'name'          => $asset->name,
-                            'extension'     => $asset->extension,
-                            'size'          => $asset->size,
-                            'mime_type'     => $asset->mime_type,
-                            'type'          => $asset->type,
-                            'path'          => $asset->path,
-                            'time_create'   => $asset->time_create,
-                            'user'          => $asset->user,
-                            'article'       => $articleId,
-                        );
-    //                    $data['path'] = Upload::moveTmpToAsset($attachment->path, $module, $attachment->type);
-                        $rowAsset = $modelAsset->createRow($data);
-                        $rowAsset->save();
-                    }
-
-                    // Clear draft assets info
-                    $modelDraftAsset->delete(array('draft' => $id));
-
-                    if ($refreshArticle) {
-                        $rowArticle->save();
-                    }
-
-                    // Save tag
-                    if ($this->config('enable_tag') && !empty($row->tag)) {
-                        Pi::service('tag')->add($module, $articleId, null, $row->tag, $timestamp);
-                    }
-
-                    // Save channel
-                    Pi::service('api')->channel(
-                        array('entity', 'addEntity'),
-                        $row->channel,
-                        $module,
-                        $articleId,
-                        $row->category,
-                        array(
-                            'slug'          => $rowArticle->slug,
-                            'time'          => $rowArticle->time_publish,
-                            'active'        => $rowArticle->active,
-                            'recommended'   => $rowArticle->recommended,
-                        )
-                    );
-
-                    // Save partnumber
-                    if (!empty($row->partnumber)) {
-                        Pi::service('api')->partnumber->add($module, $articleId, null, $row->partnumber, $timestamp);
-                    }
-
-                    // Save manufacturer
-                    if (!empty($row->manufacturer)) {
-                        $this->getModel('manufacturer')->updateRelation($articleId, $row->manufacturer);
-                    }
-
-                    // Save related articles
-                    $relatedArticles = $row->related;
-                    if ($relatedArticles) {
-                        $relatedModel = $this->getModel('related');
-                        $relatedModel->saveRelated($articleId, $relatedArticles);
-                    }
-
-                    // delete draft
-                    $row->delete();
-
-                    $result['status']   = AjaxController::AJAX_RESULT_TRUE;
-                    $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
-                }
-            } else {
-                $result['message'] = __('Invalid draft.');
-            }
-        } else {
-            $result['message'] = __('Not enough parameter.');
+        if (!$id) {
+            return array('message' => __('Not enough parameter.'));
         }
+        
+        $model  = $this->getModel('draft');
+        $row    = $model->find($id);
+        if (!$row->id or $row->status != Draft::FIELD_STATUS_PENDING) {
+            return array('message' => __('Invalid draft.'));
+        }
+        
+        $result = $this->validateForm($row->toArray(), null, $elements);
+        if (!$result['status']) {
+            return $result;
+        }
+        
+        $module         = $this->getModule();
+        $modelArticle   = $this->getModel('article');
+        
+        // move draft to article
+        $timestamp = time();
+        $article = array(
+            'subject'         => $row->subject,
+            'subtitle'        => $row->subtitle,
+            'summary'         => $row->summary,
+            'content'         => $row->content,
+            'markup'          => $row->markup,
+            'uid'             => $row->uid,
+            'author'          => $row->author,
+            'source'          => $row->source,
+            'pages'           => $row->pages,
+            'category'        => $row->category,
+            'status'          => Article::FIELD_STATUS_PUBLISHED,
+            'active'          => 1,
+            'time_submit'     => $row->time_submit,
+            'time_publish'    => $row->time_publish ? $row->time_publish : $timestamp,
+            'time_update'     => $row->time_update ? $row->time_update : 0,
+            'image'           => $row->image,
+        );
+        $rowArticle = $modelArticle->createRow($article);
+        $rowArticle->save();
+        $articleId = $rowArticle->id;
+        $refreshArticle = false;
+        
+        // Moving extended fields to extended table
+        $modelExtended  = $this->getModel('extended');
+        $extended       = array(
+            'article'         => $articleId,
+            'seo_title'       => $row->seo_title,
+            'seo_keywords'    => $row->seo_keywords,
+            'seo_description' => $row->seo_description,
+            'slug'            => $row->slug ?: null,
+        );
+        $rowExtended = $modelExtended->createRow($extended);
+        $rowExtended->save();
+        
+        // Compiled article content
+        $modelCompiled   = $this->getModel('compiled');
+        $compiledType    = $this->config('compiled_type') ?: 'html';
+        $compiledContent = Compiled::getContent($rowArticle->markup, $rowArticle->content, $compiledType);
+        $compiled        = array(
+            'article'         => $articleId,
+            'type'            => $compiledType,
+            'content'         => $compiledContent,
+        );
+        $rowCompiled     = $modelCompiled->createRow($compiled);
+        $rowCompiled->save();
+
+        // Transform foreign images
+        $content = Service::transformArticleImages($row->content, $module);
+        if ($content) {
+            $rowArticle->content = $content;
+            $refreshArticle      = true;
+        }
+
+        // Move asset
+        /*$modelDraftAsset     = $this->getModel('draft_asset');
+        $resultsetDraftAsset = $modelDraftAsset->select(array(
+            'draft' => $id,
+        ));
+        $modelAsset = $this->getModel('asset');
+        foreach ($resultsetDraftAsset as $asset) {
+            $data = array(
+                'original_name' => $asset->original_name,
+                'name'          => $asset->name,
+                'extension'     => $asset->extension,
+                'size'          => $asset->size,
+                'mime_type'     => $asset->mime_type,
+                'type'          => $asset->type,
+                'path'          => $asset->path,
+                'time_create'   => $asset->time_create,
+                'user'          => $asset->user,
+                'article'       => $articleId,
+            );
+//                    $data['path'] = Upload::moveTmpToAsset($attachment->path, $module, $attachment->type);
+            $rowAsset = $modelAsset->createRow($data);
+            $rowAsset->save();
+        }*/
+
+        // Clear draft assets info
+        //$modelDraftAsset->delete(array('draft' => $id));
+
+        if ($refreshArticle) {
+            $rowArticle->save();
+        }
+
+        // Save tag
+        if ($this->config('enable_tag') && !empty($row->tag)) {
+            Pi::service('tag')->add($module, $articleId, null, $row->tag, $timestamp);
+        }
+
+        // Save related articles
+        $relatedArticles = $row->related;
+        if ($relatedArticles) {
+            $relatedModel = $this->getModel('related');
+            $relatedModel->saveRelated($articleId, $relatedArticles);
+        }
+
+        // delete draft
+        $row->delete();
+
+        $result['status']   = self::RESULT_TRUE;
+        $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
 
         return $result;
     }
@@ -557,6 +565,12 @@ class DraftController extends ActionController
         return $result;
     }
 
+    /**
+     * Saving new article into draft table, and the status of article will be draft.
+     * 
+     * @param array  $data  Posted article details
+     * @return boolean 
+     */
     protected function saveDraft($data)
     {
         $rowDraft   = $id = $fakeId = null;
@@ -645,7 +659,7 @@ class DraftController extends ActionController
     }
 
     /**
-     * Saving article as a draft, and its status is draft
+     * Processing article saving.
      * 
      * @return ViewModel 
      */
@@ -662,10 +676,7 @@ class DraftController extends ActionController
         $form    = $this->getDraftForm('save', $options);
         $form->setData($this->request->getPost());
         $form->setInputFilter(new DraftEditFilter($options));
-        $availableFields = Draft::getAvailableFields();
-        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit');
-        $fields          = array_merge($remainFields, array_intersect($availableFields, $options['elements']));
-        $form->setValidationGroup($fields);
+        $form->setValidationGroup(Draft::getValidFields());
         
         if (!$form->isValid()) {
             return array(
@@ -690,13 +701,16 @@ class DraftController extends ActionController
         return $result;
     }
 
+    /**
+     * Default action. 
+     */
     public function indexAction()
     {
         // @todo use transaction
     }
     
     /**
-     * Adding a new article
+     * Processing article adding
      * 
      * @return ViewModel 
      */
@@ -719,42 +733,20 @@ class DraftController extends ActionController
             'config'    => Pi::service('module')->config('', $this->getModule()),
             'elements'  => $options['elements'],
         ));
-        $this->view()->setTemplate('draft-form-edit');
-        
-        if ($this->request->isPost()) {
-            $jump   = Service::getParam($this, 'jump', '');
-            
-            $form->setInputFilter(new DraftEditFilter($options));
-            $form->setValidationGroup(Draft::getAvailableFields());
-            $form->setData($this->request->getPost());
-
-            if (!$form->isValid()) {
-                return $this->renderForm($form, __('There are some error occured!'), true);
-            }
-            
-            $data = $form->getData();
-            $id   = $this->saveDraft($data);
-            if (!$id) {
-                return $this->renderForm($form, __('Can not save data!'), true);
-            }
-            if (false !== array_search($jump, array('publish', 'preview'))) {
-                $this->redirect()->toRoute('', array(
-                    'action' => $jump,
-                    'id'     => $id,
-                ));
-            } else {
-                $this->redirect()->toRoute('', array(
-                    'action'     =>'draft',
-                    'controller' => 'my',
-                ));
-            }
-        }
+        $this->view()->setTemplate('draft-edit');
     }
     
+    /**
+     * Processing article editing
+     * 
+     * @return ViewModel 
+     */
     public function editAction()
     {
-        $id     = Service::getParam($this, 'id', 0);
-        $module = $this->getModule();
+        $id       = Service::getParam($this, 'id', 0);
+        $module   = $this->getModule();
+        $options  = Service::getFormConfig();
+        $elements = $options['elements'];
 
         if (!$id) {
             return ;
@@ -820,7 +812,7 @@ class DraftController extends ActionController
         $featureImage = $data['image'] ? Pi::url($data['image']) : '';
         $featureThumb = $data['image'] ? Pi::url(Upload::getThumbFromOriginal($data['image'])) : '';
 
-        $form = $this->getDraftForm('edit');
+        $form = $this->getDraftForm('edit', $options);
         /**#@+
         * Added by Zongshu Lin
         */
@@ -830,7 +822,7 @@ class DraftController extends ActionController
         $form->setData($data);
 
         // Get author info
-        if ($data['author']) {
+        if (isset($elements['author']) and $data['author']) {
             $author = $this->getModel('author')->find($data['author']);
             if ($author) {
                 $this->view()->assign('author', array(
@@ -852,25 +844,27 @@ class DraftController extends ActionController
         }
 
         // Get related articles
-        $related = $relatedIds = array();
-        if (Article::FIELD_RELATED_TYPE_CUSTOM == $data['related_type'] && !empty($row->related)) {
-            $relatedIds = array_flip($row->related);
+        if (isset($elements['related'])) {
+            $related = $relatedIds = array();
+            if (Article::FIELD_RELATED_TYPE_CUSTOM == $data['related_type'] && !empty($row->related)) {
+                $relatedIds = array_flip($row->related);
 
-            $related = Service::getArticlePage(array('id' => $row->related), 1, null, null, null, $module);
+                $related = Service::getArticlePage(array('id' => $row->related), 1, null, null, null, $module);
 
-            foreach ($related as $item) {
-                if (array_key_exists($item['id'], $relatedIds)) {
-                    $relatedIds[$item['id']] = $item;
+                foreach ($related as $item) {
+                    if (array_key_exists($item['id'], $relatedIds)) {
+                        $relatedIds[$item['id']] = $item;
+                    }
                 }
-            }
 
-            $related = array_filter($relatedIds, function($var) {
-                return is_array($var);
-            });
+                $related = array_filter($relatedIds, function($var) {
+                    return is_array($var);
+                });
+            }
         }
 
         // Get assets
-        $attachments = $images = array();
+        /*$attachments = $images = array();
         $resultsetDraftAsset = $this->getModel('draft_asset')->select(array(
             'draft' => $id,
         ));
@@ -918,11 +912,11 @@ class DraftController extends ActionController
                     'thumb_url'   => Pi::url(Upload::getThumbFromOriginal($asset->path)),
                 );
             }
-        }
+        }*/
 
         $this->setModuleConfig();
         $this->view()->assign(array(
-            'title'         => __('Edit article'),
+            'title'         => __('Edit Article'),
             'form'          => $form,
             'draft'         => $row,
             'related'       => $related,
@@ -932,159 +926,48 @@ class DraftController extends ActionController
             'featureThumb'  => $featureThumb,
             'config'        => Pi::service('module')->config('', $module),
             'from'          => Service::getParam($this, 'from', ''),
+            'elements'      => $elements,
             /**#@+
             * Added by Zongshu Lin
             */
-            'rules'         => $rules,
+            //'rules'         => $rules,
             /**#@-*/
         ));
-        $this->view()->setTemplate('draft-form-edit');
-        return;
     }
 
-    public function formEditAction()
-    {
-        
-    }
-
-    public function editAction()
-    {
-        $jump   = Service::getParam($this, 'jump', '');
-        $module = $this->getModule();
-
-        $form = $this->getDraftForm('edit');
-        $form->setInputFilter(new DraftEditFilter);
-        $form->setValidationGroup(Draft::getAvailableFields());
-        $form->setData($this->request->getPost());
-
-        if ($form->isValid()) {
-            $data = $form->getData();
-
-            $id = $this->saveDraft($data);
-
-            if (false !== array_search($jump, array('preview', 'form-reject'))) {
-                $this->redirect()->toRoute('', array(
-                    'action' => $jump,
-                    'id'     => $id,
-                ));
-            } else {
-                $this->redirect()->toRoute('', array(
-                    'action'     =>'draft',
-                    'controller' => 'my',
-                ));
-            }
-
-            $this->view()->setTemplate(false);
-
-        } else {
-            $draftModel = $this->getModel('draft');
-            $id         = Service::getParam($this, 'id', 0);
-
-            $row        = $draftModel->find($id);
-
-            if ($row) {
-                // Get author info
-                if ($row->author) {
-                    $author = $this->getModel('author')->find($row->author);
-                    if ($author) {
-                        $this->view()->assign('author', $author);
-                    }
-                }
-
-                // Get related articles
-                if (Article::FIELD_RELATED_TYPE_CUSTOM == $row->related_type && !empty($row->related)) {
-                    $relatedIds = array_flip($row->related);
-
-                    $related = Service::getRelatedArticles($row->related, null, $module);
-
-                    foreach ($related as $item) {
-                        if (array_key_exists($item['id'], $relatedIds)) {
-                            $relatedIds[$item['id']] = $item;
-                        }
-                    }
-
-                    $related = array_filter($relatedIds, function($var) {
-                        return is_array($var);
-                    });
-
-                    $this->view()->assign('related', $related);
-                }
-            }
-
-            $this->setModuleConfig();
-            $this->view()->assign(array(
-                'title'     => __('Edit article'),
-                'form'      => $form,
-                'draft'     => $row,
-                'config'    => Pi::service('module')->config('', $this->getModule()),
-            ));
-
-            $this->view()->setTemplate('draft-form-edit');
-            return;
-        }
-    }
-
+    /**
+     * Processing draft deletion
+     * 
+     * @throws \Exception 
+     */
     public function deleteAction()
     {
         $id     = Service::getParam($this, 'id', '');
         $ids    = array_filter(explode(',', $id));
         $from   = Service::getParam($this, 'from', '');
 
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        if ('all' === Service::getParam($this, 'from')) {
-            $role = PermController::PERM_EDITOR;
-        } else {
-            $role = PermController::PERM_WRITER;
-        }
-        $draftModel  = $this->getModel('draft');
-        $rowset      = $draftModel->select(array('id' => $ids));
-        $draftStatus = 0;
-        foreach ($rowset as $row) {
-            $draftStatus = $row->status;
-            break;
-        }
-        $status = '';
-        switch ((int) $draftStatus) {
-            case 1:
-                $status = 'draft';
-                break;
-            case 2:
-                $status = 'pending';
-                break;
-            case 3:
-                $status = 'rejected';
-                break;
-        }
-        $rules    = Role::getAllowedResources($this, $role, $status);
-        if (!$rules['delete']) {
-            return $this->jumpToDenied('__denied__');
-        }
-        /**#@-*/
-            
-        if ($ids) {
-            Service::deleteDraft($ids, $this->getModule());
-
-            if ($from) {
-                $from = urldecode($from);
-                $this->redirect()->toUrl($from);
-            } else {
-                // Go to list page
-                $this->redirect()->toRoute('', array(
-                    'action'        => 'draft',
-                    'controller'    => 'my',
-                ));
-            }
-            $this->view()->setTemplate(false);
-        } else {
+        if (empty($ids)) {
             throw new \Exception(__('Invalid draft id'));
         }
+        
+        Service::deleteDraft($ids, $this->getModule());
+
+        if ($from) {
+            $from = urldecode($from);
+            $this->redirect()->toUrl($from);
+        } else {
+            // Go to list page
+            $this->redirect()->toRoute('', array(
+                'action'        => 'list',
+                'controller'    => 'draft',
+                'status'        => 'draft',
+            ));
+        }
+        $this->view()->setTemplate(false);
     }
 
     /**
-     * Publishing article, the article is still storing in draft table, 
-     * but status is changed to pending
+     * Processing article publishing
      * 
      * @return ViewModel
      */
@@ -1099,10 +982,7 @@ class DraftController extends ActionController
         $options = Service::getFormConfig();
         $form    = $this->getDraftForm('save', $options);
         $form->setInputFilter(new DraftEditFilter($options));
-        $availableFields = Draft::getAvailableFields();
-        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit');
-        $fields          = array_merge($remainFields, array_intersect($availableFields, $options['elements']));
-        $form->setValidationGroup($fields);
+        $form->setValidationGroup(Draft::getValidFields());
         $form->setData($this->request->getPost());
 
         if (!$form->isValid()) {
@@ -1139,113 +1019,110 @@ class DraftController extends ActionController
         return $result;
     }
 
-    public function formRejectAction()
-    {
-        $id = Service::getParam($this, 'id', 0);
-
-        if ($id) {
-            $form = new DraftRejectForm;
-            $form->setData(array('id' => $id));
-
-            $this->view()->assign(array(
-                'form'  => $form,
-                'title' => __('Reject pending draft')
-            ));
-        }
-    }
-
+    /**
+     * Processing article rejected, article status will be changed to rejected
+     * 
+     * @return ViewModel 
+     */
     public function rejectAction()
     {
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_TRUE,
+            'status'    => self::RESULT_TRUE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        $id   = Service::getParam($this, 'id', 0);
-        $memo = Service::getParam($this, 'memo', '');
+        $id           = Service::getParam($this, 'id', 0);
+        $rejectReason = Service::getParam($this, 'memo', '');
 
-        if ($id) {
-            $model = $this->getModel('draft');
-            $row = $model->find($id);
-
-            if ($row && $row->status == Draft::FIELD_STATUS_PENDING) {
-                $row->status = Draft::FIELD_STATUS_REJECTED;
-                $row->memo = $memo;
-                $row->save();
-
-                $result['status']   = AjaxController::AJAX_RESULT_TRUE;
-                $result['data']['redirect'] = $this->url('', array('action'=>'rejected', 'controller' => 'my'));
-            } else {
-                $result['message'] = __('Invalid draft.');
-            }
-        } else {
-            $result['message'] = __('Not enough parameter.');
+        if (!$id) {
+            return array('message' => __('Not enough parameter.'));
         }
+        
+        $model = $this->getModel('draft');
+        $row   = $model->find($id);
+        if (!$row->id or $row->status != Draft::FIELD_STATUS_PENDING) {
+            return array('message' => __('Invalid draft.'));
+        }
+        
+        $row->status        = Draft::FIELD_STATUS_REJECTED;
+        $row->reject_reason = $rejectReason;
+        $row->save();
+
+        $result['status']   = self::RESULT_TRUE;
+        $result['data']['redirect'] = $this->url('', array('action'=>'list', 'controller' => 'draft'));
 
         return $result;
     }
 
+    /**
+     * Processing article approving.
+     * 
+     * @return ViewModel 
+     */
     public function approveAction()
     {
         /**#@+
         * Added by Zongshu Lin
         */
-        $rules = Role::isAllowed(PermController::PERM_EDITOR, 'pending-approve-reject');
+        /*$rules = Role::isAllowed(PermController::PERM_EDITOR, 'pending-approve-reject');
         if (!isset($rules)) {
             return array(
                 'status'   => PermController::AJAX_RESULT_FALSE,
                 'message'  => PermController::DENIED_MESSAGE,
             );
-        }
+        }*/
         /**#@-*/
         
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_FALSE,
+            'status'    => self::RESULT_FALSE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        $form = $this->getDraftForm('save');
-        $form->setInputFilter(new DraftEditFilter());
-        $form->setValidationGroup(Draft::getAvailableFields());
+        $options = Service::getFormConfig();
+        $form    = $this->getDraftForm('save', $options);
+        $form->setInputFilter(new DraftEditFilter($options));
+        $form->setValidationGroup(Draft::getValidFields());
         $form->setData($this->request->getPost());
 
-        if ($form->isValid()) {
-            $data = $form->getData();
-
-            $validate = $this->validateForm($data);
-
-            if ($validate['status']) {
-                $id = $this->saveDraft($data);
-
-                if ($id) {
-                    $result = $this->approve($id);
-                    $result['message'] = __('approve successfully.');
-                } else {
-                    $result['message'] = __('Failed to save draft.');
-                }
-            } else {
-                $form->setMessages($validate['message']);
-
-                $result = $validate;
-            }
-        } else {
-            $result['message'] = $form->getMessages();
+        if (!$form->isValid()) {
+            return array('message' => $form->getMessages());
         }
+        
+        $data     = $form->getData();
+        $validate = $this->validateForm($data, null, $options['elements']);
+
+        if (!$validate['status']) {
+            $form->setMessages($validate['message']);
+            return $validate;
+        }
+        
+        $id = $this->saveDraft($data);
+
+        if (!$id) {
+            return array('message' => __('Failed to save draft.'));
+        }
+        
+        $result = $this->approve($id, $options['elements']);
+        $result['message'] = __('approve successfully.');
 
         return $result;
     }
 
+    /**
+     * Processing batch article approving 
+     */
     public function batchApproveAction()
     {
         $id     = Service::getParam($this, 'id', '');
         $ids    = array_filter(explode(',', $id));
         $from   = Service::getParam($this, 'from', '');
 
+        $options = Service::getFormConfig();
         if ($ids) {
             foreach ($ids as $id) {
-                $this->approve($id);
+                $this->approve($id, $options['elements']);
             }
         }
 
@@ -1254,16 +1131,15 @@ class DraftController extends ActionController
             $this->redirect()->toUrl($from);
         } else {
             // Go to list page
-            $this->redirect()->toRoute('', array('action' => 'published'));
+            $this->redirect()->toRoute('', array('controller' =>'article', 'action' => 'published'));
         }
-        $this->view()->setTemplate(false);
     }
 
     public function previewAction()
     {
         $id = Service::getParam($this, 'id', 0);
 
-        $this->redirect()->toRoute('default', array(
+        $this->redirect()->toRoute('', array(
             'module'     => $this->getModule(),
             'controller' => 'preview',
             'action'     => 'single-page',
@@ -1308,22 +1184,5 @@ class DraftController extends ActionController
         }
 
         return $result;
-    }
-
-    public function downloadAssetAction()
-    {
-        Pi::service('log')->active(false);
-
-        $id = Service::getParam($this, 'id', 0);
-
-        $row = $this->getModel('draft_asset')->find($id);
-        if ($row) {
-            $options = array(
-                'file'     => Pi::path($row->path),
-                'fileName' => $row->original_name,
-            );
-
-            Upload::httpOutputFile($options);
-        }
     }
 }
