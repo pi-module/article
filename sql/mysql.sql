@@ -144,5 +144,5 @@ CREATE TABLE `{statistics}` (
 
   PRIMARY KEY           (`id`),
   UNIQUE KEY `article`  (`article`),
-  KEY `article_visits`  (`article`, `visits`),
+  KEY `article_visits`  (`article`, `visits`)
 );

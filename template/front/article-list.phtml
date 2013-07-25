@@ -1,0 +1,37 @@
+<div class="main-block">
+    <div class="block-header-bg"></div>    
+    <div class="block-header block-header40 mb10" style="padding-right: 0 !important;">
+        <div class="pull-right muted">
+        <?php 
+        $count = count($categories);
+        $index = 0;
+        foreach ($categories as $category) {
+            if ($category['id'] == $currentCategory) {
+                continue;
+            } ?>
+            <a href="<?php echo $this->escape($category['url']) ?>" title="<?php echo $this->escape($category['category_title']) ?>"><?php echo $this->escape($category['category_title']) ?></a>
+            <?php if (++$index !== ($count - 1)) { ?>
+                <span class="divider"> | </span>
+            <?php } ?>
+        <?php } ?>
+        </div>
+        <span class="title title18"><?php echo $this->escape($breadCrumbs['category']['name']) ?></span>
+    </div>
+    <div>
+        <ul class="list list14">
+            <?php $index = 0; ?>
+            <?php foreach ($articles as $row) { ?>
+                <li>
+                    <div class="list-hover">
+                        <span class="muted pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
+                        <a target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
+                    </div>
+                </li>
+                <?php if (!(++$index % 5)) { ?>
+                    <li class="dashed"></li>    
+                <?php } ?>    
+            <?php } ?>   
+        </ul>
+        <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-centered')); ?>
+    </div>
+</div>
