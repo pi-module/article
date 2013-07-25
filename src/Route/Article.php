@@ -90,6 +90,7 @@ class Article extends Standard
                 list($ignored, $category) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $controller = 'category';
                 $action     = 'list';
+                $category   = urldecode($category);
             } elseif (preg_match('/^tag-/', $urlParams[0])) {
                 list($ignored, $tag) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $tag        = urldecode($tag);
@@ -167,7 +168,7 @@ class Article extends Standard
             $url .= 'list';
             unset($mergedParams['list']);
         } elseif (isset($mergedParams['category'])) {
-            $url .= 'list' . $this->keyValueDelimiter . $mergedParams['category'];
+            $url .= 'list' . $this->keyValueDelimiter . urlencode($mergedParams['category']);
             unset($mergedParams['category']);
         } elseif (isset($mergedParams['tag'])) {
             $url .= 'tag' . $this->keyValueDelimiter . urlencode($mergedParams['tag']);
