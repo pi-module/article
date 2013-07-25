@@ -351,62 +351,6 @@ class ArticleController extends ActionController
     }
 
     /**
-     * Listing all articles for users to review. 
-     */
-    public function listAction()
-    {
-        $page   = Service::getParam($this, 'page', 1);
-        
-        $where  = array(
-            'status'           => Article::FIELD_STATUS_PUBLISHED,
-            'active'           => 1,
-            'time_publish < ?' => time(),
-        );
-        
-        //@todo Get limit from module config
-        $limit  = (int) $this->config('page_limit_front');
-        $limit  = $limit ?: 40;
-        $offset = $limit * ($page - 1);
-
-        $model  = $this->getModel('article');
-        $select = $model->select()->where($where);
-        $select->order('time_publish DESC')->offset($offset)->limit($limit);
-
-        $resultset = $model->selectWith($select);
-        $items     = array();
-        foreach ($resultset as $row) {
-            $items[$row->id] = $row->toArray();
-            $items[$row->id]['url'] = $this->url('', array('action' => 'detail', 'id' => $row->id));
-        }
-
-        // Total count
-        $select     = $model->select()->where($where)->columns(array('total' => new Expression('count(id)')));
-        $articleCountResultset = $model->selectWith($select);
-        $totalCount = intval($articleCountResultset->current()->total);
-
-        // Paginator
-        $paginator = Paginator::factory($totalCount);
-        $paginator->setItemCountPerPage($limit)
-            ->setCurrentPageNumber($page)
-            ->setUrlOptions(array(
-                'pageParam' => 'page',
-                'router'    => $this->getEvent()->getRouter(),
-                'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
-                'params'    => array(
-                    'module'        => $this->getModule(),
-                    'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                    'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
-                ),
-            ));
-
-        $this->view()->assign(array(
-            'title'     => __('All Articles'),
-            'articles'  => $items,
-            'paginator' => $paginator,
-        ));
-    }
-
-    /**
      * Processing published article list 
      */
     public function publishedAction()

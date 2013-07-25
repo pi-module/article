@@ -25,8 +25,9 @@ return array(
         'options'  => array(
             'prefix'          => '/article',
             'structure_delimiter'   => '/',
-            'param_delimiter'       => '-',
+            'param_delimiter'       => '/',
             'key_value_delimiter'   => '-',
+            'route'                 => '/article',
             'defaults'        => array(
                 'module'     => 'article',
                 'controller' => 'index',
