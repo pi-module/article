@@ -22,27 +22,27 @@ use Pi;
 use Pi\Application\Model\Model;
 use Zend\Db\Sql\Expression;
 
-class Article extends Model
+class Extended extends Model
 {
-    const FIELD_STATUS_PUBLISHED = 11;
-    const FIELD_STATUS_DELETED   = 12;
-
-    const FIELD_RELATED_TYPE_OFF    = 0;
-    const FIELD_RELATED_TYPE_AUTO   = 1;
-    const FIELD_RELATED_TYPE_CUSTOM = 2;
-
-    const FIELD_SEO_SITE_DEFAULT        = 0;
-    const FIELD_SEO_TITLE_ARTICLE       = 1;
-    const FIELD_SEO_TITLE_CATEGORY      = 2;
-    const FIELD_SEO_KEYWORDS_TAG        = 1;
-    const FIELD_SEO_KEYWORDS_CATEGORY   = 2;
-    const FIELD_SEO_DESCRIPTION_SUMMARY = 1;
-
-    const PAGE_BREAK_PATTERN = '|(<p class="pagebreak page-title">.*?</p>)|is';
-
-    public static function getDefaultColumns()
+    public function getValidColumns()
     {
-        return array('id', 'subject', 'image', 'uid', 'author', 'time_publish', 'category', 'active');
+        $table = $this->getTable();
+        $sql = 'select COLUMN_NAME as name from information_schema.columns where table_name=\'' . $table . '\'';
+        try {
+            $rowset = Pi::db()->getAdapter()->query($sql, 'prepare')->execute();
+        } catch (\Exception $exception) {
+            return false;
+        }
+        
+        $fields = array();
+        foreach ($rowset as $row) {
+            if (in_array($row['name'], array('id', 'article'))) {
+                continue;
+            }
+            $fields[] = $row['name'];
+        }
+        
+        return $fields;
     }
 
     /**

@@ -606,13 +606,15 @@ class Service
                 }
 
                 if (empty($columns) || in_array('subject', $columns)) {
-                    $row['url'] = Pi::engine()->application()
+                    $url = Pi::engine()->application()
                                               ->getRouter()
                                               ->assemble(array(
+                                                  'module'     => $module,
                                                   'controller' => 'article',
                                                   'action'     => 'detail',
                                                   'id'         => $row['id'],
                                               ), array('name' => 'default'));
+                    $row['url'] = $url;
                 }
                 
                 $row['visits'] = $statis[$row['id']];
