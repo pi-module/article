@@ -21,13 +21,28 @@ namespace Module\Article\Model;
 use Pi;
 use Pi\Application\Model\Model;
 
+/**
+ * Public class for operating related table 
+ */
 class Related extends Model
 {
+    /**
+     * Getting default table fields
+     * 
+     * @return array 
+     */
     public static function getDefaultColumns()
     {
         return array('id', 'related');
     }
 
+    /**
+     * Saving related article data into table
+     * 
+     * @param int    $article
+     * @param array  $data
+     * @return null 
+     */
     public function saveRelated($article, $data)
     {
         // Delete old related articles
@@ -47,6 +62,12 @@ class Related extends Model
         return;
     }
 
+    /**
+     * Getting related articles
+     * 
+     * @param int  $article
+     * @return array 
+     */
     public function getRelated($article)
     {
         $result = array();

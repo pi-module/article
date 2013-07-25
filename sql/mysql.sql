@@ -16,6 +16,7 @@ CREATE TABLE `{article}` (
   `time_submit`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_publish`    int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `user_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
 
   PRIMARY KEY                     (`id`),
   KEY `uid`                       (`uid`),
@@ -48,11 +49,13 @@ CREATE TABLE `{field}` (
 
 CREATE TABLE `{compiled}` (
   `id`              int(10) UNSIGNED                NOT NULL AUTO_INCREMENT,
+  `name`            varchar(64)                     NOT NULL DEFAULT '',
   `article`         int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `type`            varchar(64)                     NOT NULL DEFAULT '',
   `content`         longtext                        NOT NULL DEFAULT '',
 
   PRIMARY KEY                     (`id`),
+  UNIQUE KEY                      (`name`),
   KEY `article_type`              (`article`, `type`)
 );
 

@@ -43,17 +43,14 @@ class Compiled
     public static function getContent($article, $type)
     {
         $module = Pi::service('module')->current();
-        $where  = array(
-            'article'  => $article,
-            'type'     => empty($type) ? 'html' : $type,
-        );
+        $type   = empty($type) ? 'html' : $type;
+        $name   = $article . '-' . $type;
         
         // Reading article content from compiled table
         $modelCompiled = Pi::model('compiled', $module);
-        $rowCompiled   = $modelCompiled->select($where)->toArray();
-        $compiled      = array_shift($rowCompiled);
-        if (!empty($compiled)) {
-            return $compiled['content'];
+        $rowCompiled   = $modelCompiled->find($name, 'name');
+        if (!empty($rowCompiled->id)) {
+            return $rowCompiled->content;
         }
         
         // Reading article content from article table
@@ -66,6 +63,7 @@ class Compiled
         // Compiling article content and saving into compiled table
         $compiledContent = self::compiled($rowArticle->markup, $rowArticle->content, $type);
         $data            = array(
+            'name'       => $name,
             'article'    => $rowArticle->id,
             'type'       => $type,
             'content'    => $compiledContent,

@@ -33,6 +33,7 @@ use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Cache;
 use Module\Article\Role;
+use Module\Article\Model\Extended;
 
 /**
  * Public class for article 
@@ -44,7 +45,7 @@ class ArticleController extends ActionController
      */
     public function indexAction()
     {
-        
+
     }
     
     /**
@@ -119,114 +120,94 @@ class ArticleController extends ActionController
         ));
     }
 
+    /**
+     * Deleting published articles
+     * 
+     * @return ViewModel 
+     */
     public function deleteAction()
     {
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        $rules = Role::getAllowedResources($this);
-        if (!$rules['delete']) {
-            return $this->jumpToDenied('__denied__');
-        }
-        /**#@-*/
-        
         $id     = Service::getParam($this, 'id', '');
         $ids    = array_filter(explode(',', $id));
         $from   = Service::getParam($this, 'from', '');
 
-        if ($ids) {
-            $module         = $this->getModule();
-            $modelArticle   = $this->getModel('article');
-            $modelAsset     = $this->getModel('asset');
-
-            $resultsetArticle = $modelArticle->select(array('id' => $ids));
-
-            // Step operation
-            foreach ($resultsetArticle as $article) {
-                // Delete channel
-                Pi::service('api')->channel(
-                    array('entity', 'deleteEntity'),
-                    $module,
-                    $article->id
-                );
-
-                // Delete push
-                Pi::service('api')->channel(
-                    array('entity', 'deletePush'),
-                    $module,
-                    $article->id
-                );
-
-                // Delete feature image
-                if ($article->image) {
-                    unlink(Pi::path($article->image));
-                    unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
-                }
-            }
-
-            // Batch operation
-            // Delete tag
-            if ($this->config('enable_tag')) {
-                Pi::service('tag')->delete($module, $ids);
-            }
-            // Delete related articles
-            $this->getModel('related')->delete(array('article' => $ids));
-
-            // Delete partnumber
-            Pi::service('api')->partnumber->delete($module, $ids);
-
-            // Delete manufacturer
-            $this->getModel('manufacturer')->delete(array('article' => $ids));
-
-            // Delete visits
-            $this->getModel('visit')->delete(array('article' => $ids));
-
-            // Delete assets
-            $resultsetAsset = $modelAsset->select(array('article' => $ids));
-            foreach ($resultsetAsset as $asset) {
-                unlink(Pi::path($asset->path));
-
-                if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                    unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-                }
-            }
-            $modelAsset->delete(array('article' => $ids));
-
-            // Update status
-            $modelArticle->update(
-                array('status' => Article::FIELD_STATUS_DELETED),
-                array('id' => $ids)
-            );
-
-            // Clear cache
-            Pi::service('render')->flushCache($module);
-            Pi::service('render')->flushCache('channel');
+        if (empty($ids)) {
+            return $this->jumpTo404(__('Invalid article ID'));
         }
+        
+        $module         = $this->getModule();
+        $modelArticle   = $this->getModel('article');
+        //$modelAsset     = $this->getModel('asset');
+
+        $resultsetArticle = $modelArticle->select(array('id' => $ids));
+
+        // Step operation
+        foreach ($resultsetArticle as $article) {
+            // Delete feature image
+            if ($article->image) {
+                unlink(Pi::path($article->image));
+                unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
+            }
+        }
+
+        // Batch operation
+        // Deleting extended fields
+        $this->getModel('extended')->delete(array('article' => $ids));
+        
+        // Deleting statistics
+        $this->getModel('statistics')->delete(array('article' => $ids));
+        
+        // Deleting compiled article
+        $this->getModel('compiled')->delete(array('article' => $ids));
+        
+        // Delete tag
+        if ($this->config('enable_tag')) {
+            Pi::service('tag')->delete($module, $ids);
+        }
+        // Delete related articles
+        $this->getModel('related')->delete(array('article' => $ids));
+
+        // Delete visits
+        $this->getModel('visit')->delete(array('article' => $ids));
+
+        // Delete assets
+        /*$resultsetAsset = $modelAsset->select(array('article' => $ids));
+        foreach ($resultsetAsset as $asset) {
+            unlink(Pi::path($asset->path));
+
+            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
+                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
+            }
+        }
+        $modelAsset->delete(array('article' => $ids));*/
+
+        // Update status
+        $modelArticle->update(
+            array('status' => Article::FIELD_STATUS_DELETED),
+            array('id' => $ids)
+        );
+
+        // Clear cache
+        Pi::service('render')->flushCache($module);
 
         if ($from) {
             $from = urldecode($from);
             $this->redirect()->toUrl($from);
         } else {
             // Go to list page
-            $this->redirect()->toRoute('', array(
+            return $this->redirect()->toRoute('', array(
                 'controller' => 'article',
-                'action'     => 'published'
+                'action'     => 'published',
+                'from'       => 'all',
             ));
         }
-        $this->view()->setTemplate(false);
     }
 
+    /**
+     * Active or deactivate article 
+     */
     public function activateAction()
-    {
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        $rules = Role::getAllowedResources($this);
-        if (!$rules['activate']) {
-            return $this->jumpToDenied('__denied__');
-        }
-        /**#@-*/
-        
+    {      
         $id     = Service::getParam($this, 'id', '');
         $ids    = array_filter(explode(',', $id));
         $status = Service::getParam($this, 'status', 0);
@@ -237,31 +218,6 @@ class ArticleController extends ActionController
             $modelArticle   = $this->getModel('article');
             $modelArticle->setActiveStatus($ids, $status ? 1 : 0);
 
-            // Update channel info
-            $resultsetArticle = $modelArticle->select(array('id' => $ids));
-            foreach ($resultsetArticle as $row) {
-                Pi::service('api')->channel(
-                    array('entity', 'updateEntity'),
-                    $module,
-                    $row->id,
-                    array(
-                        'time'          => $row->time_publish,
-                        'active'        => $row->active,
-                        'recommended'   => $row->recommended,
-                    )
-                );
-                Pi::service('api')->channel(
-                    array('entity', 'updatePush'),
-                    $module,
-                    $row->id,
-                    array(
-                        'time'          => $row->time_publish,
-                        'active'        => $row->active,
-                        'recommended'   => $row->recommended,
-                    )
-                );
-            }
-
             // Clear cache
             Pi::service('render')->flushCache($module);
             Pi::service('render')->flushCache('channel');
@@ -272,122 +228,117 @@ class ArticleController extends ActionController
             $this->redirect()->toUrl($from);
         } else {
             // Go to list page
-            $this->redirect()->toRoute('', array('action' => 'published'));
+            $this->redirect()->toRoute('', array('action' => 'published', 'from' => 'all'));
         }
         $this->view()->setTemplate(false);
     }
 
+    /**
+     * Editing a published article, the article details will be copy to draft table,
+     * and then redirecting to edit page.
+     * 
+     * @return ViewModel 
+     */
     public function editAction()
     {
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        $rules = Role::getAllowedResources($this);
-        if (!$rules['edit']) {
-            return $this->jumpToDenied('__denied__');
-        }
-        /**#@-*/
-        
         $id     = Service::getParam($this, 'id', 0);
         $module = $this->getModule();
 
-        if ($id) {
-            // Check if draft exists
-            $draftModel = $this->getModel('draft');
-            $rowDraft   = $draftModel->find($id, 'article');
-
-            if ($rowDraft) {
-//                $draftId = $rowDraft->id;
-                Service::deleteDraft($rowDraft->id, $module);
-            }
-
-            // Create new draft if no draft exists
-            $model = $this->getModel('article');
-            $row   = $model->find($id);
-
-            if ($row && $row->status == Article::FIELD_STATUS_PUBLISHED) {
-                $draft = array(
-                    'article'         => $row->id,
-                    'subject'         => $row->subject,
-                    'subtitle'        => $row->subtitle,
-                    'summary'         => $row->summary,
-                    'content'         => $row->content,
-                    'user'            => $row->user,
-                    'author'          => $row->author,
-                    'source'          => $row->source,
-                    'pages'           => $row->pages,
-                    'category'        => $row->category,
-                    'channel'         => $row->channel,
-                    'recommended'     => $row->recommended,
-                    'status'          => Draft::FIELD_STATUS_DRAFT,
-                    'time_save'       => time(),
-                    'time_publish'    => $row->time_publish,
-                    'time_update'     => $row->time_update,
-                    'seo_title'       => $row->seo_title,
-                    'seo_keywords'    => $row->seo_keywords,
-                    'seo_description' => $row->seo_description,
-                    'slug'            => $row->slug,
-                    'related_type'    => $row->related_type,
-                    'image'           => $row->image,
-                );
-
-                // Get related articles
-                $relatedModel = $this->getModel('related');
-                $related = $relatedModel->getRelated($id);
-                $draft['related'] = $related;
-
-                // Get tag
-                if ($this->config('enable_tag')) {
-                    $draft['tag'] = Pi::service('tag')->get($module, $id);
-                }
-
-                // Get partnumber
-                $draft['partnumber']   = Pi::service('api')->partnumber->get($module, $id);
-
-                // Get manufacturer
-                $draft['manufacturer'] = $this->getModel('manufacturer')->getRelation($id);
-
-                // Save as draft
-                $draftRow = $draftModel->createRow($draft);
-                $draftRow->save();
-
-                $draftId = $draftRow->id;
-
-                // Copy assets
-                $resultsetAsset = $this->getModel('asset')->select(array(
-                    'article' => $id,
-                ));
-                $modelDraftAsset = $this->getModel('draft_asset');
-                foreach ($resultsetAsset as $asset) {
-                    $data = array(
-                        'original_name' => $asset->original_name,
-                        'name'          => $asset->name,
-                        'extension'     => $asset->extension,
-                        'size'          => $asset->size,
-                        'mime_type'     => $asset->mime_type,
-                        'type'          => $asset->type,
-                        'path'          => $asset->path,
-                        'time_create'   => $asset->time_create,
-                        'user'          => $asset->user,
-                        'draft'         => $draftId,
-                        'published'     => 1,
-                    );
-//                        $data['path'] = Upload::copyAttachmentToTmp($attachment->path, $module);
-                    $rowDraftAsset = $modelDraftAsset->createRow($data);
-                    $rowDraftAsset->save();
-                }
-            }
+        if (!$id) {
+            return $this->jumpTo404(__('Invalid article ID'));
         }
+        
+        // Check if draft exists
+        $draftModel = $this->getModel('draft');
+        $rowDraft   = $draftModel->find($id, 'article');
+
+        if ($rowDraft) {
+            Service::deleteDraft($rowDraft->id, $module);
+        }
+
+        // Create new draft if no draft exists
+        $model = $this->getModel('article');
+        $row   = $model->find($id);
+
+        if (!$row->id or $row->status != Article::FIELD_STATUS_PUBLISHED) {
+            return $this->jumpTo404(__('Can not create draft'));
+        }
+        
+        $draft = array(
+            'article'         => $row->id,
+            'subject'         => $row->subject,
+            'subtitle'        => $row->subtitle,
+            'summary'         => $row->summary,
+            'content'         => $row->content,
+            'uid'             => $row->uid,
+            'author'          => $row->author,
+            'source'          => $row->source,
+            'pages'           => $row->pages,
+            'category'        => $row->category,
+            'status'          => Draft::FIELD_STATUS_DRAFT,
+            'time_save'       => time(),
+            'time_submit'     => $row->time_submit,
+            'time_publish'    => $row->time_publish,
+            'time_update'     => $row->time_update,
+            'image'           => $row->image,
+        );
+        
+        // Getting extended fields
+        $modelExtended = $this->getModel('extended');
+        $rowExtended   = $modelExtended->find($row->id, 'article');
+        $extendColumns = $modelExtended->getValidColumns();
+        foreach ($extendColumns as $col) {
+            $draft[$col] = $rowExtended->$col;
+        }
+
+        // Get related articles
+        $relatedModel = $this->getModel('related');
+        $related      = $relatedModel->getRelated($id);
+        $draft['related'] = $related;
+
+        // Get tag
+        if ($this->config('enable_tag')) {
+            $draft['tag'] = Pi::service('tag')->get($module, $id);
+        }
+
+        // Save as draft
+        $draftRow = $draftModel->createRow($draft);
+        $draftRow->save();
+
+        $draftId = $draftRow->id;
+
+        // Copy assets
+        /*$resultsetAsset = $this->getModel('asset')->select(array(
+            'article' => $id,
+        ));
+        $modelDraftAsset = $this->getModel('draft_asset');
+        foreach ($resultsetAsset as $asset) {
+            $data = array(
+                'original_name' => $asset->original_name,
+                'name'          => $asset->name,
+                'extension'     => $asset->extension,
+                'size'          => $asset->size,
+                'mime_type'     => $asset->mime_type,
+                'type'          => $asset->type,
+                'path'          => $asset->path,
+                'time_create'   => $asset->time_create,
+                'user'          => $asset->user,
+                'draft'         => $draftId,
+                'published'     => 1,
+            );
+//                        $data['path'] = Upload::copyAttachmentToTmp($attachment->path, $module);
+            $rowDraftAsset = $modelDraftAsset->createRow($data);
+            $rowDraftAsset->save();
+        }*/
 
         // Redirect to edit draft
         if ($draftId) {
-            $this->redirect()->toRoute('', array(
-                'action'     => 'form-edit',
+            return $this->redirect()->toRoute('', array(
+                'action'     => 'edit',
                 'controller' => 'draft',
                 'id'         => $draftId,
                 'from'       => 'all',
             ));
-            $this->view()->setTemplate(false);
         }
     }
 
