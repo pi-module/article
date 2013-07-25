@@ -60,6 +60,7 @@ return array(
             'block'         => 'block.php',
             'config'        => 'config.php',
             'route'         => 'route.php',
+            'page'          => 'page.php',
         ),
     ),
 );
