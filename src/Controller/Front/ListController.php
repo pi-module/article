@@ -52,11 +52,13 @@ class ListController extends ActionController
         $select = $model->select()->where($where);
         $select->order('time_publish DESC')->offset($offset)->limit($limit);
 
+        $route  = '.' . Service::getRouteName();
         $resultset = $model->selectWith($select);
         $items     = array();
         foreach ($resultset as $row) {
             $items[$row->id] = $row->toArray();
-            $items[$row->id]['url'] = $this->url('', array('action' => 'detail', 'id' => $row->id));
+            $publishTime     = date('Ymd', $row->time_publish);
+            $items[$row->id]['url'] = $this->url($route, array('id' => $row->id, 'time' => $publishTime));
         }
 
         // Total count
@@ -71,11 +73,12 @@ class ListController extends ActionController
             ->setUrlOptions(array(
                 'pageParam' => 'page',
                 'router'    => $this->getEvent()->getRouter(),
-                'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+                'route'     => $route,
                 'params'    => array(
                     'module'        => $this->getModule(),
                     'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
                     'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                    'list'          => 'all',
                 ),
             ));
 

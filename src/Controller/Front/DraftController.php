@@ -730,7 +730,8 @@ class DraftController extends ActionController
         $result['status']   = self::RESULT_TRUE;
         $result['data']     = array('id' => $id);
 
-        $result['data']['preview_url'] = $this->url('', array('action' => 'preview', 'id' => $id));
+        $route = '.' . Service::getRouteName();
+        $result['data']['preview_url'] = $this->url($route, array('time' => date('Ymd', time()), 'id' => $id, 'preview' => 1));
         $result['message'] = __('Draft saved successfully.');
 
         return $result;

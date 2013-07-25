@@ -16,7 +16,7 @@
  * @package         Module\Article
  */
 
-namespace Extra\Article\Route;
+namespace Module\Article\Route;
 
 use Zend\Mvc\Router\Http\RouteMatch;
 use Zend\Stdlib\RequestInterface as Request;
@@ -46,14 +46,14 @@ use Pi\Mvc\Router\Http\Standard;
  * $this->url($routeName, array('topic' => 'sodkf', 'list' => 'all', 'from' => 'my'));
  * </CODE>
  */
-class Eefocus extends Standard
+class Article extends Standard
 {
     const URL_DELIMITER       = '?';
     const KEY_VALUE_DELIMITER = '=';
     const COMBINE_DELIMITER   = '&amp;';
     
     protected $paramDelimiter = '-';
-    protected $prefix = '/article';
+    protected $prefix = '/a';
     
     protected $defaults = array(
         'module'     => 'article',
