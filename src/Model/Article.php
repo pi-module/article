@@ -42,8 +42,7 @@ class Article extends Model
 
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'image', 'user', 'author', 'slug', 'time_publish', 'visits', 'category',
-            'channel', 'active', 'recommended');
+        return array('id', 'subject', 'image', 'uid', 'author', 'time_publish', 'category', 'active');
     }
 
     /**
@@ -159,6 +158,16 @@ class Article extends Model
 //        return $result;
 //    }
 
+    /**
+     * Returning rows by search condition.
+     * 
+     * @param array        $where
+     * @param int|null     $limit
+     * @param int|null     $offset
+     * @param array|null   $columns
+     * @param string|null  $order
+     * @return array 
+     */
     public function getSearchRows($where = array(),  $limit = null, $offset = null, $columns = null, $order = null)
     {
         $result = $rows = array();

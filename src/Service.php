@@ -30,6 +30,7 @@ use Pi\Mvc\Controller\ActionController;
 use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
+use Module\Article\Compiled;
 
 /**
  * Public APIs for article module itself 
@@ -495,14 +496,25 @@ class Service
         return $resultset;
     }
 
+    /**
+     * Getting published article details
+     * 
+     * @param array   $where
+     * @param int     $page
+     * @param int     $limit
+     * @param array   $columns
+     * @param string  $order
+     * @param string  $module
+     * @return array 
+     */
     public static function getArticlePage($where, $page, $limit, $columns = null, $order = null, $module = null)
     {
         $offset = ($limit && $page) ? $limit * ($page - 1) : null;
 
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
         $config = Pi::service('module')->config('', $module);
-        $articleIds = $userIds = $authorIds = $categoryIds = $channelIds = array();
-        $channels   = $categories = $authors = $users = $tags = $urls = array();
+        $articleIds = $userIds = $authorIds = $categoryIds = array();
+        $categories = $authors = $users = $tags = $urls = array();
 
         $modelArticle  = Pi::model('article', $module);
         $modelUser     = Pi::model('user');
@@ -518,15 +530,22 @@ class Service
                     $authorIds[] = $row['author'];
                 }
 
-                if (!empty($row['user'])) {
-                    $userIds[] = $row['user'];
+                if (!empty($row['uid'])) {
+                    $userIds[] = $row['uid'];
                 }
             }
             $authorIds = array_unique($authorIds);
             $userIds   = array_unique($userIds);
+            
+            // Getting statistics data
+            $modelStatis = Pi::model('statistics', $module);
+            $rowStatis   = $modelStatis->select(array('article' => $articleIds));
+            $statis      = array();
+            foreach ($rowStatis as $item) {
+                $statis[$item->article] = $item->visits;
+            }
 
             $categories = Cache::getCategoryList();
-            $channels   = Cache::getChannelList();
 
             if (!empty($authorIds) && (empty($columns) || in_array('author', $columns))) {
                 $resultsetAuthor = $modelAuthor->find($authorIds);
@@ -538,7 +557,7 @@ class Service
                 unset($resultsetAuthor);
             }
 
-            if (!empty($userIds) && (empty($columns) || in_array('user', $columns))) {
+            if (!empty($userIds) && (empty($columns) || in_array('uid', $columns))) {
                 $resultsetUser = $modelUser->find($userIds);
                 foreach ($resultsetUser as $row) {
                     $users[$row->id] = array(
@@ -552,21 +571,9 @@ class Service
                 if ((empty($columns) || in_array('tag', $columns)) && $config['enable_tag']) {
                     $tags = Pi::service('api')->tag->multiple($module, $articleIds);
                 }
-
-                $urls = Pi::service('api')->channel(
-                    array('entity', 'getUris'),
-                    $module,
-                    $articleIds
-                );
             }
 
             foreach ($resultset as &$row) {
-                if (empty($columns) || in_array('channel', $columns)) {
-                    $row['channel_title'] = $channels[$row['channel']]['title'];
-                    $row['channel_slug']  = $channels[$row['channel']]['slug'];
-                    $row['channel_url']   = $channels[$row['channel']]['url'];
-                }
-
                 if (empty($columns) || in_array('category', $columns)) {
                     if (!empty($categories[$row['category']])) {
                         $row['category_title'] = $categories[$row['category']]['title'];
@@ -574,9 +581,9 @@ class Service
                     }
                 }
 
-                if (empty($columns) || in_array('user', $columns)) {
-                    if (!empty($users[$row['user']])) {
-                        $row['user_name'] = $users[$row['user']]['name'];
+                if (empty($columns) || in_array('uid', $columns)) {
+                    if (!empty($users[$row['uid']])) {
+                        $row['user_name'] = $users[$row['uid']]['name'];
                     }
                 }
 
@@ -599,8 +606,16 @@ class Service
                 }
 
                 if (empty($columns) || in_array('subject', $columns)) {
-                    $row['url'] = $urls[$row['id']];
+                    $row['url'] = Pi::engine()->application()
+                                              ->getRouter()
+                                              ->assemble(array(
+                                                  'controller' => 'article',
+                                                  'action'     => 'detail',
+                                                  'id'         => $row['id'],
+                                              ), array('name' => 'default'));
                 }
+                
+                $row['visits'] = $statis[$row['id']];
             }
         }
 
@@ -808,6 +823,11 @@ class Service
         return $config;
     }
     
+    /**
+     * Getting count statistics of draft with different status and published article
+     * @param type $from
+     * @return type 
+     */
     public static function getSummary($from = 'my')
     {
         $module = Pi::service('module')->current();
@@ -853,6 +873,125 @@ class Service
         if ($resultset->count()) {
             $result['published'] = $resultset->current()->total;
         }
+
+        return $result;
+    }
+    
+    public static function getEntity($id)
+    {
+        $result = array();
+        $module = Pi::service('module')->current();
+        $config = Pi::service('module')->config('', $module);
+
+        $row = Pi::model('article', $module)->find($id);
+        if (empty($row->id)) {
+            return array();
+        }
+        $subject = $subtitle = $content = '';
+        if ($row->markup) {
+            $subject    = Pi::service('markup')->render($row->subject, 'html', $row->markup);
+            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html', $row->markup);
+        } else {
+            $subject    = Pi::service('markup')->render($row->subject, 'html');
+            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html');
+        }
+        $content = Compiled::getContent($row->id, 'html');
+
+        $result  = array(
+            'title'         => $subject,
+            'content'       => Service::breakPage($content),
+            'subtitle'      => $subtitle,
+            'source'        => $row->source,
+            'pages'         => $row->pages,
+            'time_publish'  => $row->time_publish,
+            'active'        => $row->active,
+            'visits'        => '',
+            'slug'          => '',
+            'seo'           => array(),
+            'author'        => array(),
+            'attachment'    => array(),
+            'tag'           => array(),
+            'related'       => array(),
+        );
+
+        // Get author
+        if ($row->author) {
+            $author = Pi::model('author', $module)->find($row->author);
+
+            if ($author) {
+                $result['author'] = $author->toArray();
+                if (empty($result['author']['photo'])) {
+                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $module);
+                }
+            }
+        }
+
+        // Get attachments
+        /*$resultsetAsset = Pi::model('asset', $module)->select(array(
+            'article'   => $id,
+            'type'      => Asset::FIELD_TYPE_ATTACHMENT,
+        ));
+
+        foreach ($resultsetAsset as $attachment) {
+            $result['attachment'][] = array(
+                'original_name' => $attachment->original_name,
+                'extension'     => $attachment->extension,
+                'size'          => $attachment->size,
+                'url'           => Pi::engine()->application()->getRouter()->assemble(
+                    array(
+                        'module'     => $this->getModule(),
+                        'controller' => 'download',
+                        'action'     => 'attachment',
+                        'name'       => $attachment->name,
+                    ),
+                    array(
+                        'name'       => 'default',
+                    )
+                ),
+            );
+        }*/
+
+        // Get tag
+        if ($config['enable_tag']) {
+            $result['tag'] = Pi::service('tag')->get($module, $id);
+        }
+
+        // Get related articles
+        $relatedIds = $related = array();  
+        $relatedIds = Pi::model('related', $module)->getRelated($id);
+
+        if ($relatedIds) {
+            $related = array_flip($relatedIds);
+            $where   = array('id' => $relatedIds);
+            $columns = array('id', 'subject');
+
+            $resultsetRelated = Service::getArticlePage($where, 1, null, $columns, null, $module);
+
+            foreach ($resultsetRelated as $key => $val) {
+                if (array_key_exists($key, $related)) {
+                    $related[$key] = $val;
+                }
+            }
+
+            $result['related'] = array_filter($related, function($var) {
+                return is_array($var);
+            });
+        }
+
+        // Getting seo
+        $modelExtended  = Pi::model('extended', $module);
+        $rowExtended    = $modelExtended->find($row->id, 'article');
+        $result['slug'] = $rowExtended->slug;
+        $result['seo']  = array(
+            'title'        => $rowExtended->seo_title,
+            'keywords'     => $rowExtended->seo_keywords,
+            'description'  => $rowExtended->seo_description,
+        );
+        
+        // Getting statistics data
+        $modelStatis    = Pi::model('statistics', $module);
+        $rowStatis      = $modelStatis->find($row->id, 'article');
+        $result['visits'] = $rowStatis->visits;
 
         return $result;
     }

@@ -1,0 +1,149 @@
+<?php
+$this->css($this->assetModule('script/article-front.css','article'));
+if ($details['seo']['keywords']) {
+    $this->headMeta()->setName('keywords', $details['seo']['keywords']);
+}
+if ($details['seo']['description']) {
+    $this->headMeta()->setName('description', $details['seo']['description']);
+}
+?>
+<style>
+    .article-share{margin-top:5px;line-height:18px;}
+</style> 
+<div class="block-header-bg"></div>
+<div class="article-header">
+    <h1 class="headline">
+    <?php echo $this->escape($details['title']); ?>
+    </h1>
+    <?php if($details['subtitle']) { ?>
+    <div class="byline">
+        <?php echo $this->escape($details['subtitle']); ?>
+    </div>
+    <?php } ?>
+    <div class="muted subline">
+        <div style="text-align:center;margin-bottom:15px;">
+            <span class="mr20"><?php echo date('Y-m-d H:i:s', $details['time_publish']); ?></span>
+            <?php if ($details['source']) { ?><span class="mr5"><?php _e('source:'); ?></span><span class="mr20"><?php echo $this->escape($details['source']); ?></span><?php } ?>
+        </div>
+        <div class="clearfix article-share">
+            <!-- JiaThis Button BEGIN -->
+            <div class="pull-right jiathis_style" style="margin-left:10px;">
+                <span class="jiathis_txt" style="margin-right:5px;"><?php _e('Share with: '); ?></span>
+                <a class="jiathis_button_tsina"></a>
+                <a class="jiathis_button_tqq"></a>
+                <a class="jiathis_button_renren"></a>
+                <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+            </div>
+            <script type="text/javascript" src="http://v2.jiathis.com/code_mini/jia.js?uid=1350211266832882" charset="utf-8"></script>
+            <!-- JiaThis Button END -->
+            <?php if ($details['tag']) { ?>
+                <div class="pull-left">
+                    <?php _e('Tags: '); ?>
+                </div>
+                <div class="overhide overhidden">
+                    <?php foreach ($details['tag'] as $tag) { ?>
+                        <a target="_blank" href="<?php echo $this->url('article-eefocus', array('controller'=>'tag', 'action'=>'list', 'tag'=>$tag)); ?>" title="<?php echo $this->escape($tag); ?>" class="link" title="<?php echo $this->escape($tag); ?>"><?php echo $this->escape($tag); ?></a>
+                        <?php if ($tag != end($details['tag'])) {                           
+                              echo '<span>,</span>';
+                        }
+                    } ?>
+                 </div>
+            <?php } ?>
+        </div>    
+    </div>
+</div>    
+<div class="clearfix mb10">
+    <div class="clearfix">
+        <div class="article-body">
+            <?php if (isset($remain) and '0' === $remain) {
+                foreach ($details['content'] as $content) {
+                    if ( $content['title']) {
+                        echo '<div class="title title18">'.$content['title'].'</div>';
+                    }
+                    echo $content['content'];
+                } 
+             } elseif (isset($remain) and (int) $remain > 0) {
+                    for ($p = (int) $remain; $p < $details['pages']; $p++) {
+                        if( $details['content'][$p]['title'] ) {
+                            echo '<div class="title title18">'.$details['content'][$p]['title'].'</div>';
+                        }
+                        echo $details['content'][$p]['content'];
+                    }
+             } else {
+                if ($details['content'][$page-1]['title']) {
+                    echo '<div class="title title18">'. $this->escape(isset($details['content'][$page-1]['title']) ? $details['content'][$page-1]['title'] : '') .'</div>';
+                }
+                echo $details['content'][$page-1]['content'];
+             }
+            ?>  
+        </div>
+    </div>
+    <div class="clearfix" style="line-height:18px;margin-bottom:20px;">
+        <?php if (!isset($remain) and (int) $page < $details['pages']) { ?>
+            <div class="pull-right muted" style="margin-left:10px;">
+                <a class="link mr10" style="font-size:14px;" href="<?php echo $this->escape($details['content'][$page]['url']); ?>"><?php _e('Next Page');?></a>
+                <a class="link mr10" style="font-size:14px;" href="<?php echo $this->escape($details['remain']); ?>" rel="nofollow"><?php _e('Remain Page');?></a>
+            </div>
+        <?php } ?>
+    </div>
+    <?php if($details['pages']>1) { ?> 
+    <div class="pagination pagination-centered">
+        <ul>
+        <?php for($i=1;$i<=$details['pages'];$i++) { ?>
+            <li <?php if($i==$page && !isset($remain)) { echo 'class="active"'; } ?> >  
+            <a href="<?php echo $this->escape($details['content'][$i-1]['url']); ?>"><?php echo $this->escape($i); ?></a>
+        <?php } ?>
+        <li class="<?php if (isset($remain) and $remain === '0') { echo 'active'; }?>"><a href="<?php echo $this->escape($details['view']); ?>" rel="nofollow"><?php _e('Read More'); ?></a>
+        </ul>
+    </div>
+    <?php if($showTitle) { ?> 
+    <div class="dashed"></div>  
+    <div class="title mb10"><?php _e('Article introduction'); ?></div>
+        <div class="row-fluid">
+            <ul class="span6 list list14" style="margin-bottom:0;width:300px;">
+                <?php for ($i = 1,$l = $details['pages']; $i <  $l/ 2+1  ; $i++ ) { ?>
+                <li>
+                    <a href="<?php echo $this->escape($details['content'][$i-1]['url']);?>" title="<?php echo $this->escape($details['content'][$i-1]['title']) ?>">
+                        <?php echo __('the').' '. $i .'  '.__('page'); ?>:&nbsp;<?php echo $this->escape($details['content'][$i-1]['title']) ?>
+                    </a>
+                </li>
+                <?php } ?>
+            </ul>
+            <ul class="span6 list list14" style="margin-bottom:0;margin-left:20px;width:300px;">
+                <?php for ( ; $i <= $l; $i++ ) { ?>
+                <li>
+                    <a href="<?php echo $this->escape($details['content'][$i-1]['url']);?>" title="<?php echo $this->escape($details['content'][$i-1]['title']) ?>">
+                        <?php echo __('the').' '. $i .'  '.__('page'); ?>:&nbsp;<?php echo $this->escape($details['content'][$i-1]['title']) ?>
+                    </a>
+                </li>
+                <?php } ?>
+            </ul>
+        </div>
+    <?php } ?>
+    <?php } ?>
+    <?php if($details['author']) { ?>
+    <div class="dashed"></div>    
+    <div class="title mb10"><?php _e('Author introduction'); ?></div>
+    <div class="img-text-wrapper">
+        <img src="<?php echo Pi::url($details['author']['photo']); ?>" alt="<?php echo $this->escape($details['author']['name']); ?>" style="margin-right:15px;width:<?php echo $config['author_w']; ?>px;height:<?php echo $config['author_h']; ?>px;"/>
+        <div class="overhidden">
+            <strong class="title"><?php echo $this->escape($details['author']['name']); ?></strong>
+            <p class="author-desc">
+                <?php echo $this->escape($details['author']['description']); ?>
+            </p> 
+        </div>
+    </div>    
+    <?php } ?>        
+    <?php if($details['related']){ ?>
+    <div class="related">
+        <div class="dashed"></div>    
+        <div class="title mb10"><?php _e('Continue read'); ?></div>
+        <ul class="list list-double" style="margin-bottom:0;">
+            <?php $leftright = 0; foreach($details['related'] as $related) { ?>
+            <li style="width:300px;<?php if($leftright % 2) {echo 'margin-left:20px;';} ?>"><a target="_blank" href="<?php echo $this->escape($related['url']); ?>" title="<?php echo $this->escape($related['subject']); ?>"><?php echo $this->escape($related['subject']); ?></a>
+            <?php $leftright++; } ?>    
+        </ul>
+    </div>
+    <?php } ?>
+</div> 
+    

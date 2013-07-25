@@ -11,8 +11,8 @@ $this->Backbone();
 ); ?>
 
 <ul class="nav nav-pills">
-    <li class="<?php if ($status == 'published') echo 'active' ?>">
-        <a href="<?php echo $this->url('', array('action' => 'list', 'controller' => 'article')) ?>">
+    <li class="<?php if ($status == $flags['published']) echo 'active' ?>">
+        <a href="<?php echo $this->url('', array('action' => 'published', 'controller' => 'article', 'from' => $from)) ?>">
             <?php _e('Published'); ?>(<?php echo $summary['published'] ?>)
         </a>
     </li>
