@@ -31,6 +31,8 @@ use Module\Article\Model\Category;
 use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
+use Module\Article\Cache;
+use Module\Article\Model\Article;
 
 /**
  * Public action controller for operating category
@@ -168,6 +170,25 @@ class CategoryController extends ActionController
 
         return $id;
     }
+    
+    protected function getCacheKey($category)
+    {
+        $result = false;
+
+        switch ($category) {
+            case '2':
+                $result = Cache::KEY_ARTICLE_NEWS_COUNT;
+                break;
+            case '3':
+                $result = Cache::KEY_ARTICLE_PRODUCT_COUNT;
+                break;
+            case '4':
+                $result = Cache::KEY_ARTICLE_DESIGN_COUNT;
+                break;
+        }
+
+        return $result;
+    }
 
     /**
      * Category index page, which will redirect to category article list page
@@ -176,6 +197,88 @@ class CategoryController extends ActionController
     {
         return $this->redirect()->toRoute('', array(
             'action'    => 'list',
+        ));
+    }
+    
+    /**
+     * Processing article list in category
+     */
+    public function listAction()
+    {
+        $modelCategory  = $this->getModel('category');
+
+        $category   = Service::getParam($this, 'category', '');
+        $categoryId = is_numeric($category) ? (int) $category : $modelCategory->slugToId($category);
+        $page       = Service::getParam($this, 'p', 1);
+        $page       = $page > 0 ? $page : 1;
+
+        $module = $this->getModule();
+        $config = Pi::service('module')->config('', $module);
+        $limit  = (int) $config['page_limit_front'] ?: 40;
+        $where  = array();
+        
+        $route  = '.' . Service::getRouteName();
+
+        // Get category info
+        $categories = Cache::getCategoryList();
+        foreach ($categories as &$row) {
+            $row['url'] = $this->url($route, array(
+                'category'      => $row['slug'] ?: $row['id'],
+            ));
+        }
+        $categoryIds    = $modelCategory->getDescendantIds($categoryId);
+        if (empty($categoryIds)) {
+            return $this->jumpTo404(__('Invalid category id'));
+        }
+        $where['category']  = $categoryIds;
+        $categoryInfo       = $categories[$categoryId];
+
+        // Get articles
+        $columns            = array('id', 'subject', 'time_publish', 'category');
+        $resultsetArticle   = Service::getAvailableArticlePage($where, $page, $limit, $columns, null, $module);
+
+        // Total count
+        $cacheKey   = $this->getCacheKey($categoryId);
+        $totalCount = (int) Cache::getSimple($cacheKey);
+        if (empty($totalCount)) {
+            $where = array_merge($where, array(
+                'time_publish <= ?' => time(),
+                'status'            => Article::FIELD_STATUS_PUBLISHED,
+                'active'            => 1,
+            ));
+            $modelArticle   = $this->getModel('article');
+            $totalCount     = $modelArticle->getSearchRowsCount($where);
+
+            Cache::setSimple($cacheKey, $totalCount);
+        }
+
+        // Pagination
+        $paginator = Paginator::factory($totalCount);
+        $paginator->setItemCountPerPage($limit)
+            ->setCurrentPageNumber($page)
+            ->setUrlOptions(array(
+                'router'    => $this->getEvent()->getRouter(),
+                'route'     => $route,
+                'params'    => array(
+                    'category'      => $category,
+                ),
+            ));
+
+        $this->view()->assign(array(
+            'title'         => __('Article List in Category'),
+            'articles'      => $resultsetArticle,
+            'paginator'     => $paginator,
+            'categories'    => $categories,
+            'categoryInfo'  => $categoryInfo,
+            'category'      => $category,
+            'p'             => $page,
+            'config'        => $config,
+            //'seo'           => $this->setupSeo($categoryId),
+        ));
+
+        $this->view()->viewModel()->getRoot()->setVariables(array(
+            'breadCrumbs' => true,
+            'Tag'         => $categoryInfo['title'],
         ));
     }
     

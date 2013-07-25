@@ -16,7 +16,7 @@
  * @package         Module\Article
  */
 
-namespace Extra\Article\Route;
+namespace Module\Article\Route;
 
 use Zend\Mvc\Router\Http\RouteMatch;
 use Zend\Stdlib\RequestInterface as Request;
@@ -46,14 +46,14 @@ use Pi\Mvc\Router\Http\Standard;
  * $this->url($routeName, array('topic' => 'sodkf', 'list' => 'all', 'from' => 'my'));
  * </CODE>
  */
-class Eefocus extends Standard
+class Article extends Standard
 {
     const URL_DELIMITER       = '?';
     const KEY_VALUE_DELIMITER = '=';
     const COMBINE_DELIMITER   = '&amp;';
     
     protected $paramDelimiter = '-';
-    protected $prefix = '/article';
+    protected $prefix = '/a';
     
     protected $defaults = array(
         'module'     => 'article',
@@ -90,6 +90,7 @@ class Eefocus extends Standard
                 list($ignored, $category) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $controller = 'category';
                 $action     = 'list';
+                $category   = urldecode($category);
             } elseif (preg_match('/^tag-/', $urlParams[0])) {
                 list($ignored, $tag) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $tag        = urldecode($tag);
@@ -167,7 +168,7 @@ class Eefocus extends Standard
             $url .= 'list';
             unset($mergedParams['list']);
         } elseif (isset($mergedParams['category'])) {
-            $url .= 'list' . $this->keyValueDelimiter . $mergedParams['category'];
+            $url .= 'list' . $this->keyValueDelimiter . urlencode($mergedParams['category']);
             unset($mergedParams['category']);
         } elseif (isset($mergedParams['tag'])) {
             $url .= 'tag' . $this->keyValueDelimiter . urlencode($mergedParams['tag']);

@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
@@ -606,15 +606,13 @@ class Service
                 }
 
                 if (empty($columns) || in_array('subject', $columns)) {
-                    $url = Pi::engine()->application()
+                    $route      = $module . '-' . Service::getRouteName();
+                    $row['url'] = Pi::engine()->application()
                                               ->getRouter()
                                               ->assemble(array(
-                                                  'module'     => $module,
-                                                  'controller' => 'article',
-                                                  'action'     => 'detail',
+                                                  'time'       => date('Ymd', $row['time_publish']),
                                                   'id'         => $row['id'],
-                                              ), array('name' => 'default'));
-                    $row['url'] = $url;
+                                              ), array('name' => $route));
                 }
                 
                 $row['visits'] = $statis[$row['id']];
