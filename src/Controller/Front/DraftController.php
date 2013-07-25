@@ -298,6 +298,7 @@ class DraftController extends ActionController
         $compiledType    = $this->config('compiled_type') ?: 'html';
         $compiledContent = Compiled::compiled($rowArticle->markup, $rowArticle->content, $compiledType);
         $compiled        = array(
+            'name'            => $articleId . '-' . $compiledType,
             'article'         => $articleId,
             'type'            => $compiledType,
             'content'         => $compiledContent,
@@ -364,200 +365,178 @@ class DraftController extends ActionController
         return $result;
     }
 
+    /**
+     * Updating published article data
+     * 
+     * @param  int $id  Article ID
+     * @return array 
+     */
     protected function update($id)
     {
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_FALSE,
+            'status'    => self::RESULT_FALSE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        if ($id) {
-            $modelDraft = $this->getModel('draft');
-            $rowDraft   = $modelDraft->find($id);
-
-            if ($rowDraft && $rowDraft->article) {
-                $module         = $this->getModule();
-                $modelArticle   = $this->getModel('article');
-
-                // Update draft to article
-                $articleId = $rowDraft->article;
-                $timestamp = time();
-
-                // Transform foreign images in content
-                $content = Service::transformArticleImages($rowDraft->content, $module);
-
-                $article = array(
-                    'subject'         => $rowDraft->subject,
-                    'subtitle'        => $rowDraft->subtitle,
-                    'summary'         => $rowDraft->summary,
-                    'content'         => $content ?: $rowDraft->content,
-//                    'image'           => $row->image,
-                    'user'            => $rowDraft->user,
-                    'author'          => $rowDraft->author,
-                    'source'          => $rowDraft->source,
-                    'pages'           => $rowDraft->pages,
-//                    'category'        => $row->category,
-                    'recommended'     => $rowDraft->recommended,
-//                    'status'          => Article::FIELD_STATUS_PUBLISHED,
-//                    'active'          => 1,
-//                    'time_create'     => $timestamp,
-                    'time_publish'    => $rowDraft->time_publish,
-                    'time_update'     => $rowDraft->time_update > $timestamp ? $rowDraft->time_update : $timestamp,
-                    'user_update'     => Pi::registry('user')->id,
-                    'seo_title'       => $rowDraft->seo_title,
-                    'seo_keywords'    => $rowDraft->seo_keywords,
-                    'seo_description' => $rowDraft->seo_description,
-                    'slug'            => $rowDraft->slug ?: null,
-                    'related_type'    => $rowDraft->related_type,
-                );
-                $rowArticle = $modelArticle->find($articleId);
-                $needToAddChannel = empty($rowArticle->channel) && $rowDraft->channel;
-                if ($needToAddChannel) {
-                    $article['channel'] = $rowDraft->channel;
-                }
-                $rowArticle->assign($article);
-                $rowArticle->save();
-
-                // Move feature image
-                if (strcmp($rowDraft->image, $rowArticle->image) != 0) {
-                    if ($rowArticle->image) {
-                        $image = Pi::path($rowArticle->image);
-
-                        unlink($image);
-                        unlink(Upload::getThumbFromOriginal($image));
-                    }
-
-                    $rowArticle->image = $rowDraft->image;
-                    $rowArticle->save();
-                }
-
-                // Merge assets
-                $draftAssetFiles     = $articleAssetFiles = $diffDraft = $diffArticle = array();
-                $modelAsset          = $this->getModel('asset');
-                $modelDraftAsset     = $this->getModel('draft_asset');
-                $resultsetDraftAsset = $modelDraftAsset->select(array(
-                    'draft' => $id,
-                ));
-                foreach ($resultsetDraftAsset as $asset) {
-                    $draftAssetFiles[$asset->name] = $asset;
-
-                    // Add new assets
-                    if (!$asset->published) {
-                        $data = array(
-                            'original_name' => $asset->original_name,
-                            'name'          => $asset->name,
-                            'extension'     => $asset->extension,
-                            'size'          => $asset->size,
-                            'type'          => $asset->type,
-                            'path'          => $asset->path,
-                            'time_create'   => $asset->time_create,
-                            'user'          => $asset->user,
-                            'article'       => $articleId,
-                        );
-//                        $data['path'] = Upload::moveTmpToAsset($attachment['path'], $module, $attachment['type']);
-                        $rowAsset = $modelAsset->createRow($data);
-                        $rowAsset->save();
-                    }
-                }
-
-                $resultsetAsset = $modelAsset->select(array(
-                    'article' => $articleId,
-                ));
-                foreach ($resultsetAsset as $asset) {
-                    $articleAssetFiles[$asset->name] = $asset;
-                }
-
-                // Assets need to remove
-                $needToDelete = array();
-                $diffArticle  = array_diff(array_keys($articleAssetFiles), array_keys($draftAssetFiles));
-                foreach ($diffArticle as $key) {
-                    $asset = $articleAssetFiles[$key];
-
-                    unlink(Pi::path($asset->path));
-                    if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                        unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-                    }
-
-                    $needToDelete[] = $asset->id;
-                }
-                if ($needToDelete) {
-                    $modelAsset->delete(array('id' => $needToDelete));
-                }
-
-                // Clear draft assets
-                $modelDraftAsset->delete(array('draft' => $id));
-
-                // Save tag
-                if ($this->config('enable_tag')) {
-                    Pi::service('tag')->update($module, $articleId, null, $rowDraft->tag, $timestamp);
-                }
-
-                // Save channel
-                if ($needToAddChannel) {
-                    Pi::service('api')->channel(
-                        array('entity', 'addEntity'),
-                        $rowArticle->channel,
-                        $module,
-                        $articleId,
-                        $rowArticle->category,
-                        array(
-                            'slug'          => $rowArticle->slug,
-                            'time'          => $rowArticle->time_publish,
-                            'active'        => $rowArticle->active,
-                            'recommended'   => $rowArticle->recommended,
-                        )
-                    );
-                } else {
-                    Pi::service('api')->channel(
-                        array('entity', 'updateEntity'),
-                        $module,
-                        $articleId,
-                        array(
-                            'slug'          => $rowArticle->slug,
-                            'time'          => $rowArticle->time_publish,
-                            'active'        => $rowArticle->active,
-                            'recommended'   => $rowArticle->recommended,
-                        )
-                    );
-                    Pi::service('api')->channel(
-                        array('entity', 'updatePush'),
-                        $module,
-                        $articleId,
-                        array(
-                            'slug'          => $rowArticle->slug,
-                            'time'          => $rowArticle->time_publish,
-                            'active'        => $rowArticle->active,
-                            'recommended'   => $rowArticle->recommended,
-                        )
-                    );
-                }
-
-                // Save partnumber
-                Pi::service('api')->partnumber->update($module, $articleId, null, $rowDraft->partnumber, $timestamp);
-
-                // Save manufacturer
-                $this->getModel('manufacturer')->updateRelation($articleId, $rowDraft->manufacturer);
-
-                // Save related articles
-                $relatedArticles = $rowDraft->related;
-                if ($relatedArticles) {
-                    $modelRelated = $this->getModel('related');
-                    $modelRelated->saveRelated($articleId, $relatedArticles);
-                }
-
-                // Delete draft
-                $rowDraft->delete();
-
-                $result['status']   = AjaxController::AJAX_RESULT_TRUE;
-                $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
-                $result['message']= __('Article update successfully.');
-            } else {
-                $result['message'] = __('Invalid draft.');
-            }
-        } else {
+        if (!$id) {
             $result['message'] = __('Not enough parameter.');
         }
+        
+        $modelDraft = $this->getModel('draft');
+        $rowDraft   = $modelDraft->find($id);
+
+        if (!$rowDraft->id or !$rowDraft->article) {
+            $result['message'] = __('Invalid draft.');
+        }
+        
+        $module         = $this->getModule();
+        $modelArticle   = $this->getModel('article');
+
+        // Update draft to article
+        $articleId = $rowDraft->article;
+        $timestamp = time();
+
+        // Transform foreign images in content
+        $content = Service::transformArticleImages($rowDraft->content, $module);
+
+        $article = array(
+            'subject'         => $rowDraft->subject,
+            'subtitle'        => $rowDraft->subtitle,
+            'summary'         => $rowDraft->summary,
+            'content'         => $content ?: $rowDraft->content,
+            'uid'             => $rowDraft->uid,
+            'author'          => $rowDraft->author,
+            'source'          => $rowDraft->source,
+            'pages'           => $rowDraft->pages,
+            'time_submit'     => $rowDraft->time_submit,
+            'time_publish'    => $rowDraft->time_publish,
+            'time_update'     => $rowDraft->time_update > $timestamp ? $rowDraft->time_update : $timestamp,
+            'user_update'     => Pi::registry('user')->id,
+        );
+        $rowArticle = $modelArticle->find($articleId);
+        $rowArticle->assign($article);
+        $rowArticle->save();
+        
+        // Compiled article content
+        $modelCompiled   = $this->getModel('compiled');
+        $compiledType    = $this->config('compiled_type') ?: 'html';
+        $compiledContent = Compiled::compiled($rowArticle->markup, $rowArticle->content, $compiledType);
+        $name            = $articleId . '-' . $compiledType;
+        $compiled        = array(
+            'name'            => $name,
+            'article'         => $articleId,
+            'type'            => $compiledType,
+            'content'         => $compiledContent,
+        );
+        $rowCompiled     = $modelCompiled->find($name, 'name');
+        if ($rowCompiled->id) {
+            $rowCompiled->assign($compiled);
+            $rowCompiled->save();
+        } else {
+            $rowCompiled     = $modelCompiled->createRow($compiled);
+            $rowCompiled->save();
+        }
+        
+        // Updating value of extended fields
+        $extended = array(
+            'seo_title'       => $rowDraft->seo_title,
+            'seo_keywords'    => $rowDraft->seo_keywords,
+            'seo_description' => $rowDraft->seo_description,
+            'slug'            => $rowDraft->slug ?: null,
+        );
+        $modelExtended = $this->getModel('extended');
+        $rowExtended   = $modelExtended->find($articleId, 'article');
+        $rowExtended->assign($extended);
+        $rowExtended->save();
+
+        // Move feature image
+        if (strcmp($rowDraft->image, $rowArticle->image) != 0) {
+            if ($rowArticle->image) {
+                $image = Pi::path($rowArticle->image);
+
+                unlink($image);
+                unlink(Upload::getThumbFromOriginal($image));
+            }
+
+            $rowArticle->image = $rowDraft->image;
+            $rowArticle->save();
+        }
+
+        // Merge assets
+        /*$draftAssetFiles     = $articleAssetFiles = $diffDraft = $diffArticle = array();
+        $modelAsset          = $this->getModel('asset');
+        $modelDraftAsset     = $this->getModel('draft_asset');
+        $resultsetDraftAsset = $modelDraftAsset->select(array(
+            'draft' => $id,
+        ));
+        foreach ($resultsetDraftAsset as $asset) {
+            $draftAssetFiles[$asset->name] = $asset;
+
+            // Add new assets
+            if (!$asset->published) {
+                $data = array(
+                    'original_name' => $asset->original_name,
+                    'name'          => $asset->name,
+                    'extension'     => $asset->extension,
+                    'size'          => $asset->size,
+                    'type'          => $asset->type,
+                    'path'          => $asset->path,
+                    'time_create'   => $asset->time_create,
+                    'user'          => $asset->user,
+                    'article'       => $articleId,
+                );
+//                        $data['path'] = Upload::moveTmpToAsset($attachment['path'], $module, $attachment['type']);
+                $rowAsset = $modelAsset->createRow($data);
+                $rowAsset->save();
+            }
+        }
+
+        $resultsetAsset = $modelAsset->select(array(
+            'article' => $articleId,
+        ));
+        foreach ($resultsetAsset as $asset) {
+            $articleAssetFiles[$asset->name] = $asset;
+        }
+
+        // Assets need to remove
+        $needToDelete = array();
+        $diffArticle  = array_diff(array_keys($articleAssetFiles), array_keys($draftAssetFiles));
+        foreach ($diffArticle as $key) {
+            $asset = $articleAssetFiles[$key];
+
+            unlink(Pi::path($asset->path));
+            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
+                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
+            }
+
+            $needToDelete[] = $asset->id;
+        }
+        if ($needToDelete) {
+            $modelAsset->delete(array('id' => $needToDelete));
+        }
+
+        // Clear draft assets
+        $modelDraftAsset->delete(array('draft' => $id));*/
+
+        // Save tag
+        if ($this->config('enable_tag')) {
+            Pi::service('tag')->update($module, $articleId, null, $rowDraft->tag, $timestamp);
+        }
+
+        // Save related articles
+        $relatedArticles = $rowDraft->related;
+        if ($relatedArticles) {
+            $modelRelated = $this->getModel('related');
+            $modelRelated->saveRelated($articleId, $relatedArticles);
+        }
+
+        // Delete draft
+        $rowDraft->delete();
+
+        $result['status']   = self::RESULT_TRUE;
+        $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
+        $result['message']= __('Article update successfully.');
 
         return $result;
     }
@@ -1253,40 +1232,42 @@ class DraftController extends ActionController
         $this->view()->setTemplate(false);
     }
 
+    /**
+     * Processing published article updating
+     * 
+     * @return ViewModel 
+     */
     public function updateAction()
     {
         $result = array(
-            'status'    => AjaxController::AJAX_RESULT_FALSE,
+            'status'    => self::RESULT_FALSE,
             'message'   => array(),
             'data'      => array(),
         );
 
-        $form = $this->getDraftForm('save');
-        $form->setInputFilter(new DraftEditFilter());
-        $form->setValidationGroup(Draft::getAvailableFields());
+        $options = Service::getFormConfig();
+        $form    = $this->getDraftForm('save', $options);
+        $form->setInputFilter(new DraftEditFilter($options));
+        $form->setValidationGroup(Draft::getValidFields());
         $form->setData($this->request->getPost());
 
-        if ($form->isValid()) {
-            $data = $form->getData();
-
-            $validate = $this->validateForm($data, Service::getParam($this, 'article', 0));
-
-            if ($validate['status']) {
-                $id = $this->saveDraft($data);
-
-                if ($id) {
-                    $result = $this->update($id);
-                } else {
-                    $result['message'] = __('Failed to save draft.');
-                }
-            } else {
-                $form->setMessages($validate['message']);
-
-                $result = $validate;
-            }
-        } else {
-            $result['message'] = $form->getMessages();
+        if (!$form->isValid()) {
+            return array('message' => $form->getMessages());
         }
+        
+        $data     = $form->getData();
+        $validate = $this->validateForm($data, Service::getParam($this, 'article', 0), $options['elements']);
+
+        if (!$validate['status']) {
+            $form->setMessages($validate['message']);
+            return $validate;
+        }
+        
+        $id = $this->saveDraft($data);
+        if (!$id) {
+            return array('message', __('Failed to save draft.'));
+        }
+        $result = $this->update($id);
 
         return $result;
     }
