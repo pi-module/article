@@ -59,6 +59,7 @@ return array(
             'navigation'    => 'navigation.php',
             'block'         => 'block.php',
             'config'        => 'config.php',
+            'route'         => 'route.php',
         ),
     ),
 );

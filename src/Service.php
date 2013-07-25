@@ -997,4 +997,30 @@ class Service
 
         return $result;
     }
+    
+    public static function getRouteName()
+    {
+        $module      = Pi::service('module')->current();
+        $resBasename = \Module\Article\Installer\Resource\Route::RESOURCE_CONFIG_NAME;
+        $resFilename = sprintf('var/%s/config/%s', $module, $resBasename);
+        $resPath     = Pi::path($resFilename);
+        if (!file_exists($resPath)) {
+            return 'article';
+        }
+        
+        $configs = include $resPath;
+        $class   = '';
+        $name    = '';
+        foreach ($configs as $key => $config) {
+            $class = $config['type'];
+            $name  = $key;
+            break;
+        }
+        
+        if (!class_exists($class)) {
+            return 'article';
+        }
+        
+        return $name;
+    }
 }

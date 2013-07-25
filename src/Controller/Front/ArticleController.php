@@ -45,7 +45,15 @@ class ArticleController extends ActionController
      */
     public function indexAction()
     {
-
+        $routeName = '.' . Service::getRouteName();
+        d($this->url($routeName, array('controller' => 'article', 'action' => 'index')));
+        d($this->url($routeName, array('list' => 'all', 't' => 20, 'p' => 2)));
+        d($this->url($routeName, array('category' => 'sport', 'p' => 3)));
+        d($this->url($routeName, array('tag' => '标签')));
+        d($this->url($routeName, array('id' => 3, 'time' => '20130725')));
+        d($this->url($routeName, array('slug' => '文章', 'time' => '20010101')));
+        d($this->url($routeName, array('topic' => 'music')));
+        d($this->url($routeName, array('topic' => 'sodkf', 'list' => 'all', 'from' => 'my')));
     }
     
     /**
