@@ -87,11 +87,11 @@ class Eefocus extends Standard
                 $controller = 'list';
                 $action     = 'all';
             } elseif (preg_match('/^list-/', $urlParams[0])) {
-                list($ignored, $category) = explode($this->paramDelimiter, $urlParams[0]);
+                list($ignored, $category) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $controller = 'category';
                 $action     = 'list';
             } elseif (preg_match('/^tag-/', $urlParams[0])) {
-                list($ignored, $tag) = explode($this->paramDelimiter, $urlParams[0]);
+                list($ignored, $tag) = explode($this->keyValueDelimiter, $urlParams[0]);
                 $tag        = urldecode($tag);
                 $controller = 'tag';
                 $action     = 'list';
@@ -108,7 +108,7 @@ class Eefocus extends Standard
             } elseif ('topic' == $urlParams[0]) {
                 $controller = 'topic';
                 if (preg_match('/^list-/', $urlParams[1])) {
-                    list($ignored, $topic) = explode($this->paramDelimiter, $urlParams[1]);
+                    list($ignored, $topic) = explode($this->keyValueDelimiter, $urlParams[1]);
                     $action = 'list';
                 } else {
                     $topic = $urlParams[1];
@@ -116,13 +116,13 @@ class Eefocus extends Standard
                 }
             }
         }
-        $matches  = compact($controller, $action, $category, $tag, $id, $slug, $topic);
+        $matches  = compact('controller', 'action', 'category', 'tag', 'id', 'slug', 'topic');
         
-        $params   = explode(self::COMBINE_DELIMITER, $parameter);
+        $params   = array_filter(explode(self::COMBINE_DELIMITER, $parameter));
         foreach ($params as $param) {
             list($key, $value) = explode(self::KEY_VALUE_DELIMITER, $param);
             if (!isset($matches[$key])) {
-                $matches[$key]     = urldecode($value);
+                $matches[$key] = urldecode($value);
             }
         }
 
@@ -167,16 +167,16 @@ class Eefocus extends Standard
             $url .= 'list';
             unset($mergedParams['list']);
         } elseif (isset($mergedParams['category'])) {
-            $url .= 'list' . $this->paramDelimiter . $mergedParams['category'];
+            $url .= 'list' . $this->keyValueDelimiter . $mergedParams['category'];
             unset($mergedParams['category']);
         } elseif (isset($mergedParams['tag'])) {
-            $url .= 'tag' . $this->paramDelimiter . urlencode($mergedParams['tag']);
+            $url .= 'tag' . $this->keyValueDelimiter . urlencode($mergedParams['tag']);
             unset($mergedParams['tag']);
         } elseif (isset($mergedParams['topic'])) {
             $url .= 'topic';
             if (isset($mergedParams['list']) and 'all' == $mergedParams['list']) {
                 $url .= $this->structureDelimiter . 'list';
-                $url .= $this->paramDelimiter . $mergedParams['topic'];
+                $url .= $this->keyValueDelimiter . $mergedParams['topic'];
                 unset($mergedParams['list']);
             } else {
                 $url .= $this->structureDelimiter . $mergedParams['topic'];
