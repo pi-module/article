@@ -45,15 +45,7 @@ class ArticleController extends ActionController
      */
     public function indexAction()
     {
-        $routeName = '.' . Service::getRouteName();
-        d($this->url($routeName, array('controller' => 'article', 'action' => 'index')));
-        d($this->url($routeName, array('list' => 'all', 't' => 20, 'p' => 2)));
-        d($this->url($routeName, array('category' => 'sport', 'p' => 3)));
-        d($this->url($routeName, array('tag' => '标签')));
-        d($this->url($routeName, array('id' => 3, 'time' => '20130725')));
-        d($this->url($routeName, array('slug' => '文章', 'time' => '20010101')));
-        d($this->url($routeName, array('topic' => 'music')));
-        d($this->url($routeName, array('topic' => 'sodkf', 'list' => 'all', 'from' => 'my')));
+
     }
     
     /**
@@ -94,9 +86,10 @@ class ArticleController extends ActionController
             return $this->redirect()->setStatusCode(301)->toRoute('', array_merge($routeParams, $params));
         }
         
+        $route = '.' . Service::getRouteName();
         foreach ($details['content'] as &$value) {
-            $value['url'] = $this->url('', array_merge(array(
-                'action'     => 'detail',
+            $value['url'] = $this->url($route, array_merge(array(
+                'time'       => date('Ymd', $details['time_published']),
                 'id'         => $id,
                 'slug'       => $slug,
                 'p'          => $value['page'],
@@ -107,14 +100,14 @@ class ArticleController extends ActionController
                 $value['title'] = '';
             }
         }
-        $details['view'] = $this->url('', array_merge(array(
-            'action'      => 'detail',
+        $details['view'] = $this->url($route, array_merge(array(
+            'time'        => date('Ymd', $details['time_published']),
             'id'          => $id,
             'slug'        => $slug,
             'r'           => 0,
         ), $params));
-        $details['remain'] = $this->url('', array_merge(array(
-            'action'      => 'detail',
+        $details['remain'] = $this->url($route, array_merge(array(
+            'time'        => date('Ymd', $details['time_published']),
             'id'          => $id,
             'slug'        => $slug,
             'r'           => $page,
