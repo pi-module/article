@@ -1,0 +1,10 @@
+<ul class="article-tab-content-row">
+    <?php foreach ($block['articles'] as $article) { ?>
+    <li>
+        <span><?php echo $this->escape($article['total']) ?></span>
+        <a href="<?php echo $this->escape($article['url']) ?>" title="<?php echo $this->escape($article['subject']); ?>" target="<?php echo $this->escape($block['target']) ?>">
+            <?php echo $block['max_subject_length'] ? $this->escape(mb_substr($article['subject'], 0, $block['max_subject_length'], 'UTF-8')) : $this->escape($article['subject']); ?>
+        </a>
+    </li>
+    <?php } ?>
+</ul>

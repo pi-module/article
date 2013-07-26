@@ -207,15 +207,17 @@ class DraftController extends ActionController
             return array('message' => __('Draft has been published.'));
         }
         
-        $rowDraft->status = Draft::FIELD_STATUS_PENDING;
+        $rowDraft->status      = Draft::FIELD_STATUS_PENDING;
+        $rowDraft->time_submit = time();
         $rowDraft->save();
 
         $result['status']   = self::RESULT_TRUE;
         $result['message']  = __('Draft submitted successfully.');
         $result['data']     = array(
-            'id'        => $id,
-            'status'    => __('Pending'),
-            'btn_value' => __('Approve'),
+            'id'          => $id,
+            'time_submit' => $rowDraft->time_submit,
+            'status'      => __('Pending'),
+            'btn_value'   => __('Approve'),
         );
 
         return $result;
@@ -572,7 +574,7 @@ class DraftController extends ActionController
 
         $data['time_publish'] = $data['time_publish'] ? strtotime($data['time_publish']) : 0;
         $data['time_update']  = $data['time_update'] ? strtotime($data['time_update']) : 0;
-        $data['time_submit']  = $data['time_submit'] ? strtotime($data['time_submit']) : 0;
+        $data['time_submit']  = $data['time_submit'] ? $data['time_submit'] : 0;
         $data['time_save']    = time();
 
         if (isset($data['related'])) {
