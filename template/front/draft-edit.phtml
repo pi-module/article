@@ -86,7 +86,7 @@
 <form class="row-fluid" method="POST" enctype="multipart/form-data" action="<?php echo $form->getAttribute("action") ?>" onkeypress="return event.keyCode != 13;">
     <div class="span8">
         <a href="#" target="_blank" class="hide hide-preview"></a>
-        <?php $hiddens = array('security', 'article', 'id', 'fake_id', 'uid', 'jump', 'time_publish');
+        <?php $hiddens = array('security', 'article', 'id', 'fake_id', 'uid', 'jump', 'time_publish', 'time_update', 'time_submit');
         foreach ($hiddens as $value) {
             echo $this->formElement($form->get($value));
         }
@@ -833,6 +833,7 @@ var ReleaseProcess = Backbone.View.extend({
                //    btn.remove();
                //} else {
                    btn.removeAttr("disabled").html(resp.btn_value).removeClass("pending").addClass("approve");
+                   $('input[name="time_submit"]').val(resp.time_submit);
                //}
            },
            fail:function(){
