@@ -1,0 +1,11 @@
+<div>
+    <ul>
+        <?php foreach ($block as $item) { ?>
+        <li>
+            <a target="_blank" href="<?php echo $this->escape($item['url']) ?>">
+                <?php echo $this->escape($item['title']) ?>
+            </a>
+        </li>
+        <?php } ?>
+    </ul>
+</div>

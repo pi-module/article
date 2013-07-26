@@ -1,0 +1,26 @@
+<?php
+$topArticle = array_shift($articles);
+?>
+<div>
+    <div>
+        <h4>
+            <strong>
+                <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($topArticle['url']) ?>">
+                    <?php echo $this->escape($topArticle['subject']) ?>
+                </a>
+            </strong>
+        </h4>
+        <div><?php echo $this->escape($topArticle['summary']) ?></div>
+    </div>
+    <div>
+        <ul>
+            <?php foreach ($articles as $article) { ?>
+            <li>
+                <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>">
+            <?php echo $this->escape($article['subject']) ?>
+        </a>
+            </li>
+            <?php } ?>
+        </ul>
+    </div>
+</div>

@@ -73,24 +73,20 @@ class Service
         return $result;
     }
 
-    public static function getVisitsInPeriod($dateFrom, $dateTo, $limit = null, $category = null, $channel = null, $module = null)
+    public static function getVisitsInPeriod($dateFrom, $dateTo, $limit = null, $category = null, $module = null)
     {
         $result = $where = array();
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
 
         $modelArticle   = Pi::model('article', $module);
         $modelCategory  = Pi::model('category', $module);
         $modelVisit     = Pi::model('visit', $module);
 
         if (!empty($dateFrom)) {
-            $where['date >= ?'] = $dateFrom;
+            $where['time >= ?'] = $dateFrom;
         }
         if (!empty($dateTo)) {
-            $where['date <= ?'] = $dateTo;
-        }
-
-        if ($channel) {
-            $where['a.channel'] = (int) $channel;
+            $where['time <= ?'] = $dateTo;
         }
 
         if ($category && $category > 1) {
@@ -138,12 +134,12 @@ class Service
         return $result;
     }
 
-    public static function getVisitsRecently($days, $limit = null, $category = null, $channel = null, $module = null)
+    public static function getVisitsRecently($days, $limit = null, $category = null, $module = null)
     {
         $dateFrom = date('Ymd', strtotime(sprintf('-%d day', $days)));
         $dateTo   = date('Ymd');
 
-        return self::getVisitsInPeriod($dateFrom, $dateTo, $limit, $category, $channel, $module);
+        return self::getVisitsInPeriod($dateFrom, $dateTo, $limit, $category, $module);
     }
 
     public static function getTotalVisits($limit = null, $category = null, $channel = null, $module = null)
@@ -300,10 +296,10 @@ class Service
         $module = $module ?: self::$module;
 
         if (!empty($dateFrom)) {
-            $where['time_create >= ?'] = $dateFrom;
+            $where['time_submit >= ?'] = $dateFrom;
         }
         if (!empty($dateTo)) {
-            $where['time_create <= ?'] = $dateTo;
+            $where['time_submit <= ?'] = $dateTo;
         }
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
         $where['active'] = 1;
@@ -312,9 +308,9 @@ class Service
         $modelUser    = Pi::model('user');
 
         $select = $modelArticle->select()
-            ->columns(array('user', 'total' => new Expression('count(user)')))
+            ->columns(array('uid', 'total' => new Expression('count(uid)')))
             ->where($where)
-            ->group('user')
+            ->group('uid')
             ->order('total DESC');
 
         if ($limit) {
@@ -324,8 +320,8 @@ class Service
         $result = $modelArticle->selectWith($select)->toArray();
 
         foreach ($result as $row) {
-            if (!empty($row['user'])) {
-                $userIds[] = $row['user'];
+            if (!empty($row['uid'])) {
+                $userIds[] = $row['uid'];
             }
         }
         $userIds = array_unique($userIds);
@@ -341,8 +337,8 @@ class Service
         }
 
         foreach ($result as &$row) {
-            if (!empty($users[$row['user']])) {
-                $row['identity'] = $users[$row['user']]['name'];
+            if (!empty($users[$row['uid']])) {
+                $row['identity'] = $users[$row['uid']]['name'];
             }
         }
 

@@ -89,7 +89,7 @@ class ArticleController extends ActionController
         $route = '.' . Service::getRouteName();
         foreach ($details['content'] as &$value) {
             $value['url'] = $this->url($route, array_merge(array(
-                'time'       => date('Ymd', $details['time_published']),
+                'time'       => date('Ymd', $details['time_publish']),
                 'id'         => $id,
                 'slug'       => $slug,
                 'p'          => $value['page'],
@@ -101,13 +101,13 @@ class ArticleController extends ActionController
             }
         }
         $details['view'] = $this->url($route, array_merge(array(
-            'time'        => date('Ymd', $details['time_published']),
+            'time'        => date('Ymd', $details['time_publish']),
             'id'          => $id,
             'slug'        => $slug,
             'r'           => 0,
         ), $params));
         $details['remain'] = $this->url($route, array_merge(array(
-            'time'        => date('Ymd', $details['time_published']),
+            'time'        => date('Ymd', $details['time_publish']),
             'id'          => $id,
             'slug'        => $slug,
             'r'           => $page,

@@ -1,0 +1,16 @@
+<?php 
+$totalWidth = 900;
+$topCount   = count($block);
+$width      = floor($totalWidth / $topCount);
+?>
+
+<div class="span12" style="overflow: hidden; margin-top: 10px; margin-bottom: 10px">
+    <?php foreach ($block as $top) { ?>
+    <div style="width: <?php echo $this->escape($width) . 'px' ?>; float: left">
+        <div style="font-weight: bold"><a href="<?php echo $this->escape($top['url']) ?>"><?php echo $this->escape($top['title']) ?></a></div>
+        <?php foreach ($top['child'] as $sub) { ?>
+        <div style="font-size: 12px"><a href="<?php echo $this->escape($sub['url']) ?>"><?php echo $this->escape($sub['title']) ?></a></div>
+        <?php } ?>
+    </div>
+    <?php } ?>
+</div>
