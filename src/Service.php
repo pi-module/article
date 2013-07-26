@@ -101,7 +101,7 @@ class Service
         $where['active'] = 1;
 
         $select = $modelVisit->select()
-            ->columns(array('article', 'total' => new Expression('sum(count)')))
+            ->columns(array('article', 'total' => new Expression('count(article)')))
             ->join(
                 array('a' => $modelArticle->getTable()),
                 sprintf('%s.article = a.id', $modelVisit->getTable()),
@@ -136,8 +136,8 @@ class Service
 
     public static function getVisitsRecently($days, $limit = null, $category = null, $module = null)
     {
-        $dateFrom = date('Ymd', strtotime(sprintf('-%d day', $days)));
-        $dateTo   = date('Ymd');
+        $dateTo   = time();
+        $dateFrom = $dateTo - 24 * 3600 * 7;
 
         return self::getVisitsInPeriod($dateFrom, $dateTo, $limit, $category, $module);
     }

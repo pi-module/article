@@ -118,4 +118,9 @@ class Topic
         
         return $topics;
     }
+    
+    public static function getVisitsRecently($days, $limit = null, $category = null, $topic = null, $module = null)
+    {
+        
+    }
 }
