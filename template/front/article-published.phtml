@@ -80,7 +80,7 @@ $this->Backbone();
                     <?php if ($article['active'] == 0) { ?> - <strong class="text-warning"><?php _e('Deactive'); ?></strong> <?php } ?>
                     <?php if ($article['image']) { ?><i class="icon-picture" title="<?php _e('Feature image'); ?>"></i> <?php } ?>
                     <div class="row-actions">
-                        <a href="<?php echo $this->url('', array('action' => 'edit', 'id' => $article['id'])); ?>?from=all"><?php _e('Edit'); ?></a>
+                        <a href="<?php echo $this->url('', array('controller' => 'article', 'action' => 'edit', 'id' => $article['id'])); ?>?from=all"><?php _e('Edit'); ?></a>
                         <span class="divider">|</span>
                         <a href="javascript:void(0)" class="one-action" data-value="delete"><?php _e('Delete'); ?></a>
                         <?php if ($article['active']) { ?>
@@ -112,7 +112,6 @@ $this->Backbone();
    var page={
        url: "<?php echo $this->url('', array('controller' => 'article','action' => '')) ?>".replace(/\/$/,""),
        el:$("#jsList"),
-       channel:"<?php echo $channel; ?>",
        $:function(selector){
            return this.el.find(selector);
        },

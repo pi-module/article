@@ -39,6 +39,42 @@ class Service
 {
     protected static $module = 'article';
 
+    /**
+     * Rendering form
+     * 
+     * @param Pi\Mvc\Controller\ActionController $obj  ActionController instance
+     * @param Zend\Form\Form $form     Form instance
+     * @param string         $message  Message assign to template
+     * @param bool           $isError  Whether is error message
+     */
+    public static function renderForm($obj, $form, $message = null, $isError = false)
+    {
+        $params = array('form' => $form);
+        if ($isError) {
+            $params['error'] = $message;
+        } else {
+            $params['message'] = $message;
+        }
+        $obj->view()->assign($params);
+    }
+    
+    /**
+     * Assign configuration data to template
+     * 
+     * @param Pi\Mvc\Controller\ActionController $obj  ActionController instance
+     */
+    public static function setModuleConfig($obj)
+    {
+        $obj->view()->assign(array(
+            'width'            => $obj->config('author_width'),
+            'height'           => $obj->config('author_height'),
+            'image_extension'  => $obj->config('image_extension'),
+            'max_image_size'   => Upload::fromByteString($obj->config('max_image_size')),
+            'media_extension'  => $obj->config('media_extension'),
+            'max_media_size'   => Upload::fromByteString($obj->config('max_media_size')),
+        ));
+    }
+    
     public static function content($arrayOfContentKeys, $arrayOfConditions)
     {
         $result = $data = array();

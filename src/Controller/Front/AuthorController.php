@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) Copyright (c) Pi Engine http://www.xoopsengine.org
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
@@ -34,24 +34,6 @@ use Module\Article\Service;
 class AuthorController extends ActionController
 {
     /**
-     * Rendering form
-     * 
-     * @param Zend\Form\Form $form     Form instance
-     * @param string         $message  Message assign to template
-     * @param bool           $isError  Whether is error message
-     */
-    protected function renderForm($form, $message = null, $isError = false)
-    {
-        $params = array('form' => $form);
-        if ($isError) {
-            $params['error'] = $message;
-        } else {
-            $params['message'] = $message;
-        }
-        $this->view()->assign($params);
-    }
-    
-    /**
      * Getting form instance
      * 
      * @param string  $action  Action to request when submit
@@ -68,21 +50,6 @@ class AuthorController extends ActionController
         ));
 
         return $form;
-    }
-
-    /**
-     * Assign configuration data to template 
-     */
-    protected function setModuleConfig()
-    {
-        $this->view()->assign(array(
-            'width'                 => $this->config('author_width'),
-            'height'                => $this->config('author_height'),
-            'image_extension'       => $this->config('image_extension'),
-            'max_image_size'        => Upload::fromByteString($this->config('max_image_size')),
-            //'attachment_extension'  => $this->config('attachment_extension'),
-            //'max_attachment_size'   => Upload::fromByteString($this->config('max_attachment_size')),
-        ));
     }
 
     /**
@@ -171,8 +138,8 @@ class AuthorController extends ActionController
     public function addAction()
     {
         $form = $this->getAuthorForm('add');
+        Service::setModuleConfig($this);
         $this->view()->assign('title', __('Add author info'));
-        $this->setModuleConfig();
         $this->view()->setTemplate('author-edit');
         
         if ($this->request->isPost()) {
@@ -182,7 +149,7 @@ class AuthorController extends ActionController
             $form->setValidationGroup(Author::getAvailableFields());
 
             if (!$form->isValid()) {
-                return $this->renderForm($form, __('There are some error occured'), true);
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             
             $data = $form->getData();
@@ -204,12 +171,11 @@ class AuthorController extends ActionController
      * Editing author information
      * 
      * @return ViewModel
-     * @throws \Exception 
      */
     public function editAction()
     {
         $form = $this->getAuthorForm('edit');
-        $this->setModuleConfig();
+        Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Author Info'));
         
         if ($this->request->isPost()) {
@@ -219,39 +185,39 @@ class AuthorController extends ActionController
             $form->setValidationGroup(Author::getAvailableFields());
 
             if (!$form->isValid()) {
-                return $this->renderForm($form, __('There are some error occured'), true);
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             
             $data = $form->getData();
             $id   = $this->saveAuthor($data);
 
-            return $this->redirect()->toRoute('', array('action'=>'list'));
+            return $this->redirect()->toRoute('', array('action' => 'list'));
         }
         
         $id  = $this->params('id', 0);
         if (empty($id)) {
-            throw new \Exception(__('Invalid author id'));
+            return $this->jumpto404(__('Invalid author id'));
         }
 
         $row = $this->getModel('author')->find($id);
-        if ($row) {
-            $form->setData($row->toArray());
-            $this->view()->assign('form', $form);
+        if (!$row->id) {
+            return $this->jumpTo404(__('The author is not exists'));
         }
+        $form->setData($row->toArray());
+        $this->view()->assign('form', $form);
     }
     
     /**
      * Deleting authors by given id
      * 
      * @return ViewModel
-     * @throws \Exception 
      */
     public function deleteAction()
     {
         $id     = $this->params('id');
         $ids    = array_filter(explode(',', $id));
         if (empty($ids)) {
-            throw new \Exception(__('Invalid author id'));
+            return $this->jumpTo404(__('Invalid author id!'));
         }
 
         $modelAuthor = $this->getModel('author');
@@ -270,7 +236,7 @@ class AuthorController extends ActionController
         $modelAuthor->delete(array('id' => $ids));
 
         // Go to list page
-        return $this->redirect()->toRoute('', array('action'=>'list'));
+        return $this->redirect()->toRoute('', array('action' => 'list'));
     }
 
     /**
@@ -278,14 +244,13 @@ class AuthorController extends ActionController
      */
     public function listAction()
     {
-        $page = Service::getParam($this, 'page', 1);
-        $name = Service::getParam($this, 'name', '');
-        //@todo Get limit from module config
-        $limit = 20;
+        $page   = Service::getParam($this, 'p', 1);
+        $name   = Service::getParam($this, 'name', '');
+        $limit  = $this->config('author_limit') > 0 ? $this->config('author_limit') : 20;
         $offset = $limit * ($page - 1);
 
         $module = $this->getModule();
-        $model = $this->getModel('author');
+        $model  = $this->getModel('author');
         $select = $model->select();
         if ($name) {
             $select->where->like('name', "%{$name}%");
@@ -307,7 +272,6 @@ class AuthorController extends ActionController
         $paginator->setItemCountPerPage($limit)
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
-                'pageParam' => 'page',
                 'router'    => $this->getEvent()->getRouter(),
                 'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
                 'params'    => array_filter(array(

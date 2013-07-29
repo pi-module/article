@@ -49,7 +49,6 @@ class AuthorEditForm extends BaseForm
                 'label' => __('Photo'),
             ),
             'attributes' => array(
-               
             ),
         ));
 

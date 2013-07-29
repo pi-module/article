@@ -38,25 +38,6 @@ class ConfigController extends ActionController
     const FORM_MODE_CUSTOM   = 'custom';
     
     /**
-     * Rendering form
-     * 
-     * @param Zend\Form\Form $form     Form instance
-     * @param string         $message  Message assign to template
-     * @param bool           $isError  Whether is error message
-     */
-    protected function renderForm($form, $message = null, $isError = false)
-    {
-        $params = array('form' => $form);
-        if ($isError) {
-            $params['error'] = $message;
-        } else {
-            $params['message'] = $message;
-        }
-        $this->view()->assign($params);
-        $this->view()->assign('form', $form);
-    }
-    
-    /**
      * Saving config result into file
      * 
      * @param array|int  $elements     Elements want to display, if mode is not custom, its value is mode name
@@ -172,7 +153,7 @@ EOD;
         $options = Service::getFormConfig();
         if (!empty($options)) {
             $data['mode'] = $options['mode'];
-            if (self::FORM_MODE_CUSTOM == $data['mode']) {
+            if (self::FORM_MODE_CUSTOM == $options['mode']) {
                 foreach ($options['elements'] as $value) {
                     $data[$value] = 1;
                 }
@@ -191,11 +172,12 @@ EOD;
                     $post[$name] = 0;
                 }
             }
+            $neededElements = DraftEditForm::getNeededElements();
             $form->setData($post);
-            $form->setInputFilter(new DraftCustomFilter(array('elements' => $items)));
+            $form->setInputFilter(new DraftCustomFilter($post['mode'], array('needed' => $neededElements)));
 
             if (!$form->isValid()) {
-                return $this->renderForm($form, __('There are some error occured'), true);
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             
             $data     = $form->getData();
@@ -215,10 +197,10 @@ EOD;
             );
             $result  = $this->saveFormConfig($elements, $items, $options);
             if (!$result) {
-                return $this->renderForm($form, __('Can not save data!'), true);
+                return Service::renderForm($this, $form, __('Can not save data!'), true);
             }
             
-            $this->renderForm($form, __('Data saved successful!'), false);
+            Service::renderForm($this, $form, __('Data saved successful!'), false);
         }
     }
 }

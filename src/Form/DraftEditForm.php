@@ -87,6 +87,11 @@ class DraftEditForm extends BaseForm
         );
     }
     
+    public static function getNeededElements()
+    {
+        return array('subject', 'content', 'category');
+    }
+    
     /**
      * Getting default elements for displaying
      * 
@@ -131,7 +136,7 @@ class DraftEditForm extends BaseForm
                 $this->add($formParams[$name]);
             }
         }
-        if (isset($this->items['content'])) {
+        if (in_array('content', $this->items)) {
             $editorConfig = Pi::config()->load("module.{$module}.ckeditor.php");
             $editor       = $this->get('content');
             $editor->setOptions(array_merge($editor->getOptions(), $editorConfig));
@@ -148,7 +153,7 @@ class DraftEditForm extends BaseForm
         $this->add($formParams['jump']);
         
         // Initializing form for image upload
-        if (isset($this->items['image'])) {
+        if (in_array('image', $this->items)) {
             $this->add($formParams['x']);
             $this->add($formParams['y']);
             $this->add($formParams['w']);
@@ -178,6 +183,24 @@ class DraftEditForm extends BaseForm
     {
         $module = Pi::service('module')->current();
         $config = Pi::service('module')->config('', $module);
+        
+        switch ($config['markup']) {
+            case 'html':
+                $editor = 'html';
+                $set    = '';
+                break;
+            case 'compound':
+                $editor = 'markitup';
+                $set    = 'html';
+                break;
+            case 'markdown':
+                $editor = 'markitup';
+                $set    = 'markdown';
+                break;
+            default:
+                $editor = 'textarea';
+                $set    = '';
+        }
 
         $parameters = array(
             'subject'    => array(
@@ -346,7 +369,8 @@ class DraftEditForm extends BaseForm
                 'name'       => 'content',
                 'options'    => array(
                     'label'     => __('Content'),
-                    'editor'    => 'html',
+                    'editor'    => $editor,
+                    'set'       => $set,
                 ),
                 'attributes' => array(
                     'id'        => 'content',
