@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
@@ -31,7 +31,7 @@ return array(
     'author'        => array(
         'name'          => 'Zongshu Lin',
         'email'         => 'zongshu@eefocus.com',
-        'website'       => 'http://www.github.com/pi-engine/pi',
+        'website'       => 'http://www.github.com/linzongshu',
         'credits'       => 'Pi Engine Team.'
     ),
     // Module dependency: list of module directory names, optional

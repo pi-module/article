@@ -15,14 +15,24 @@ $this->Backbone();
 </div>
 <?php } ?>
 
+<?php 
+    $form->setAttribute('class', 'form-horizontal');
+    echo $this->form()->openTag($form);
+    $this->formElementErrors()->setMessageOpenFormat('');
+    $this->formElementErrors()->setMessageCloseString('');
+    $this->formElementErrors()->setMessageSeparatorString('');
+?>
 <?php echo $this->form()->openTag($form) ?>
 <div>
 <?php $element = $form->get('mode'); ?>
     <div><?php echo $this->formLabel($element) ?></div>
-    <div><?php
-        echo $this->formElement($element);
-        echo $this->formElementErrors($element); ?>
-    </div>
+    <div><?php echo $this->formElement($element) ?></div>
+    <?php if ($this->formElementErrors($element)) { ?>
+        <div class="alert alert-error" style="margin-top: 8px">
+            <button class="close" data-dismiss="alert" type="button">×</button>
+            <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
+        </div>
+    <?php } ?>
 </div>
 
 <div id="article-config-form-elements" <?php if ($custom != $form->get('mode')->getValue()) echo 'style="display: none"' ?>>
@@ -31,6 +41,12 @@ $this->Backbone();
         <div class="span12">
         <?php $element = $form->get($name); ?>
             <div><?php echo $this->formElement($element) ?></div>
+            <?php if ($this->formElementErrors($element)) { ?>
+                <div class="alert alert-error" style="margin-top: 8px">
+                    <button class="close" data-dismiss="alert" type="button">×</button>
+                    <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
+                </div>
+            <?php } ?>
         </div>
     <?php } ?>
 </div>

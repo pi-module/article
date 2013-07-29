@@ -35,23 +35,23 @@ class CategoryEditForm extends BaseForm
         $this->add(array(
             'name'       => 'parent',
             'options'    => array(
-                'label' => __('Parent'),
+                'label'       => __('Parent'),
             ),
             'attributes' => array(
                 'description' => __('Category Hierarchy'),
             ),
-            'type' => 'Module\Article\Form\Element\CategoryWithRoot',
+            'type'       => 'Module\Article\Form\Element\CategoryWithRoot',
             
         ));
 
         $this->add(array(
             'name'       => 'name',
             'options'    => array(
-                'label' => __('Name'),
+                'label'       => __('Name'),
             ),
             'attributes' => array(
-                'type' => 'text',
-                'description' => __('The unique identifier of category.REQUIRED!'),
+                'type'        => 'text',
+                'description' => __('The unique identifier of category. REQUIRED!'),
             ),
             
         ));
@@ -59,10 +59,10 @@ class CategoryEditForm extends BaseForm
         $this->add(array(
             'name'       => 'slug',
             'options'    => array(
-                'label' => __('Slug'),
+                'label'       => __('Slug'),
             ),
             'attributes' => array(
-                'type' => 'text',
+                'type'        => 'text',
                 'description' => __('The "Slug" is category name in URL.'),
             ),
             
@@ -71,10 +71,10 @@ class CategoryEditForm extends BaseForm
         $this->add(array(
             'name'       => 'title',
             'options'    => array(
-                'label' => __('Title'),
+                'label'       => __('Title'),
             ),
             'attributes' => array(
-                'type' => 'text',
+                'type'        => 'text',
                 'description' => __('Will be displayed on your website.'),
             ),
            
@@ -83,76 +83,78 @@ class CategoryEditForm extends BaseForm
         $this->add(array(
             'name'       => 'description',
             'options'    => array(
-                'label' => __('Description'),
+                'label'       => __('Description'),
             ),
             'attributes' => array(
-                'type' => 'textarea',
+                'type'        => 'textarea',
                 'description' => __('Display in the website depends on theme.'),
             ),
             
         ));
         
         $this->add(array(
-            'name' => 'image',
-            'options' => array(
-                'label' => __('Image'),
+            'name'       => 'image',
+            'options'    => array(
+                'label'       => __('Image'),
             ),
             'attributes' => array(
-                'type' => '',
+                'type'        => '',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'x',
+            'name'       => 'x',
             'attributes' => array(
-                'type' => 'hidden',
+                'type'        => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'y',
+            'name'       => 'y',
             'attributes' => array(
-                'type' => 'hidden',
+                'type'        => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'w',
+            'name'       => 'w',
             'attributes' => array(
-                'type' => 'hidden',
+                'type'        => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'h',
+            'name'       => 'h',
             'attributes' => array(
-                'type' => 'hidden',
+                'type'        => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'security',
-            'type'  => 'csrf',
+            'name'       => 'security',
+            'type'       => 'csrf',
         ));
 
         $this->add(array(
-            'name'  => 'id',
+            'name'       => 'id',
             'attributes' => array(
-                'type' => 'hidden',
+                'type'        => 'hidden',
             ),
         ));
+        
         $this->add(array(
-            'name'  => 'fake_id',
-            'attributes'    => array(
-                'type' => 'hidden',
+            'name'       => 'fake_id',
+            'attributes' => array(
+                'type'        => 'hidden',
             ),
         ));
+        
         $this->add(array(
-            'name'          => 'submit',
-            'attributes'    => array(                
-                'value' => __('Submit'),
+            'name'       => 'submit',
+            'attributes' => array(                
+                'value'       => __('Submit'),
             ),
-            'type'  => 'submit',
+            'type'       => 'submit',
         ));
     }
 }

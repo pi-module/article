@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
@@ -44,25 +44,6 @@ class DraftController extends ActionController
     const RESULT_TRUE  = true;
 
     /**
-     * Rendering form
-     * 
-     * @param Zend\Form\Form $form     Form instance
-     * @param string         $message  Message assign to template
-     * @param bool           $isError  Whether is error message
-     */
-    protected function renderForm($form, $message = null, $isError = false)
-    {
-        $params = array('form' => $form);
-        if ($isError) {
-            $params['error'] = $message;
-        } else {
-            $params['message'] = $message;
-        }
-        $this->view()->assign($params);
-        $this->view()->assign('form', $form);
-    }
-    
-    /**
      * Getting draft form instance
      * 
      * @param string  $action   The action to request when forms are submitted
@@ -89,6 +70,8 @@ class DraftController extends ActionController
         $this->view()->assign(array(
             'width'                 => $this->config('feature_width'),
             'height'                => $this->config('feature_height'),
+            'thumb_width'           => $this->config('feature_thumb_width'),
+            'thumb_height'          => $this->config('feature_thumb_height'),
             'image_extension'       => $this->config('image_extension'),
             'max_image_size'        => Upload::fromByteString($this->config('max_image_size')),
             'attachment_extension'  => $this->config('attachment_extension'),
@@ -909,7 +892,7 @@ class DraftController extends ActionController
         $form->setData($data);
 
         // Get author info
-        if (isset($elements['author']) and $data['author']) {
+        if (in_array('author', $elements) and $data['author']) {
             $author = $this->getModel('author')->find($data['author']);
             if ($author) {
                 $this->view()->assign('author', array(
@@ -921,7 +904,7 @@ class DraftController extends ActionController
 
         // Get submitter info
         if ($data['uid']) {
-            $user = Pi::model('user')->find($data['user']);
+            $user = Pi::model('user')->find($data['uid']);
             if ($user) {
                 $this->view()->assign('user', array(
                     'id'   => $user->id,

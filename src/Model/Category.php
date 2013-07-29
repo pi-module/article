@@ -21,10 +21,13 @@ namespace Module\Article\Model;
 use Pi;
 use Pi\Application\Model\Nest as Nest;
 
+/**
+ * Public class for operating category table. 
+ */
 class Category extends Nest
 {
     /**
-     * Getting available fields
+     * Getting available fields.
      * 
      * @return array 
      */
@@ -46,8 +49,8 @@ class Category extends Nest
     /**
      * Get nodes by ids
      *
-     * @param $ids Node ids
-     * @param null $columns Columns, null for default
+     * @param array  $ids      Node ids
+     * @param null   $columns  Columns, null for default
      * @return array
      */
     public function getRows($ids, $columns = null)
@@ -86,8 +89,8 @@ class Category extends Nest
     /**
      * Get category list
      *
-     * @param null $columns Columns, null for default
-     * @param bool $withRoot Include root node or not
+     * @param null  $columns   Columns, null for default
+     * @param bool  $withRoot  Include root node or not
      * @return array Associative array
      */
     public function getList($columns = null, $withRoot = false)
@@ -122,8 +125,8 @@ class Category extends Nest
     /**
      * Get nodes in level N
      *
-     * @param $depth Level depth
-     * @param null $columns Columns, null for default
+     * @param int   $depth    Level depth
+     * @param null  $columns  Columns, null for default
      * @return array Associative array
      */
     public function getLevel($depth, $columns = null)
@@ -158,8 +161,8 @@ class Category extends Nest
     /**
      * Get direct parent node info
      *
-     * @param $objective Node id
-     * @param null $cols Columns, null for all
+     * @param int|Node $objective  Node id
+     * @param null     $cols       Columns, null for all
      * @return bool|array Parent node info
      */
     public function getParentNode($objective, $cols = null)
@@ -179,6 +182,7 @@ class Category extends Nest
             return false;
         }
 
+        $result = array();
         foreach ($rowset as $row) {
             $result = $row->toArray();
         }
@@ -189,7 +193,7 @@ class Category extends Nest
     /**
      * Does a node have children
      *
-     * @param $objective Node id
+     * @param int|Node  $objective  Node id
      * @return bool
      */
     public function hasChildren($objective)
@@ -198,24 +202,16 @@ class Category extends Nest
         if (!$row) {
             return false;
         }
-//        $select = $this->select()
-//            ->where(array($this->quoteColumn('left') . ' > ?' => $row->left))
-//            ->where(array($this->quoteColumn('right') . ' < ?' => $row->right));
-//        $select->order($this->column['left'] . ' ASC');
-//        if (($rowset = $this->selectWith($select)) && $rowset->count()) {
-//            return true;
-//        }
-//
-//        return false;
+
         return $row->right - $row->left > 1;
     }
 
     /**
      * Get ids of all children
      *
-     * @param $objective Node id
-     * @param null $cols Columns, null for all
-     * @param bool $includeSelf Include self in result or not
+     * @param int|Node  $objective    Node id
+     * @param null      $cols         Columns, null for all
+     * @param bool      $includeSelf  Include self in result or not
      * @return array Node ids
      */
     public function getDescendantIds($objective, $cols = null, $includeSelf = true)
@@ -238,9 +234,9 @@ class Category extends Nest
     /**
      * Get ids of all sons
      *
-     * @param $objective Node id
-     * @param null $cols Columns, null for all
-     * @param bool $includeSelf Include self in result or not
+     * @param int|Node  $objective    Node id
+     * @param null      $cols         Columns, null for all
+     * @param bool      $includeSelf  Include self in result or not
      * @return array Node ids
      */
     public function getChildrenIds($objective, $cols = null, $includeSelf = false)
@@ -268,7 +264,7 @@ class Category extends Nest
     /**
      * Get nodes as options of Select element
      *
-     * @param bool $withRoot Include root node in result or not
+     * @param bool   $withRoot  Include root node in result or not
      * @return array Options
      */
     public function getSelectOptions($withRoot = false)

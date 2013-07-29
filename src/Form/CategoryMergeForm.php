@@ -35,36 +35,36 @@ class CategoryMergeForm extends BaseForm
         $this->add(array(
             'name'       => 'from',
             'options'    => array(
-                'label' => __('From'),
+                'label'     => __('From'),
             ),
             'attributes' => array(
-                'id'   => 'from',
+                'id'        => 'from',
             ),
-            'type' => 'Module\Article\Form\Element\Category',
+            'type'       => 'Module\Article\Form\Element\Category',
         ));
 
         $this->add(array(
             'name'       => 'to',
             'options'    => array(
-                'label' => __('To'),
+                'label'     => __('To'),
             ),
             'attributes' => array(
-                'id'   => 'to',
+                'id'        => 'to',
             ),
-            'type' => 'Module\Article\Form\Element\Category',
+            'type'       => 'Module\Article\Form\Element\Category',
         ));
 
         $this->add(array(
-            'name'  => 'security',
-            'type'  => 'csrf',
+            'name'       => 'security',
+            'type'       => 'csrf',
         ));
 
         $this->add(array(
-            'name'          => 'submit',
-            'attributes'    => array(               
-                'value' => __('Submit'),
+            'name'       => 'submit',
+            'attributes' => array(               
+                'value'     => __('Submit'),
             ),
-            'type'  => 'submit',
+            'type'       => 'submit',
         ));
     }
 }
