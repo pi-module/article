@@ -29,70 +29,28 @@ return array(
             'article-homepage'  => array(
                 'label'         => _t('Article Homepage'),
                 'route'         => 'default',
-                'controller'    => 'index',
+                'controller'    => 'article',
                 'action'        => 'index',
             ),
-            'topic-homepage'    => array(
-                'label'         => _t('Topic Homepage'),
+            'dashboard'         => array(
+                'label'         => _t('Dashboard'),
                 'route'         => 'default',
-                'controller'    => 'topic',
-                'action'        => 'index',
-            ),
-            'my'                => array(
-                'label'         => _t('My Article'),
-                'route'         => 'default',
-                'controller'    => 'my',
+                'controller'    => 'dashboard',
                 'action'        => 'index',
             ),
         ),
         
         // Default admin navigation
         'admin'   => array(
-            'article'           => array(
-                'label'         => _t('All Articles'),
+            'config'            => array(
+                'label'         => _t('Configuration'),
                 'route'         => 'admin',
-                'controller'    => 'article',
+                'controller'    => 'config',
+                'action'        => 'form',
                 'resource'      => array(
-                    'resource'  => 'article',
+                    'resource'  => 'config',
                 ),
             ),
-            
-            'topic'             => array(
-                'label'         => _t('Topic'),
-                'route'         => 'admin',
-                'controller'    => 'topic',
-                'resource'      => array(
-                    'resource'  => 'topic',
-                ),
-            ),
-            
-            'media'             => array(
-                'label'         => _t('Media'),
-                'route'         => 'admin',
-                'controller'    => 'media',
-                'resource'      => array(
-                    'resource'  => 'media',
-                ),
-            ),
-
-            'author'            => array(
-                'label'         => _t('Author'),
-                'route'         => 'admin',
-                'controller'    => 'author',
-                'resource'      => array(
-                    'resource'  => 'author',
-                ),
-            ),
-
-            'category'          => array(
-                'label'         => _t('Category'),
-                'route'         => 'admin',
-                'controller'    => 'category',
-                'resource'      => array(
-                    'resource'  => 'category',
-                ),
-            ),
-            
             'permission'        => array(
                 'label'         => _t('Permission'),
                 'route'         => 'admin',
@@ -101,7 +59,6 @@ return array(
                     'resource'  => 'permission',
                 ),
             ),
-
             'analysis'          => array(
                 'label'         => _t('Statistics'),
                 'route'         => 'admin',
@@ -117,17 +74,49 @@ return array(
             'article-homepage'  => array(
                 'label'         => _t('Article Homepage'),
                 'route'         => 'default',
-                'controller'    => 'index',
+                'controller'    => 'article',
             ),
-            'topic-homepage'    => array(
-                'label'         => _t('Topic Homepage'),
+            'article'           => array(
+                'label'         => _t('All Articles'),
                 'route'         => 'default',
-                'controller'    => 'topic',
+                'controller'    => 'article',
+                'action'        => 'published',
+                'params'        => array(
+                    'from'         => 'all',
+                ),
             ),
-            'my'                => array(
+            'draft'             => array(
                 'label'         => _t('My Article'),
                 'route'         => 'default',
-                'controller'    => 'my',
+                'controller'    => 'draft',
+                'action'        => 'list',
+                'params'        => array(
+                    'status'       => 1,
+                ),
+            ),
+            'topic'             => array(
+                'label'         => _t('Topic'),
+                'route'         => 'default',
+                'controller'    => 'topic',
+                'action'        => 'article-list',
+            ),
+            'media'             => array(
+                'label'         => _t('Media'),
+                'route'         => 'default',
+                'controller'    => 'media',
+                'action'        => 'list',
+            ),
+            'author'            => array(
+                'label'         => _t('Author'),
+                'route'         => 'default',
+                'controller'    => 'author',
+                'action'        => 'list',
+            ),
+            'category'          => array(
+                'label'         => _t('Category'),
+                'route'         => 'default',
+                'controller'    => 'category',
+                'action'        => 'list-category',
             ),
         ),
     ),
