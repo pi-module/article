@@ -1,6 +1,6 @@
 <?php
 /**
- * Article module author class
+ * Article module empty value validator
  *
  * You may not change or alter any portion of this comment or credits
  * of supporting developers from this source code or any supporting source code
@@ -14,45 +14,41 @@
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
+ * @subpackage      Validator
  */
 
-namespace Module\Article\Model;
+namespace Module\Article\Validator;
 
 use Pi;
-use Pi\Application\Model\Model;
+use Zend\Validator\AbstractValidator;
 
-/**
- * Model class for operating author table 
- */
-class Author extends Model
+class NotEmpty extends AbstractValidator
 {
-    /**
-     * Getting available fields
-     * 
-     * @return array 
-     */
-    public static function getAvailableFields()
-    {
-        return array('id', 'name', 'photo', 'description');
-    }
+    const IS_EMPTY        = 'isEmpty';
 
     /**
-     * Getting author name
-     * 
-     * @return array 
+     * @var array
      */
-    public function getSelectOptions()
+    protected $messageTemplates = array(
+        self::IS_EMPTY     => 'The value is required!',
+    );
+
+    /**
+     * Empty value validate
+     *
+     * @param  mixed  $value
+     * @param  array  $context
+     * @return boolean
+     */
+    public function isValid($value)
     {
-        $result = array('0' => '');
+        $this->setValue($value);
 
-        $select = $this->sql->select()
-            ->columns(array('id', 'name'))->order('name ASC');
-        $authors = $this->selectWith($select);
-
-        foreach ($authors as $author) {
-            $result[$author->id] = $author->name;
+        if (empty($value)) {
+            $this->error(self::IS_EMPTY);
+            return false;
         }
 
-        return $result;
+        return true;
     }
 }

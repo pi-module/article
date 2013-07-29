@@ -12,7 +12,7 @@
                 <th><?php echo __('Title'); ?></th>
                 <th style="width:15%;"><?php echo __('Category'); ?></th>
                 <th style="width:15%;"><?php echo __('Tag'); ?></th>
-                <th style="width:15%;"><?php echo __('Last update date'); ?></th>
+                <th style="width:15%;"><?php echo $status == $flags['published'] ? __('Published time') : __('Last update date'); ?></th>
             </tr>
             <?php foreach ($data as $draft) { ?>
             <tr data-id="<?php echo $draft['id']; ?>">
@@ -26,7 +26,12 @@
                     <strong class="muted"><?php echo _e('No Title'); ?></strong>
                     <?php } ?>    
                     <div class="row-actions">
-                        <a href="<?php echo $this->url('', array('action' => 'edit', 'controller' => 'draft', 'id' => $draft['id'])); ?>"><?php _e('Edit'); ?></a>
+                        <?php if ($status == $flags['published']) {
+                            $controller = 'article';
+                        } else {
+                            $controller = 'draft';
+                        } ?>
+                        <a href="<?php echo $this->url('', array('action' => 'edit', 'controller' => $controller, 'id' => $draft['id'])); ?>"><?php _e('Edit'); ?></a>
                         <span class="divider">|</span>
                         <a href="javascript:void(0)" class="delete"><?php _e('Delete'); ?></a>
                     </div>
@@ -48,7 +53,7 @@
                 <td>
                     <?php echo $this->escape($draft['tag']); ?>
                 </td>
-                <td><?php echo date('Y-m-d', $draft['time_save']); ?></td>
+                <td><?php echo date('Y-m-d', $status == $flags['published'] ? $draft['time_publish'] : $draft['time_update']); ?></td>
             </tr>
             <?php } ?>
         </tbody>

@@ -40,24 +40,6 @@ use Module\Article\Model\Article;
 class CategoryController extends ActionController
 {
     /**
-     * Rendering form
-     * 
-     * @param Zend\Form\Form $form     Form instance
-     * @param string         $message  Message assign to template
-     * @param bool           $isError  Whether is error message
-     */
-    protected function renderForm($form, $message = null, $isError = false)
-    {
-        $params = array('form' => $form);
-        if ($isError) {
-            $params['error'] = $message;
-        } else {
-            $params['message'] = $message;
-        }
-        $this->view()->assign($params);
-    }
-    
-    /**
      * Getting category form object
      * 
      * @param string $action  Form name
@@ -74,21 +56,6 @@ class CategoryController extends ActionController
         ));
 
         return $form;
-    }
-
-    /**
-     * Reading configuration and assign them to template
-     */
-    protected function setModuleConfig()
-    {
-        $this->view()->assign(array(
-            'width'                 => $this->config('category_width'),
-            'height'                => $this->config('category_height'),
-            'image_extension'       => $this->config('image_extension'),
-            'max_image_size'        => Upload::fromByteString($this->config('max_image_size')),
-            //'attachment_extension'  => $this->config('attachment_extension'),
-            //'max_attachment_size'   => Upload::fromByteString($this->config('max_attachment_size')),
-        ));
     }
 
     /**
@@ -205,7 +172,7 @@ class CategoryController extends ActionController
      */
     public function listAction()
     {
-        $modelCategory  = $this->getModel('category');
+        $modelCategory = $this->getModel('category');
 
         $category   = Service::getParam($this, 'category', '');
         $categoryId = is_numeric($category) ? (int) $category : $modelCategory->slugToId($category);
@@ -223,10 +190,10 @@ class CategoryController extends ActionController
         $categories = Cache::getCategoryList();
         foreach ($categories as &$row) {
             $row['url'] = $this->url($route, array(
-                'category'      => $row['slug'] ?: $row['id'],
+                'category' => $row['slug'] ?: $row['id'],
             ));
         }
-        $categoryIds    = $modelCategory->getDescendantIds($categoryId);
+        $categoryIds = $modelCategory->getDescendantIds($categoryId);
         if (empty($categoryIds)) {
             return $this->jumpTo404(__('Invalid category id'));
         }
@@ -301,7 +268,7 @@ class CategoryController extends ActionController
             'fake_id'  => Upload::randomKey(),
         ));
 
-        $this->setModuleConfig();
+        Service::setModuleConfig($this);
         $this->view()->assign(array(
             'title'                 => __('Add Category Info'),
             'form'                  => $form,
@@ -314,15 +281,13 @@ class CategoryController extends ActionController
             $form->setInputFilter(new CategoryEditFilter);
             $form->setValidationGroup(Category::getAvailableFields());
             if (!$form->isValid()) {
-                $this->setModuleConfig();
-                $this->view()->assign('form', $form);
-                return ;
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             
             $data = $form->getData();
             $id   = $this->saveCategory($data);
             if (!$id) {
-                return $this->renderForm($form, __('Can not save data!'), true);
+                return Service::renderForm($this, $form, __('Can not save data!'), true);
             }
             return $this->redirect()->toRoute('', array('action'=>'list-category'));
         }
@@ -332,10 +297,10 @@ class CategoryController extends ActionController
      * Editing category information
      * 
      * @return ViewModel
-     * @throws \Exception 
      */
     public function editAction()
     {
+        Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Category Info'));
         
         $form = $this->getCategoryForm('edit');
@@ -346,34 +311,34 @@ class CategoryController extends ActionController
             $form->setInputFilter(new CategoryEditFilter);
             $form->setValidationGroup(Category::getAvailableFields());
             if (!$form->isValid()) {
-                $this->setModuleConfig();
-                return $this->renderForm($form, __('Can not update data!'), true);
+                return Service::renderForm($this, $form, __('Can not update data!'), true);
             }
             $data = $form->getData();
             $id   = $this->saveCategory($data);
 
-            return $this->redirect()->toRoute('', array('action'=>'list-category'));
+            return $this->redirect()->toRoute('', array('action' => 'list-category'));
         }
         
         $id     = $this->params('id', 0);
         if (empty($id)) {
-            throw new \Exception(__('Invalid author id'));
+            $this->jumpto404(__('Invalid author id!'));
         }
 
         $model = $this->getModel('category');
         $row   = $model->find($id);
-        if ($row) {
-            $form = $this->getCategoryForm('edit');
-            $form->setData($row->toArray());
-
-            $parent = $model->getParentNode($row->id);
-            if ($parent) {
-                $form->get('parent')->setAttribute('value', $parent['id']);
-            }
-
-            $this->setModuleConfig();
-            $this->view()->assign('form', $form);
+        if (!$row->id) {
+            return $this->jumpTo404(__('Can not find category!'));
         }
+        
+        $form = $this->getCategoryForm('edit');
+        $form->setData($row->toArray());
+
+        $parent = $model->getParentNode($row->id);
+        if ($parent) {
+            $form->get('parent')->setAttribute('value', $parent['id']);
+        }
+
+        $this->view()->assign('form', $form);
     }
     
     /**
@@ -452,7 +417,7 @@ class CategoryController extends ActionController
             $form->setInputFilter(new CategoryMergeFilter);
         
             if (!$form->isValid()) {
-                return $this->renderForm($form, __('Can not merge category!'), true);
+                return Service::renderForm($this, $form, __('Can not merge category!'), true);
             }
             $data = $form->getData();
 
@@ -461,19 +426,19 @@ class CategoryController extends ActionController
             // Deny to be merged to self or a child
             $descendant = $categoryModel->getDescendantIds($data['from']);
             if (array_search($data['to'], $descendant) !== false) {
-                return $this->renderForm($form, __('Category cannot be moved to self or a child'), true);
+                return Service::renderForm($this, $form, __('Category cannot be moved to self or a child!'), true);
             }
 
             // From node cannot be default
             if ($this->config('default_category') == $data['from']) {
-               return $this->renderForm($form, __('Cannot merge default category'), true);
+               return Service::renderForm($this, $form, __('Cannot merge default category'), true);
             }
 
             // Move children node
             $children = $categoryModel->getChildrenIds($data['from']);
             foreach ($children as $objective) {
                 if (!$categoryModel->move($objective, $data['to'])) {
-                    return $this->renderForm($form, __('Move children error.'), true);
+                    return Service::renderForm($this, $form, __('Move children error.'), true);
                 }
             }
 
@@ -487,7 +452,7 @@ class CategoryController extends ActionController
             $categoryModel->remove($data['from']);
 
             // Go to list page
-            return $this->redirect()->toRoute('', array('action'=>'list-category'));
+            return $this->redirect()->toRoute('', array('action' => 'list-category'));
         }
         
         $from = $this->params('from', 0);
@@ -503,6 +468,7 @@ class CategoryController extends ActionController
 
     /**
      * Moving source category as a child of target category
+     * 
      * @return ViewModel 
      */
     public function moveAction()
@@ -517,7 +483,7 @@ class CategoryController extends ActionController
             $form->setInputFilter(new CategoryMoveFilter);
 
             if (!$form->isValid()) {
-                return $this->renderForm($form, __('Can not move category!'), true);
+                return Service::renderForm($this, $form, __('Can not move category!'), true);
             }
                 
             $data = $form->getData();
@@ -526,14 +492,14 @@ class CategoryController extends ActionController
             // Deny to be moved to self or a child
             $children = $categoryModel->getDescendantIds($data['from']);
             if (array_search($data['to'], $children) !== false) {
-                return $this->renderForm($form, __('Category cannot be moved to self or a child'), true);
+                return Service::renderForm($this, $form, __('Category cannot be moved to self or a child!'), true);
             }
 
             // Move category
             $categoryModel->move($data['from'], $data['to']);
 
             // Go to list page
-            return $this->redirect()->toRoute('', array('action'=>'list-category'));
+            return $this->redirect()->toRoute('', array('action' => 'list-category'));
         }
         
         $from = $this->params('from', 0);

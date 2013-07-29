@@ -38,7 +38,7 @@ $this->Backbone();
 (function($){
 var page={
     id: function(){
-        return "<?php echo $form->get('id')->getValue()?'id/'.$form->get('id')->getValue():'fake_id/'.$form->get('fake_id')->getValue(); ?>";
+        return "<?php echo $form->get('id')->getValue() ? 'id-' . $form->get('id')->getValue() : 'fake_id-' . $form->get('fake_id')->getValue(); ?>";
     },
     form:$("form.form-horizontal"),
     $:function(selector){
@@ -63,7 +63,7 @@ var UploadView=Backbone.View.extend({
               return [];
            },
            forceIframeTransport:true,
-           url: '<?php echo $this->url('',array('controller' => 'upload', 'action' => 'authorPhoto')); ?>'+page.id(),
+           url: '<?php echo $this->url('',array('controller' => 'upload', 'action' => 'authorPhoto')); ?>' + page.id(),
            done:function(e,data){
                var d=$.parseJSON($.trim($(data.result).text()));
                if(d.status==1){

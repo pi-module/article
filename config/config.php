@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * @copyright       Copyright (c) http://www.eefocus.com
+ * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
@@ -63,6 +63,20 @@ return array(
             'value'       => 40,
             'filter'      => 'number_int',
         ),
+        'author_limit'    => array(
+            'category'    => 'general',
+            'title'       => _t('Author Limit'),
+            'description' => _t('Maximum count of author in management page.'),
+            'value'       => 20,
+            'filter'      => 'number_int',
+        ),
+        'category_limit'  => array(
+            'category'    => 'general',
+            'title'       => _t('Category Limit'),
+            'description' => _t('Maximum count of category in management page.'),
+            'value'       => 20,
+            'filter'      => 'number_int',
+        ),
         'enable_tag'      => array(
             'category'    => 'general',
             'title'       => _t('Enable Tag'),
@@ -91,6 +105,24 @@ return array(
             'description' => _t('Maximum related articles to fetch.'),
             'value'       => 5,
             'filter'      => 'number_int',
+        ),
+        'markup'          => array(
+            'category'    => 'general',
+            'title'       => _t('Markup Language'),
+            'description' => _t('Default markup language for editing draft.'),
+            'value'       => _t('html'),
+            'edit'        => array(
+                'type'    => 'select',
+                'options' => array(
+                    'options' => array(
+                        'html'     => _t('HTML'),
+                        'compound' => _t('Compound'),
+                        'markdown' => _t('Markdown'),
+                        'default'  => _t('Textarea'),
+                    ),
+                ),
+            ),
+            'filter'      => 'string',
         ),
 
         // Autosave
@@ -217,7 +249,7 @@ return array(
             'value'       => 110,
             'filter'      => 'number_int',
         ),
-        'author_h'        => array(
+        'author_height'   => array(
             'category'    => 'media',
             'title'       => _t('Author Photo Height'),
             'description' => _t('Author photo height'),
@@ -258,17 +290,51 @@ return array(
             'filter'      => 'number_int',
         ),
         'feature_height'  => array(
-            'category'    => 'image',
+            'category'    => 'media',
             'title'       => _t('Feature Image Height'),
             'description' => _t('Feature image height'),
             'value'       => 300,
             'filter'      => 'number_int',
         ),
         'default_feature_image' => array(
-            'category'    => 'image',
+            'category'    => 'media',
             'title'       => _t('Default Feature Image'),
             'description' => _t('Path to default feature image of article.'),
             'value'       => 'image/default-feature.png',
+        ),
+        'feature_thumb_width' => array(
+            'category'    => 'media',
+            'title'       => _t('Feature thumb width'),
+            'description' => '',
+            'value'       => 110,
+            'filter'      => 'number_int',
+        ),
+        'feature_thumb_height' => array(
+            'category'    => 'media',
+            'title'       => _t('Feature thumb height'),
+            'description' => '',
+            'value'       => 75,
+            'filter'      => 'number_int',
+        ),
+        'default_feature_thumb' => array(
+            'category'    => 'media',
+            'title'       => _t('Default feature thumb'),
+            'description' => _t('Path to default feature thumb of article.'),
+            'value'       => 'image/default-feature-thumb.png',
+        ),
+        'content_thumb_width' => array(
+            'category'    => 'media',
+            'title'       => _t('Content thumb width'),
+            'description' => '',
+            'value'       => 500,
+            'filter'      => 'number_int',
+        ),
+        'content_thumb_height' => array(
+            'category'    => 'media',
+            'title'       => _t('Content thumb height'),
+            'description' => '',
+            'value'       => 400,
+            'filter'      => 'number_int',
         ),
 
         // SEO

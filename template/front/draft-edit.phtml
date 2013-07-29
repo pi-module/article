@@ -106,9 +106,11 @@
                     echo $this->formElement($element);
                 ?>
                 <span><span class="left-wrod"></span><?php echo __('Character left') ?></span>
-                <label class="checkbox" style="margin: 0 5px 0 10px;">
-                    <input type="checkbox" class="subtitle-check" <?php $subtitle = $form->get('subtitle')->getValue(); if ($subtitle) echo "checked" ?>><?php _e('Subtitle') ?>
-                </label>
+                <?php if (in_array('subtitle', $elements)) { ?>
+                    <label class="checkbox" style="margin: 0 5px 0 10px;">
+                        <input type="checkbox" class="subtitle-check" <?php $subtitle = $form->get('subtitle')->getValue(); if ($subtitle) echo "checked" ?>><?php _e('Subtitle') ?>
+                    </label>
+                <?php } ?>
             </div>
             <?php } ?>
             <?php if (in_array('subtitle', $elements)) { ?>
@@ -131,6 +133,8 @@
                     }
                     echo $this->formElement($element); ?>
                 <?php } ?>
+            </div>
+            <div class="form-inline input-col3">
                 <?php if (in_array('source', $elements)) { ?>
                 <strong><?php _e('Source:') ?></strong>
                 <?php $element = $form->get('source');
@@ -265,7 +269,7 @@
                     </div>
                     <p>
                         <?php if ($draft['time_save']) { ?>
-                        <?php _e('Last edited at') ?><?php echo date('Y-m-d H:i', $draft['time_save']); ?> <?php _e('by'); ?> <?php echo $user['name']; ?>
+                        <?php _e('Last edited at') ?>&nbsp;<?php echo date('Y-m-d H:i', $draft['time_save']); ?> <?php _e('by'); ?>&nbsp;<?php echo $user['name']; ?>
                         <?php } ?> 
                     </p>
                 </div>
@@ -308,18 +312,17 @@
                 <strong><?php _e('Feature image') ?></strong>
             </div>
             <div class="clearfix widget-body">
-                <div class="upload-image-wrap" style="cursor: default; width: <?php echo $width . 'px' ?>; height: <?php echo $height . 'px' ?>;">
+                <div class="upload-image-wrap" style="cursor: default; width: <?php echo $thumbWidth . 'px' ?>; height: <?php echo $thumbHeight . 'px' ?>;">
                 </div>
                 <div class="pull-left" style="margin-top: 20px;">
                     <span class="btn fileinput-button">
                     <?php _e('Upload') ?>
                     <input type="file" name="featureImage">
                     </span>
-                    <span class="muted"><?php echo _e('image size'). $width . '*' . $height ; ?></span>
+                    <span class="muted"><?php echo _e('image size '). $width . '*' . $height ; ?></span>
                 </div>
             </div>
         </div>
-        <?php } ?>
         <div class="widget" id="jsGallery">
             <div class="widget-header" style="cursor:pointer;" title="<?php _e('Click toggle show'); ?>">
                 <i class="icon-caret-up"></i>
@@ -335,6 +338,7 @@
                 </div>
             </div>
         </div>
+        <?php } ?>
         <?php if (!empty($config['enable_tag']) and in_array('tag', $elements)) { ?>
         <div class="widget" id="jsTag">
             <div class="widget-header">
@@ -564,7 +568,7 @@ var page = {
     base:"<?php echo Pi::url(''); ?>",
     id:"<?php echo $form->get('id')->getValue() ?: $form->get('fake_id')->getValue(); ?>",
     ajaxId: function(){
-        return "<?php echo $form->get('id')->getValue()? 'id/' . $form->get('id')->getValue() : 'fake_id/' . $form->get('fake_id')->getValue(); ?>";
+        return "<?php echo $form->get('id')->getValue()? 'id-' . $form->get('id')->getValue() : 'fake_id-' . $form->get('fake_id')->getValue(); ?>";
     },
     status: "<?php echo $draft['status']; ?>",
     form: $("form.row-fluid"),
@@ -572,7 +576,7 @@ var page = {
     init: function () {
         this.jump = this.$("[name=jump]");
         <?php if (!$draft['article']) { ?>
-        if (this.enableAutosave == 1) {
+        if (this.autosaveInterval > 0) {
             setInterval(function(){
                 if($.trim(this.$("[name=subject]").val()) || $.trim(this.$("#content").val())){
                    page.submit({msg:false});

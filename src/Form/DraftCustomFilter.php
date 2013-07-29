@@ -20,6 +20,7 @@ namespace Module\Article\Form;
 
 use Pi;
 use Zend\InputFilter\InputFilter;
+use Module\Article\Controller\Admin\ConfigController as Config;
 
 /**
  * Class for verfying and filter form 
@@ -29,7 +30,7 @@ class DraftCustomFilter extends InputFilter
     /**
      * Initializing validator and filter 
      */
-    public function __construct()
+    public function __construct($mode, $options = array())
     {
         $this->add(array(
             'name'     => 'mode',
@@ -40,5 +41,19 @@ class DraftCustomFilter extends InputFilter
                 ),
             ),
         ));
+        
+        if (Config::FORM_MODE_CUSTOM == $mode) {
+            foreach ($options['needed'] as $element) {
+                $this->add(array(
+                    'name'       => $element,
+                    'required'   => true,
+                    'validators' => array(
+                        array(
+                            'name' => 'Module\Article\Validator\NotEmpty',
+                        ),
+                    ),
+                ));
+            }
+        }
     }
 }
