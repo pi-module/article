@@ -21,6 +21,7 @@ namespace Module\Article\Route;
 use Zend\Mvc\Router\Http\RouteMatch;
 use Zend\Stdlib\RequestInterface as Request;
 use Pi\Mvc\Router\Http\Standard;
+use Pi;
 
 /**
  * Custom default route class, using for SEO
@@ -131,6 +132,14 @@ class Article extends Standard
         if (isset($matches['preview']) and $matches['preview'] == 1) {
             $matches['controller'] = 'draft';
             $matches['action']     = 'preview';
+        }
+        
+        // Attaching listener to add visit count, then if the action is cached, visit statistics also works.
+        // This code must be added if user want to use itself custom route.
+        if ('article' == $matches['controller'] and 'detail' == $matches['action']) {
+            $events = Pi::engine()->application()->getEventManager();
+            $obj    = new \Module\Article\Statistics;
+            $events->attach(\Zend\Mvc\MvcEvent::EVENT_DISPATCH, array($obj, 'runBeforePageCache'), 1100);
         }
 
         return new RouteMatch(array_merge($this->defaults, $matches), $pathLength);
