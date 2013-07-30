@@ -1,4 +1,6 @@
-<form method="get" action="<?php echo $block['actionUrl']; ?>">
-    <input type="text" name="keyword" value="" />
-    <input type="submit" value="Submit" />
+<form class="form-search" action="<?php echo $block['url'] ?>" method="post">
+    <div class="input-append">
+        <input name="keyword" class="span2 search-query" type="text" placeholder="<?php _e('Keyword') ?>" />
+        <button class="btn" type="submit"><?php _e('Search') ?></button>
+    </div>
 </form>

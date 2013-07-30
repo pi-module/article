@@ -216,7 +216,7 @@ class Block
         }
         
         return array(
-            'actionUrl' => Pi::engine()->application()->getRouter()->assemble(
+            'url' => Pi::engine()->application()->getRouter()->assemble(
                 array(
                     'module'     => $module,
                     'controller' => 'search',
