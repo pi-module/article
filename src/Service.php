@@ -110,6 +110,16 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting recently visited articles.
+     * 
+     * @param int     $dateFrom
+     * @param int     $dateTo
+     * @param int     $limit
+     * @param int     $category
+     * @param string  $module
+     * @return array 
+     */
     public static function getVisitsInPeriod($dateFrom, $dateTo, $limit = null, $category = null, $module = null)
     {
         $result = $where = array();
@@ -159,7 +169,7 @@ class Service
 
         $articleIds = array_keys($result);
         if ($articleIds) {
-            $resultsetArticle   = self::getAvailableArticlePage(array('id' => $articleIds), 1, $limit, null, '', $module);
+            $resultsetArticle = self::getAvailableArticlePage(array('id' => $articleIds), 1, $limit, null, '', $module);
 
             foreach ($result as $key => &$row) {
                 if (isset($resultsetArticle[$key])) {
@@ -171,6 +181,15 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting recently visited articles.
+     * 
+     * @param int     $days
+     * @param int     $limit
+     * @param int     $category
+     * @param string  $module
+     * @return array 
+     */
     public static function getVisitsRecently($days, $limit = null, $category = null, $module = null)
     {
         $dateTo   = time();
@@ -257,189 +276,13 @@ class Service
     }
 
     /**
-     * Getting article total count in period.
+     * Getting param post by post, get or query.
      * 
-     * @param int     $dateFrom  
-     * @param int     $dateTo
-     * @param string  $module
-     * @return int 
+     * @param ActionController $handler
+     * @param string  $param    Parameter key
+     * @param mixed   $default  Default value if parameter is no exists
+     * @return mixed 
      */
-    public static function getTotalInPeriod($dateFrom, $dateTo, $module = null)
-    {
-        $result = 0;
-        $where  = array();
-        $module = $module ?: Pi::service('module')->current();
-
-        if (!empty($dateFrom)) {
-            $where['time_submit >= ?'] = $dateFrom;
-        }
-        if (!empty($dateTo)) {
-            $where['time_submit <= ?'] = $dateTo;
-        }
-        $where['status'] = Article::FIELD_STATUS_PUBLISHED;
-        $where['active'] = 1;
-
-        $modelArticle   = Pi::model('article', $module);
-        $select         = $modelArticle->select()
-            ->columns(array('total' => new Expression('count(id)')))
-            ->where($where);
-        $resultset = $modelArticle->selectWith($select);
-
-        $result = $resultset->current()->total;
-
-        return $result;
-    }
-
-    /**
-     * Getting article total count in period.
-     * 
-     * @param int     $days
-     * @param string  $module
-     * @return int 
-     */
-    public static function getTotalRecently($days = null, $module = null)
-    {
-        $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
-        $dateTo   = time();
-
-        return self::getTotalInPeriod($dateFrom, $dateTo, $module);
-    }
-
-    /**
-     * Getting total article counts group by category.
-     * 
-     * @param int     $dateFrom
-     * @param int     $dateTo
-     * @param string  $module
-     * @return int 
-     */
-    public static function getTotalInPeriodByCategory($dateFrom, $dateTo, $module)
-    {
-        $result = $where = array();
-        $module = $module ?: Pi::service('module')->current();
-
-        if (!empty($dateFrom)) {
-            $where['time_submit >= ?'] = $dateFrom;
-        }
-        if (!empty($dateTo)) {
-            $where['time_submit <= ?'] = $dateTo;
-        }
-
-        $result = Cache::getCategoryList();
-
-        foreach ($result as &$val) {
-            $val['total'] = 0;
-        }
-
-        $modelArticle = Pi::model('article', $module);
-        $select = $modelArticle->select()
-            ->columns(array('category', 'total' => new Expression('count(category)')))
-            ->where($where)
-            ->group('category');
-        $groupResultset = $modelArticle->selectWith($select)->toArray();
-
-        foreach ($groupResultset as $row) {
-            $result[$row['category']]['total'] = $row['total'];
-        }
-
-        return $result;
-    }
-
-    /**
-     * Getting total article counts group by category.
-     * 
-     * @param int     $days
-     * @param string  $module
-     * @return int 
-     */
-    public static function getTotalRecentlyByCategory($days = null, $module = null)
-    {
-        $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
-        $dateTo   = time();
-
-        return self::getTotalInPeriodByCategory($dateFrom, $dateTo, $module);
-    }
-
-    /**
-     * Getting submitter count in period.
-     * 
-     * @param int     $dateFrom
-     * @param int     $dateTo
-     * @param int     $limit
-     * @param string  $module
-     * @return int 
-     */
-    public static function getSubmittersInPeriod($dateFrom, $dateTo, $limit = null, $module = null)
-    {
-        $result = $userIds = $users = $where = array();
-        $module = $module ?: self::$module;
-
-        if (!empty($dateFrom)) {
-            $where['time_submit >= ?'] = $dateFrom;
-        }
-        if (!empty($dateTo)) {
-            $where['time_submit <= ?'] = $dateTo;
-        }
-        $where['status'] = Article::FIELD_STATUS_PUBLISHED;
-        $where['active'] = 1;
-
-        $modelArticle = Pi::model('article', $module);
-        $modelUser    = Pi::model('user');
-
-        $select = $modelArticle->select()
-            ->columns(array('uid', 'total' => new Expression('count(uid)')))
-            ->where($where)
-            ->group('uid')
-            ->order('total DESC');
-
-        if ($limit) {
-            $select->limit($limit);
-        }
-
-        $result = $modelArticle->selectWith($select)->toArray();
-
-        foreach ($result as $row) {
-            if (!empty($row['uid'])) {
-                $userIds[] = $row['uid'];
-            }
-        }
-        $userIds = array_unique($userIds);
-
-        if (!empty($userIds)) {
-            $resultsetUser = $modelUser->find($userIds);
-            foreach ($resultsetUser as $row) {
-                $users[$row->id] = array(
-                    'name' => $row->identity,
-                );
-            }
-            unset($resultsetUser);
-        }
-
-        foreach ($result as &$row) {
-            if (!empty($users[$row['uid']])) {
-                $row['identity'] = $users[$row['uid']]['name'];
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Getting submitter count in period.
-     * 
-     * @param int     $days
-     * @param int     $limit
-     * @param string  $module
-     * @return int 
-     */
-    public static function getSubmittersRecently($days = null, $limit = null, $module = null)
-    {
-        $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
-        $dateTo   = time();
-
-        return self::getSubmittersInPeriod($dateFrom, $dateTo, $limit, $module);
-    }
-    
     public static function getParam(ActionController $handler = null, $param = null, $default = null)
     {      
         // Route parameter first

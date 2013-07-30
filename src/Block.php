@@ -23,6 +23,7 @@ use Module\System\Form\LoginForm;
 use Module\Article\Service;
 use Module\Article\Model\Article;
 use Module\Article\Topic;
+use Module\Article\Statistics;
 
 /**
  * Public class for rendering block content 
@@ -248,10 +249,10 @@ class Block
         $tomorrow  = $today + 24 * 3600;
         $week      = $tomorrow - 24 * 3600 * 7;
         $month     = $tomorrow - 24 * 3600 * 30;
-        $daySets   = Service::getSubmittersInPeriod($today, $tomorrow, $limit, $module);
-        $weekSets  = Service::getSubmittersInPeriod($week, $tomorrow, $limit, $module);
-        $monthSets = Service::getSubmittersInPeriod($month, $tomorrow, $limit, $module);
-        $historySets   = Service::getSubmittersInPeriod(0, $tomorrow, $limit, $module);
+        $daySets   = Statistics::getSubmittersInPeriod($today, $tomorrow, $limit, $module);
+        $weekSets  = Statistics::getSubmittersInPeriod($week, $tomorrow, $limit, $module);
+        $monthSets = Statistics::getSubmittersInPeriod($month, $tomorrow, $limit, $module);
+        $historySets   = Statistics::getSubmittersInPeriod(0, $tomorrow, $limit, $module);
         
         return array(
             'day'     => $daySets,

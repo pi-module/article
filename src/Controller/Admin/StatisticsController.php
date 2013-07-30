@@ -21,6 +21,7 @@ namespace Module\Article\Controller\Admin;
 use Pi\Mvc\Controller\ActionController;
 use Pi;
 use Module\Article\Service;
+use Module\Article\Statistics;
 
 class StatisticsController extends ActionController
 {
@@ -30,17 +31,17 @@ class StatisticsController extends ActionController
         $topVisits7    = Service::getVisitsRecently(7, 10);
         $topVisits30   = Service::getVisitsRecently(30, 10);
 
-        $totalEver = Service::getTotalRecently();
-        $total7    = Service::getTotalRecently(7);
-        $total30   = Service::getTotalRecently(30);
+        $totalEver = Statistics::getTotalRecently();
+        $total7    = Statistics::getTotalRecently(7);
+        $total30   = Statistics::getTotalRecently(30);
 
-        $totalEverByCategory = Service::getTotalRecentlyByCategory();
-        $total7ByCategory    = Service::getTotalRecentlyByCategory(7);
-        $total30ByCategory   = Service::getTotalRecentlyByCategory(30);
+        $totalEverByCategory = Statistics::getTotalRecentlyByCategory();
+        $total7ByCategory    = Statistics::getTotalRecentlyByCategory(7);
+        $total30ByCategory   = Statistics::getTotalRecentlyByCategory(30);
 
-        $topSubmittersEver = Service::getSubmittersRecently(null, 10);
-        $topSubmitters7    = Service::getSubmittersRecently(7, 10);
-        $topSubmitters30   = Service::getSubmittersRecently(30, 10);
+        $topSubmittersEver = Statistics::getSubmittersRecently(null, 10);
+        $topSubmitters7    = Statistics::getSubmittersRecently(7, 10);
+        $topSubmitters30   = Statistics::getSubmittersRecently(30, 10);
 
         if ($this->config['enable-tag']) {
             $topTags = Pi::service('api')->tag->top($this->getModule(), null, 10);
