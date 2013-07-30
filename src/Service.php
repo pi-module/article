@@ -31,6 +31,7 @@ use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;
+use Module\Article\Statistics;
 
 /**
  * Public APIs for article module itself 
@@ -173,19 +174,23 @@ class Service
     public static function getVisitsRecently($days, $limit = null, $category = null, $module = null)
     {
         $dateTo   = time();
-        $dateFrom = $dateTo - 24 * 3600 * 7;
+        $dateFrom = $dateTo - 24 * 3600 * $days;
 
         return self::getVisitsInPeriod($dateFrom, $dateTo, $limit, $category, $module);
     }
 
-    public static function getTotalVisits($limit = null, $category = null, $channel = null, $module = null)
+    /**
+     * Getting total visits of articles.
+     * 
+     * @param int     $limit
+     * @param int     $category
+     * @param string  $module
+     * @return array 
+     */
+    public static function getTotalVisits($limit = null, $category = null, $module = null)
     {
         $result = $where = $columns = array();
         $module = $module ?: self::$module;
-
-        if ($channel) {
-            $where['channel'] = (int) $channel;
-        }
 
         $modelCategory  = Pi::model('category', $module);
         if ($category && $category > 1) {
@@ -195,23 +200,22 @@ class Service
                 $where['category'] = $categoryIds;
             }
         }
-
+        
+        $articles    = Statistics::getTopVisits($limit, $module);
+        $where['id'] = array_keys($articles);
+        
         $columns = array(
             'id',
             'article' => 'id',
-            'total'   => 'visits',
             'subject',
             'source',
             'image',
             'pages',
-            'slug',
             'summary',
             'time_publish',
         );
 
-        $order = 'total DESC';
-
-        $result = self::getAvailableArticlePage($where, 1, $limit, $columns, $order, $module);
+        $result = self::getAvailableArticlePage($where, 1, $limit, $columns, null, $module);
 
         return $result;
     }
@@ -252,17 +256,25 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting article total count in period.
+     * 
+     * @param int     $dateFrom  
+     * @param int     $dateTo
+     * @param string  $module
+     * @return int 
+     */
     public static function getTotalInPeriod($dateFrom, $dateTo, $module = null)
     {
         $result = 0;
         $where  = array();
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
 
         if (!empty($dateFrom)) {
-            $where['time_create >= ?'] = $dateFrom;
+            $where['time_submit >= ?'] = $dateFrom;
         }
         if (!empty($dateTo)) {
-            $where['time_create <= ?'] = $dateTo;
+            $where['time_submit <= ?'] = $dateTo;
         }
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
         $where['active'] = 1;
@@ -278,6 +290,13 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting article total count in period.
+     * 
+     * @param int     $days
+     * @param string  $module
+     * @return int 
+     */
     public static function getTotalRecently($days = null, $module = null)
     {
         $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
@@ -286,16 +305,24 @@ class Service
         return self::getTotalInPeriod($dateFrom, $dateTo, $module);
     }
 
+    /**
+     * Getting total article counts group by category.
+     * 
+     * @param int     $dateFrom
+     * @param int     $dateTo
+     * @param string  $module
+     * @return int 
+     */
     public static function getTotalInPeriodByCategory($dateFrom, $dateTo, $module)
     {
         $result = $where = array();
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
 
         if (!empty($dateFrom)) {
-            $where['time_create >= ?'] = $dateFrom;
+            $where['time_submit >= ?'] = $dateFrom;
         }
         if (!empty($dateTo)) {
-            $where['time_create <= ?'] = $dateTo;
+            $where['time_submit <= ?'] = $dateTo;
         }
 
         $result = Cache::getCategoryList();
@@ -318,6 +345,13 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting total article counts group by category.
+     * 
+     * @param int     $days
+     * @param string  $module
+     * @return int 
+     */
     public static function getTotalRecentlyByCategory($days = null, $module = null)
     {
         $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
@@ -326,6 +360,15 @@ class Service
         return self::getTotalInPeriodByCategory($dateFrom, $dateTo, $module);
     }
 
+    /**
+     * Getting submitter count in period.
+     * 
+     * @param int     $dateFrom
+     * @param int     $dateTo
+     * @param int     $limit
+     * @param string  $module
+     * @return int 
+     */
     public static function getSubmittersInPeriod($dateFrom, $dateTo, $limit = null, $module = null)
     {
         $result = $userIds = $users = $where = array();
@@ -381,6 +424,14 @@ class Service
         return $result;
     }
 
+    /**
+     * Getting submitter count in period.
+     * 
+     * @param int     $days
+     * @param int     $limit
+     * @param string  $module
+     * @return int 
+     */
     public static function getSubmittersRecently($days = null, $limit = null, $module = null)
     {
         $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
@@ -407,44 +458,6 @@ class Service
                 }
             }
         }
-
-        return $result;
-    }
-
-    public static function getRecommended($limit = null, $category = null, $channel = null, $module = null)
-    {
-        $result = $where = $columns = array();
-
-        $module = $module ?: self::$module;
-
-        // Build where
-        if ($channel) {
-            $where['channel'] = (int) $channel;
-        }
-
-        if ($category && $category > 1) {
-            $categoryIds = Pi::model('category', $module)->getDescendantIds($category);
-
-            if ($categoryIds) {
-                $where['category'] = $categoryIds;
-            }
-        }
-
-        $where['recommended'] = 1;
-
-        $columns = array(
-            'id',
-            'article' => 'id',
-            'subject',
-            'source',
-            'image',
-            'pages',
-            'slug',
-            'summary',
-            'time_publish',
-        );
-
-        $result = self::getAvailableArticlePage($where, 1, $limit, $columns, null, $module);
 
         return $result;
     }
@@ -574,7 +587,21 @@ class Service
             $rowStatis   = $modelStatis->select(array('article' => $articleIds));
             $statis      = array();
             foreach ($rowStatis as $item) {
-                $statis[$item->article] = $item->visits;
+                $temp = $item->toArray();
+                unset($temp['id']);
+                unset($temp['article']);
+                $statis[$item->article] = $temp;
+            }
+            
+            // Getting extended data
+            $modelExtended = Pi::model('extended', $module);
+            $rowExtended   = $modelExtended->select(array('article' => $articleIds));
+            $extended      = array();
+            foreach ($rowExtended as $item) {
+                $temp = $item->toArray();
+                unset($temp['id']);
+                unset($temp['article']);
+                $extended[$item->article] = $temp;
             }
 
             $categories = Cache::getCategoryList();
@@ -647,7 +674,8 @@ class Service
                                               ), array('name' => $route));
                 }
                 
-                $row['visits'] = $statis[$row['id']];
+                $row = array_merge($row, $statis[$row['id']]);
+                $row = array_merge($row, $extended[$row['id']]);
             }
         }
 
