@@ -75,7 +75,7 @@ class ArticleController extends ActionController
         }
         if (strval($slug) != $details['slug']) {
             $routeParams = array(
-                'action'    => 'detail',
+                'time'      => date('Ymd', $details['time_publish']),
                 'id'        => $id,
                 'slug'      => $details['slug'],
                 'p'         => $page,

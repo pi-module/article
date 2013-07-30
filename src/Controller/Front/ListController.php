@@ -35,7 +35,7 @@ class ListController extends ActionController
      */
     public function allAction()
     {
-        $page   = Service::getParam($this, 'page', 1);
+        $page   = Service::getParam($this, 'p', 1);
         
         $where  = array(
             'status'           => Article::FIELD_STATUS_PUBLISHED,
@@ -71,7 +71,6 @@ class ListController extends ActionController
         $paginator->setItemCountPerPage($limit)
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
-                'pageParam' => 'page',
                 'router'    => $this->getEvent()->getRouter(),
                 'route'     => $route,
                 'params'    => array(

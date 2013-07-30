@@ -909,6 +909,12 @@ class Service
         return $result;
     }
     
+    /**
+     * Getting published article details.
+     * 
+     * @param int  $id  Article ID
+     * @return array 
+     */
     public static function getEntity($id)
     {
         $result = array();
@@ -1028,6 +1034,134 @@ class Service
         return $result;
     }
     
+    /**
+     * Getting draft article details.
+     * 
+     * @param int  $id  Draft article ID
+     * @return array 
+     */
+    public static function getDraft($id)
+    {
+        $result = array();
+        $module = Pi::service('module')->current();
+        $config = Pi::service('module')->config('', $module);
+
+        $row    = Pi::model('draft', $module)->find($id);
+        if (empty($row->id)) {
+            return array();
+        }
+        
+        $subject = $subtitle = $content = '';
+        if ($row->markup) {
+            $subject    = Pi::service('markup')->render($row->subject, 'html', $row->markup);
+            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html', $row->markup);
+        } else {
+            $subject    = Pi::service('markup')->render($row->subject, 'html');
+            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html');
+        }
+        $content = Compiled::compiled($row->markup, $row->content, 'html');
+
+        $result = array(
+            'title'         => $subject,
+            'content'       => Service::breakPage($content),
+            'slug'          => $row->slug,
+            'seo'           => array(
+                'title'         => $row->seo_title,
+                'keywords'      => $row->seo_keywords,
+                'description'   => $row->seo_description,
+            ),
+            'subtitle'      => $subtitle,
+            'source'        => $row->source,
+            'pages'         => $row->pages,
+            'time_publish'  => $row->time_publish,
+            'author'        => array(),
+            'attachment'    => array(),
+            'tag'           => $row->tag,
+            'related'       => array(),
+            'category'      => $row->category,
+        );
+
+        // Get author
+        if ($row->author) {
+            $author = Pi::model('author', $module)->find($row->author);
+
+            if ($author) {
+                $result['author'] = $author->toArray();
+                if (empty($result['author']['photo'])) {
+                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $this->module);
+                }
+            }
+        }
+
+        // Get attachments
+        /*$resultsetDraftAsset = Pi::model('draft_asset', $module)->select(array(
+            'draft' => $id,
+            'type'  => Asset::FIELD_TYPE_ATTACHMENT,
+        ));
+
+        foreach ($resultsetDraftAsset as $attachment) {
+            $result['attachment'][] = array(
+                'original_name' => $attachment->original_name,
+                'extension'     => $attachment->extension,
+                'size'          => $attachment->size,
+                'url'           => Pi::engine()->application()->getRouter()->assemble(
+                    array(
+                        'module'     => $this->getModule(),
+                        'controller' => 'download',
+                        'action'     => 'attachment',
+                        'name'       => $attachment->name,
+                    ),
+                    array(
+                        'name'       => 'default',
+                    )
+                ),
+            );
+        }*/
+
+        // Get related articles
+        $relatedIds = $related = array();
+        $relatedIds = $row->related;
+        if ($relatedIds) {
+            $related = array_flip($relatedIds);
+            $where   = array('id' => $relatedIds);
+            $columns = array('id', 'subject');
+
+            $resultsetRelated = Service::getArticlePage($where, 1, null, $columns, null, $module);
+
+            foreach ($resultsetRelated as $key => $val) {
+                if (array_key_exists($key, $related)) {
+                    $related[$key] = $val;
+                }
+            }
+
+            $result['related'] = array_filter($related, function($var) {
+                return is_array($var);
+            });
+        }
+
+        if (empty($row->seo_keywords) && $config['seo_keywords']) {
+            if ($config['seo_keywords'] == Article::FIELD_SEO_KEYWORDS_TAG) {
+                $result['seo']['keywords'] = implode(' ', $result['tag']);
+            } else if ($config['seo_keywords'] == Article::FIELD_SEO_KEYWORDS_CATEGORY) {
+                $rowCategory = Pi::model('category', $module)->find($row->category);
+                $result['seo']['keywords'] = $rowCategory->title;
+            }
+        }
+
+        if (empty($row->seo_description) && $config['seo_description']) {
+            if ($config['seo_description'] == Article::FIELD_SEO_DESCRIPTION_SUMMARY) {
+                $result['seo']['description'] = $row->summary;
+            }
+        }
+
+        return $result;
+    }
+    
+    /**
+     * Getting route name.
+     * 
+     * @return string 
+     */
     public static function getRouteName()
     {
         $module      = Pi::service('module')->current();
