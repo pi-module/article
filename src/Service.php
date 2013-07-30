@@ -517,8 +517,12 @@ class Service
                                               ), array('name' => $route));
                 }
                 
-                $row = array_merge($row, $statis[$row['id']]);
-                $row = array_merge($row, $extended[$row['id']]);
+                if (isset($statis[$row['id']])) {
+                    $row = array_merge($row, $statis[$row['id']]);
+                }
+                if (isset($extended[$row['id']])) {
+                    $row = array_merge($row, $extended[$row['id']]);
+                }
             }
         }
 
