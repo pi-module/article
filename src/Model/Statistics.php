@@ -1,6 +1,6 @@
 <?php
 /**
- * Article module index controller
+ * Article module statistics class
  *
  * You may not change or alter any portion of this comment or credits
  * of supporting developers from this source code or any supporting source code
@@ -16,23 +16,35 @@
  * @package         Module\Article
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Model;
 
-use Pi\Mvc\Controller\ActionController;
-use Module\Article\Service;
 use Pi;
+use Pi\Application\Model\Model;
+use Zend\Db\Sql\Expression;
 
-/**
- * Public action controller 
- */
-class IndexController extends ActionController
+class Statistics extends Model
 {
     /**
-     * Default page, and it will redirect to article homepage 
+     * Increase visit count of a article.
+     *
+     * @param int  $id  Article ID
+     * @return array
      */
-    public function indexAction()
+    public function increaseVisits($id)
     {
-        $route = '.' . Service::getRouteName();
-        return $this->redirect()->toRoute($route, array('controller' => 'article', 'action' => 'index'));
+        $row = $this->find($id, 'article');
+        if (!$row->id) {
+            $data = array(
+                'article'  => $id,
+                'visits'   => 1,
+            );
+            $row    = $this->createRow($data);
+            $result = $row->save();
+        } else {
+            $row->visits++;
+            $result = $row->save();
+        }
+
+        return $result;
     }
 }

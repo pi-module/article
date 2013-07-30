@@ -323,4 +323,10 @@ return array(
             ),
         ),
     ),
+    'simple-search'             => array(
+        'title'       => _t('Simple Search'),
+        'description' => _t('Search form for searching articles by article title'),
+        'render'      => 'block::simpleSearch',
+        'template'    => 'simple-search',
+    ),
 );

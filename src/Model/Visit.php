@@ -1,6 +1,6 @@
 <?php
 /**
- * Article module index controller
+ * Article module visit class
  *
  * You may not change or alter any portion of this comment or credits
  * of supporting developers from this source code or any supporting source code
@@ -16,23 +16,33 @@
  * @package         Module\Article
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Model;
 
-use Pi\Mvc\Controller\ActionController;
-use Module\Article\Service;
 use Pi;
+use Pi\Application\Model\Model;
+use Zend\Db\Sql\Expression;
 
-/**
- * Public action controller 
- */
-class IndexController extends ActionController
+class Visit extends Model
 {
     /**
-     * Default page, and it will redirect to article homepage 
+     * Add a row.
+     *
+     * @param int  $id  Article ID
+     * @return array
      */
-    public function indexAction()
+    public function addRow($id)
     {
-        $route = '.' . Service::getRouteName();
-        return $this->redirect()->toRoute($route, array('controller' => 'article', 'action' => 'index'));
+        $user   = Pi::service('user')->getUser();
+        $server = Pi::engine()->application()->getRequest()->getServer();
+        $data   = array(
+            'article'  => $id,
+            'time'     => time(),
+            'ip'       => $server['REMOTE_ADDR'],
+            'uid'      => $user->account->id ?: 0,
+        );
+        $row    = $this->createRow($data);
+        $result = $row->save();
+
+        return $result;
     }
 }
