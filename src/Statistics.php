@@ -64,4 +64,29 @@ class Statistics
         Pi::model('statistics', $module)->increaseVisits($name);
         Pi::model('visit', $module)->addRow($name);
     }
+    
+    /**
+     * Getting articles which are mostly visit.
+     * 
+     * @param int     $limit   Article limitation
+     * @param string  $module
+     * @return array 
+     */
+    public static function getTopVisits($limit, $module = null)
+    {
+        $module = $module ?: Pi::service('module')->current();
+        $model  = Pi::model('statistics', $module);
+        $select = $model->select()
+                        ->limit($limit)
+                        ->order('visits DESC');
+        $rowset = $model->selectWith($select);
+        
+        $result = array();
+        foreach ($rowset as $row) {
+            unset($row->id);
+            $result[$row->article] = $row->toArray();
+        }
+        
+        return $result;
+    }
 }
