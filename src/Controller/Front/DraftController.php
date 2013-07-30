@@ -1205,17 +1205,78 @@ class DraftController extends ActionController
         }
     }
 
+    /**
+     * Previewing a draft article.
+     * 
+     * @return ViewModel 
+     */
     public function previewAction()
     {
-        $id = Service::getParam($this, 'id', 0);
+        $id       = $this->params('id');
+        $slug     = $this->params('slug', '');
+        $page     = $this->params('p', 1);
+        $remain   = $this->params('r', '');
+        
+        if ('' !== $remain) {
+            $this->view()->assign('remain', $remain);
+        }
 
-        $this->redirect()->toRoute('', array(
-            'module'     => $this->getModule(),
-            'controller' => 'preview',
-            'action'     => 'single-page',
-            'id'         => $id,
+        $time    = time();
+        $details = Service::getDraft($id);
+        $details['time_publish'] = $time;
+        $params  = array('preview' => 1);
+        
+        if (!$id) {
+            return $this->jumpTo404(__('Page not found'));
+        }
+        if (strval($slug) != $details['slug']) {
+            $routeParams = array(
+                'time'      => $time,
+                'id'        => $id,
+                'slug'      => $details['slug'],
+                'p'         => $page,
+            );
+            if ($remain) {
+                $params['r'] = $remain;
+            }
+            return $this->redirect()->setStatusCode(301)->toRoute('', array_merge($routeParams, $params));
+        }
+        
+        $route = '.' . Service::getRouteName();
+        foreach ($details['content'] as &$value) {
+            $value['url'] = $this->url($route, array_merge(array(
+                'time'       => date('Ymd', $time),
+                'id'         => $id,
+                'slug'       => $slug,
+                'p'          => $value['page'],
+            ), $params));
+            if (isset($value['title']) and preg_replace('/&nbsp;/', '', trim($value['title'])) !== '') {
+                $showTitle = true;
+            } else {
+                $value['title'] = '';
+            }
+        }
+        $details['view'] = $this->url($route, array_merge(array(
+            'time'        => date('Ymd', $time),
+            'id'          => $id,
+            'slug'        => $slug,
+            'r'           => 0,
+        ), $params));
+        $details['remain'] = $this->url($route, array_merge(array(
+            'time'        => date('Ymd', $time),
+            'id'          => $id,
+            'slug'        => $slug,
+            'r'           => $page,
+        ), $params));
+
+        $this->view()->assign(array(
+            'details'     => $details,
+            'page'        => $page,
+            'showTitle'   => isset($showTitle) ? $showTitle : null,
+            'config'      => Pi::service('module')->config('', $this->getModule()),
         ));
-        $this->view()->setTemplate(false);
+
+        $this->view()->setTemplate('article-detail');
     }
 
     /**

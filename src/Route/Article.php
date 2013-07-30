@@ -50,7 +50,7 @@ class Article extends Standard
 {
     const URL_DELIMITER       = '?';
     const KEY_VALUE_DELIMITER = '=';
-    const COMBINE_DELIMITER   = '&amp;';
+    const COMBINE_DELIMITER   = '&';
     
     protected $paramDelimiter = '-';
     protected $prefix = '/a';
@@ -76,8 +76,10 @@ class Article extends Standard
         }
         list($path, $pathLength) = $result;
 
-        $matches = array();
-        list($url, $parameter) = explode(self::URL_DELIMITER, $path);
+        $matches   = array();
+        $url       = $path;
+        $uri       = $request->getRequestUri();
+        $parameter = substr($uri, strpos($uri, self::URL_DELIMITER) + 1);
         if (empty($url)) {
             $controller = 'article';
             $action     = 'index';
@@ -126,6 +128,10 @@ class Article extends Standard
                 $matches[$key] = urldecode($value);
             }
         }
+        if (isset($matches['preview']) and $matches['preview'] == 1) {
+            $matches['controller'] = 'draft';
+            $matches['action']     = 'preview';
+        }
 
         return new RouteMatch(array_merge($this->defaults, $matches), $pathLength);
     }
@@ -156,10 +162,10 @@ class Article extends Standard
         unset($mergedParams['module']);
         
         if (isset($mergedParams['time']) and is_numeric($mergedParams['time'])) {
-            if (isset($mergedParams['slug']) and !is_numeric($mergedParams['slug'])) {
+            if (isset($mergedParams['slug']) and !empty($mergedParams['slug']) and !is_numeric($mergedParams['slug'])) {
                 $url .= $mergedParams['time'] . $this->structureDelimiter . urlencode($mergedParams['slug']);
                 unset($mergedParams['slug']);
-            } elseif (isset($mergedParams['id']) and is_numeric($mergedParams['id'])) {
+            } elseif (isset($mergedParams['id']) and !empty($mergedParams['id']) and is_numeric($mergedParams['id'])) {
                 $url .= $mergedParams['time'] . $this->structureDelimiter . $mergedParams['id'];
                 unset($mergedParams['id']);
             }
@@ -186,6 +192,7 @@ class Article extends Standard
         }
         
         $parameter = '';
+        $mergedParams = array_filter($mergedParams);
         if (!empty($mergedParams)) {
             foreach ($mergedParams as $key => $value) {
                 $parameter .= $key . self::KEY_VALUE_DELIMITER . urlencode($value) . self::COMBINE_DELIMITER;
