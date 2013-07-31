@@ -184,10 +184,7 @@ class ArticleController extends ActionController
         $modelAsset->delete(array('article' => $ids));*/
 
         // Update status
-        $modelArticle->update(
-            array('status' => Article::FIELD_STATUS_DELETED),
-            array('id' => $ids)
-        );
+        $modelArticle->delete(array('id' => $ids));
 
         // Clear cache
         Pi::service('render')->flushCache($module);
@@ -423,7 +420,7 @@ class ArticleController extends ActionController
             'data'       => $data,
             'form'       => $form,
             'paginator'  => $paginator,
-            'summary'    => Service::getSummary('all'),
+            'summary'    => Service::getSummary($from),
             'category'   => $category,
             'filter'     => $filter,
             'categories' => Cache::getCategoryList(),
