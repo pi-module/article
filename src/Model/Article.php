@@ -177,20 +177,6 @@ class Article extends Model
         );
     }
 
-    public function slugToId($slug)
-    {
-        $result = false;
-
-        if ($slug) {
-            $row = $this->find($slug, 'slug');
-            if ($row) {
-                $result = $row->id;
-            }
-        }
-
-        return $result;
-    }
-
     public function checkSubjectExists($subject, $id = null)
     {
         $result = false;
