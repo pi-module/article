@@ -24,6 +24,7 @@ use Module\Article\Service;
 use Module\Article\Model\Article;
 use Module\Article\Topic;
 use Module\Article\Statistics;
+use Module\Article\Entity;
 
 /**
  * Public class for rendering block content 
@@ -148,7 +149,7 @@ class Block
             $where['topic'] = $topic;
             $articles = Topic::getTopicArticles($where, $page, $limit, $columns, $order, $module);
         } else {
-            $articles = Service::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
+            $articles = Entity::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
         }
         
         if ($options['max_subject_length'] > 0) {
@@ -187,7 +188,7 @@ class Block
             $id = trim($id);
         }
         $where    = array('id' => $ids);
-        $articles = Service::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
+        $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
         
         if ($options['max_subject_length'] > 0) {
             foreach ($articles as &$article) {
@@ -282,28 +283,6 @@ class Block
         return $topics;
     }
 
-    public static function topNByVisits($options = array(), $module = null)
-    {
-        if (!$module) {
-            return false;
-        }
-
-        $channel            = isset($options['channel']) ? (int) $options['channel'] : null;
-        $category           = isset($options['category']) ? intval($options['category']) : null;
-        $limit              = isset($options['limit']) ? intval($options['limit']) : 10;
-        $target             = isset($options['target']) ?: '_blank';
-        $max_subject_length = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 0;
-
-        $articles = Service::getTotalVisits($limit, $category, $channel, $module);
-
-        return array(
-            'articles'           => $articles,
-            'target'             => $target,
-            'max_subject_length' => $max_subject_length,
-            'options'            => $options,
-        );
-    }
-
     /**
      * Listing hot articles by visiting count.
      * 
@@ -325,7 +304,7 @@ class Block
         if ($options['is-topic']) {
             $articles = Topic::getVisitsRecently($day, $limit, null, $module);
         } else {
-            $articles = Service::getVisitsRecently($day, $limit, null, $module);
+            $articles = Entity::getVisitsRecently($day, $limit, null, $module);
         }
 
         return array(

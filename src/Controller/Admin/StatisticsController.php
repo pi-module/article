@@ -20,16 +20,22 @@ namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
-use Module\Article\Service;
 use Module\Article\Statistics;
+use Module\Article\Entity;
 
+/**
+ * Public class for statistics 
+ */
 class StatisticsController extends ActionController
 {
+    /**
+     * Default page 
+     */
     public function indexAction()
     {
-        $topVisitsEver = Service::getTotalVisits(10);
-        $topVisits7    = Service::getVisitsRecently(7, 10);
-        $topVisits30   = Service::getVisitsRecently(30, 10);
+        $topVisitsEver = Entity::getTotalVisits(10);
+        $topVisits7    = Entity::getVisitsRecently(7, 10);
+        $topVisits30   = Entity::getVisitsRecently(30, 10);
 
         $totalEver = Statistics::getTotalRecently();
         $total7    = Statistics::getTotalRecently(7);

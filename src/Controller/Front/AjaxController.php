@@ -122,50 +122,6 @@ class AjaxController extends ActionController
         );
     }
 
-    public function getFuzzyPartnumberAction()
-    {
-        Pi::service('log')->active(false);
-        $resultset = array();
-
-        $name  = Service::getParam($this, 'name', '');
-        $limit = Service::getParam($this, 'limit', 10);
-        $limit = $limit > 100 ? 100 : $limit;
-        $module = $this->getModule();
-
-        $resultset = Pi::service('api')->partnumber->match($name, $limit, $module);
-
-        return array(
-            'status'    => self::AJAX_RESULT_TRUE,
-            'message'   => 'ok',
-            'data'      => $resultset,
-        );
-    }
-
-    public function getFuzzyManufacturerAction()
-    {
-        Pi::service('log')->active(false);
-        $resultset = $result = array();
-
-        $name  = Service::getParam($this, 'name', '');
-        $limit = Service::getParam($this, 'limit', 10);
-        $limit = $limit > 100 ? 100 : $limit;
-
-        $result = Pi::service('api')->manufacturer->match($name, $limit);
-
-        foreach ($result as $key => $val) {
-            $resultset[] = array(
-                'id'   => $key,
-                'name' => $val,
-            );
-        }
-
-        return array(
-            'status'    => self::AJAX_RESULT_TRUE,
-            'message'   => 'ok',
-            'data'      => $resultset,
-        );
-    }
-
     public function getFuzzyArticleAction()
     {
         Pi::service('log')->active(false);

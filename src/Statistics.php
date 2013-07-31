@@ -21,7 +21,6 @@ namespace Module\Article;
 use Pi;
 use Zend\Mvc\MvcEvent;
 use Zend\Db\Sql\Expression;
-use Module\Article\Service;
 use Module\Article\Model\Article;
 
 /**
