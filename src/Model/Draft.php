@@ -22,6 +22,7 @@ use Pi;
 use Pi\Application\Model\Model;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
+use Zend\Stdlib\ArrayObject;
 
 class Draft extends Model
 {
@@ -34,6 +35,34 @@ class Draft extends Model
         'related'      => true,
         'tag'          => true,
     );
+    
+    /**
+     * Getting table fields exclude id field.
+     * 
+     * @return array 
+     */
+    public function getValidColumns()
+    {
+        $table    = $this->getTable();
+        $database = Pi::config()->load('service.database.php');
+        $schema   = $database['schema'];
+        $sql = 'select COLUMN_NAME as name from information_schema.columns where table_name=\'' . $table . '\' and table_schema=\'' . $schema . '\'';
+        try {
+            $rowset = Pi::db()->getAdapter()->query($sql, 'prepare')->execute();
+        } catch (\Exception $exception) {
+            return false;
+        }
+        
+        $fields = array();
+        foreach ($rowset as $row) {
+            if ($row['name'] == 'id') {
+                continue;
+            }
+            $fields[] = $row['name'];
+        }
+        
+        return $fields;
+    }
 
     public static function getAvailableFields($module = null)
     {
@@ -89,22 +118,33 @@ class Draft extends Model
         return $row->id ?: false;
     }
 
+    /**
+     * Getting draft articles by condition.
+     * 
+     * @param array   $where
+     * @param int     $limit
+     * @param int     $offset
+     * @param array   $columns
+     * @param string  $order
+     * @return array 
+     */
     public function getSearchRows($where = array(),  $limit = null, $offset = null, $columns = null, $order = null)
     {
         $result = $rows = array();
 
-        if (null === $columns) {
-            $columns = self::getDefaultColumns();
-        }
+        $fields        = $this->getValidColumns();
+        $neededColumns = empty($columns) ? self::getDefaultColumns() : $columns;
+        $searchColumns = array_intersect($neededColumns, $fields);
 
-        if (!in_array('id', $columns)) {
-            $columns[] = 'id';
+        if (!in_array('id', $searchColumns)) {
+            $searchColumns[] = 'id';
         }
+        $searchColumns[] = 'detail';
 
         $order = (null === $order) ? 'time_save DESC' : $order;
 
         $select = $this->select()
-            ->columns($columns);
+            ->columns($searchColumns);
 
         if ($where) {
             $select->where($where);
@@ -125,7 +165,13 @@ class Draft extends Model
         $rows = $this->selectWith($select)->toArray();
 
         foreach ($rows as $row) {
-            $result[$row['id']] = $row;
+            $details = json_decode($row['detail'], true);
+            $result[$row['id']] = array_merge($row, $details);
+            foreach ($result[$row['id']] as $key) {
+                if (!in_array($key, $neededColumns)) {
+                    unset($result[$row['id']][$key]);
+                }
+            }
         }
 
         return $result;
@@ -146,5 +192,80 @@ class Draft extends Model
         $result = intval($resultset->current()->total);
 
         return $result;
+    }
+    
+    /**
+     * Saving a row.
+     * 
+     * @param array  $data
+     * @return ArrayObject 
+     */
+    public function saveRow($data)
+    {
+        $columns = $this->getValidColumns();
+        $details = array();
+        foreach ($data as $key => $value) {
+            if (in_array($key, $columns)) {
+                continue;
+            }
+            $details[$key] = $value;
+            unset($data[$key]);
+        }
+        $data['detail'] = json_encode($details);
+        
+        $row = $this->createRow($data);
+        $row->save();
+        
+        return $row;
+    }
+    
+    /**
+     * Updating draft row.
+     * 
+     * @param array  $data
+     * @param array  $where 
+     * @return bool
+     */
+    public function updateRow($data, $where)
+    {
+        foreach (array_keys($where) as $key) {
+            unset($data[$key]);
+        }
+        
+        $columns = $this->getValidColumns();
+        $details = array();
+        foreach ($data as $key => $value) {
+            if (in_array($key, $columns)) {
+                continue;
+            }
+            $details[$key] = $value;
+            unset($data[$key]);
+        }
+        $data['detail'] = json_encode($details);
+        
+        $result = $this->update($data, $where);
+        
+        return $result;
+    }
+    
+    /**
+     * Find a article.
+     * 
+     * @param string  $value
+     * @param string  $key
+     * @param bool    $arrayOrObject
+     * @return array|object 
+     */
+    public function findRow($value, $key = 'id', $arrayOrObject = true)
+    {
+        $row = $this->find($value, $key);
+        if (!$row->id) {
+            return $row;
+        }
+        $details = json_decode($row->detail, true) ?: array();
+        $row     = array_merge($row->toArray(), $details);
+        unset($row['detail']);
+        
+        return $arrayOrObject ? $row : (object) $row;
     }
 }

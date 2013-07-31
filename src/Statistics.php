@@ -59,7 +59,7 @@ class Statistics
         $module = $module ?: Pi::service('module')->current();
         
         if (!is_numeric($name)) {
-            $model = Pi::model('article', $module);
+            $model = Pi::model('extended', $module);
             $name  = $model->slugToId($name);
         }
         

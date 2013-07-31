@@ -440,7 +440,7 @@ class Service
         $module = Pi::service('module')->current();
         $config = Pi::service('module')->config('', $module);
 
-        $row    = Pi::model('draft', $module)->find($id);
+        $row    = Pi::model('draft', $module)->findRow($id, 'id', false);
         if (empty($row->id)) {
             return array();
         }

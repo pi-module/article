@@ -46,137 +46,11 @@ class Extended extends Model
     }
 
     /**
-     * Get articles by ids
-     *
-     * @param $ids Article ids
-     * @param null $columns Columns, null for default
-     * @return array
-     */
-    public function getRows($ids, $columns = null)
-    {
-        $result = $rows = array();
-
-        if (null === $columns) {
-            $columns = self::getDefaultColumns();
-        }
-
-        if ($ids) {
-            $result = array_flip($ids);
-
-            $rows = $this->select(array('id' => $ids));
-
-            foreach ($rows as $row) {
-                $result[$row['id']] = $row;
-            }
-
-            $result = array_filter($result, function($var) {
-                return is_array($var);
-            });
-        }
-
-        return $result;
-    }
-
-    /**
-     * Returning rows by search condition.
+     * Changing article slug to article ID
      * 
-     * @param array        $where
-     * @param int|null     $limit
-     * @param int|null     $offset
-     * @param array|null   $columns
-     * @param string|null  $order
-     * @return array 
+     * @param string  $slug
+     * @return int 
      */
-    public function getSearchRows($where = array(),  $limit = null, $offset = null, $columns = null, $order = null)
-    {
-        $result = $rows = array();
-
-        if (null === $columns) {
-            $columns = self::getDefaultColumns();
-        }
-
-        if (!in_array('id', $columns)) {
-            $columns[] = 'id';
-        }
-
-        $order = (null === $order) ? 'time_publish DESC' : $order;
-
-        $select = $this->select()
-            ->columns($columns);
-
-        if ($where) {
-            $select->where($where);
-        }
-
-        if ($limit) {
-            $select->limit(intval($limit));
-        }
-
-        if ($offset) {
-            $select->offset(intval($offset));
-        }
-
-        if ($order) {
-            $select->order($order);
-        }
-
-        $rows = $this->selectWith($select)->toArray();
-
-        foreach ($rows as $row) {
-            $result[$row['id']] = $row;
-        }
-
-        return $result;
-    }
-
-    public function getSearchRowsCount($where = array())
-    {
-        $result = 0;
-
-        $select = $this->select()
-            ->columns(array('total' => new Expression('count(id)')));
-
-        if ($where) {
-            $select->where($where);
-        }
-
-        $resultset  = $this->selectWith($select);
-        $result     = intval($resultset->current()->total);
-
-        return $result;
-    }
-
-    /**
-     * Setting status of active field.
-     * 
-     * @param array  $ids
-     * @param int    $active
-     * @return bool 
-     */
-    public function setActiveStatus($ids, $active)
-    {
-        return $this->update(
-            array('active' => $active),
-            array('id' => $ids)
-        );
-    }
-
-    public function setRecommendedStatus($ids, $recomended)
-    {
-        return $this->update(
-            array('recommended' => $recomended),
-            array('id' => $ids)
-        );
-    }
-
-    public function visit($article)
-    {
-        return $this->update(
-            array('visits' => new Expression('visits + 1')),
-            array('id' => $article)
-        );
-    }
-
     public function slugToId($slug)
     {
         $result = false;
@@ -184,50 +58,8 @@ class Extended extends Model
         if ($slug) {
             $row = $this->find($slug, 'slug');
             if ($row) {
-                $result = $row->id;
+                $result = $row->article;
             }
-        }
-
-        return $result;
-    }
-
-    public function checkSubjectExists($subject, $id = null)
-    {
-        $result = false;
-
-        if ($subject) {
-            $select = $this->select()
-                ->columns(array('total' => new Expression('count(id)')))
-                ->where(array(
-                    'subject' => $subject,
-                    'status'  => self::FIELD_STATUS_PUBLISHED,
-                ));
-            if ($id) {
-                $select->where(array('id <> ?' => $id));
-            }
-
-            $result = $this->selectWith($select)->current()->total > 0;
-        }
-
-        return $result;
-    }
-
-    public function checkSlugExists($slug, $id = null)
-    {
-        $result = false;
-
-        if ($slug) {
-            $select = $this->select()
-                ->columns(array('total' => new Expression('count(id)')))
-                ->where(array(
-                    'slug' => $slug,
-                    'status'  => self::FIELD_STATUS_PUBLISHED,
-                ));
-            if ($id) {
-                $select->where(array('id <> ?' => $id));
-            }
-
-            $result = $this->selectWith($select)->current()->total > 0;
         }
 
         return $result;
