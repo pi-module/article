@@ -20,6 +20,7 @@ namespace Module\Article;
 
 use Pi;
 use Module\Article\Service;
+use Module\Article\Entity;
 
 /**
  * Public APIs for article module itself 
@@ -71,7 +72,7 @@ class Topic
         }
         $where['id'] = $articleIds;
         
-        return Service::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
+        return Entity::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
     }
     
     /**

@@ -25,6 +25,7 @@ use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
 use Module\Article\Service;
+use Module\Article\Entity;
 
 /**
  * Public class for searching articles 
@@ -52,7 +53,7 @@ class SearchController extends ActionController
         }
         
         // Retrieve data
-        $articleResultset = Service::getAvailableArticlePage($where, $page, $limit, null, $order, $module);
+        $articleResultset = Entity::getAvailableArticlePage($where, $page, $limit, null, $order, $module);
 
         // Total count
         $where = array_merge($where, array(

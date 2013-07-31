@@ -31,6 +31,7 @@ use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Compiled;
+use Module\Article\Entity;
 use Module\Article\Controller\Admin\ConfigController as Config;
 
 /**
@@ -919,7 +920,7 @@ class DraftController extends ActionController
             if (Article::FIELD_RELATED_TYPE_CUSTOM == $data['related_type'] && !empty($row->related)) {
                 $relatedIds = array_flip($row->related);
 
-                $related = Service::getArticlePage(array('id' => $row->related), 1, null, null, null, $module);
+                $related = Entity::getArticlePage(array('id' => $row->related), 1, null, null, null, $module);
 
                 foreach ($related as $item) {
                     if (array_key_exists($item['id'], $relatedIds)) {
