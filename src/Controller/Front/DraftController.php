@@ -229,12 +229,12 @@ class DraftController extends ActionController
         }
         
         $model  = $this->getModel('draft');
-        $row    = $model->find($id);
+        $row    = $model->findRow($id, 'id', false);
         if (!$row->id or $row->status != Draft::FIELD_STATUS_PENDING) {
             return array('message' => __('Invalid draft.'));
         }
         
-        $result = $this->validateForm($row->toArray(), null, $elements);
+        $result = $this->validateForm((array) $row, null, $elements);
         if (!$result['status']) {
             return $result;
         }
@@ -260,7 +260,7 @@ class DraftController extends ActionController
             'time_submit'     => $row->time_submit,
             'time_publish'    => $row->time_publish ? $row->time_publish : $timestamp,
             'time_update'     => $row->time_update ? $row->time_update : 0,
-            'image'           => $row->image,
+            'image'           => $row->image ?: '',
         );
         $rowArticle = $modelArticle->createRow($article);
         $rowArticle->save();
@@ -269,13 +269,12 @@ class DraftController extends ActionController
         
         // Moving extended fields to extended table
         $modelExtended  = $this->getModel('extended');
-        $extended       = array(
-            'article'         => $articleId,
-            'seo_title'       => $row->seo_title,
-            'seo_keywords'    => $row->seo_keywords,
-            'seo_description' => $row->seo_description,
-            'slug'            => $row->slug ?: null,
-        );
+        $columns        = $modelExtended->getValidColumns();
+        $extended       = array();
+        foreach ($columns as $column) {
+            $extended[$column] = $row->$column;
+        }
+        $extended['article'] = $articleId;
         $rowExtended = $modelExtended->createRow($extended);
         $rowExtended->save();
         
@@ -343,7 +342,7 @@ class DraftController extends ActionController
         }
 
         // delete draft
-        $row->delete();
+        $model->delete(array('id' => $id));
 
         $result['status']   = self::RESULT_TRUE;
         $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
@@ -425,13 +424,12 @@ class DraftController extends ActionController
         }
         
         // Updating value of extended fields
-        $extended = array(
-            'seo_title'       => $rowDraft->seo_title,
-            'seo_keywords'    => $rowDraft->seo_keywords,
-            'seo_description' => $rowDraft->seo_description,
-            'slug'            => $rowDraft->slug ?: null,
-        );
+        $extended = array();
         $modelExtended = $this->getModel('extended');
+        $columns       = $modelExtended->getValidColumns();
+        foreach ($columns as $column) {
+            $extended[$column] = $rowDraft->$column;
+        }
         $rowExtended   = $modelExtended->find($articleId, 'article');
         $rowExtended->assign($extended);
         $rowExtended->save();
@@ -573,8 +571,7 @@ class DraftController extends ActionController
             $data['uid']    = Pi::registry('user')->id;
             $data['status'] = Draft::FIELD_STATUS_DRAFT;
 
-            $rowDraft = $modelDraft->createRow($data);
-            $rowDraft->save();
+            $rowDraft = $modelDraft->saveRow($data);
 
             if (empty($rowDraft->id)) {
                 return false;
@@ -586,13 +583,11 @@ class DraftController extends ActionController
             }
 
             $rowDraft = $modelDraft->find($id);
-
-            if (empty($rowDraft)) {
+            if (empty($rowDraft->id)) {
                 return false;
             }
 
-            $rowDraft->assign($data);
-            $rowDraft->save();
+            $modelDraft->updateRow($data, array('id' => $id));
         }
 
         // Save image
@@ -824,7 +819,7 @@ class DraftController extends ActionController
         }
         
         $draftModel = $this->getModel('draft');
-        $row        = $draftModel->find($id);
+        $row        = $draftModel->findRow($id);
 
         /**#@+
         * Added by Zongshu Lin
@@ -872,7 +867,7 @@ class DraftController extends ActionController
         }
         
         // prepare data
-        $data                 = $row->toArray();
+        $data                 = $row;
         $data['category']     = $data['category'] ?: $this->config('default_category');
         $data['related']      = $data['related'] ? implode(self::TAG_DELIMITER, $data['related']) : '';
         $data['tag']          = $data['tag'] ? implode(self::TAG_DELIMITER, $data['tag']) : '';

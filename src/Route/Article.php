@@ -80,7 +80,10 @@ class Article extends Standard
         $matches   = array();
         $url       = $path;
         $uri       = $request->getRequestUri();
-        $parameter = substr($uri, strpos($uri, self::URL_DELIMITER) + 1);
+        $parameter = '';
+        if (strpos($uri, self::URL_DELIMITER)) {
+            $parameter = substr($uri, strpos($uri, self::URL_DELIMITER) + 1);
+        }
         if (empty($url)) {
             $controller = 'article';
             $action     = 'index';
@@ -174,6 +177,7 @@ class Article extends Standard
             if (isset($mergedParams['slug']) and !empty($mergedParams['slug']) and !is_numeric($mergedParams['slug'])) {
                 $url .= $mergedParams['time'] . $this->structureDelimiter . urlencode($mergedParams['slug']);
                 unset($mergedParams['slug']);
+                unset($mergedParams['id']);
             } elseif (isset($mergedParams['id']) and !empty($mergedParams['id']) and is_numeric($mergedParams['id'])) {
                 $url .= $mergedParams['time'] . $this->structureDelimiter . $mergedParams['id'];
                 unset($mergedParams['id']);

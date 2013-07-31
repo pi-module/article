@@ -65,6 +65,10 @@ class ArticleController extends ActionController
             $this->view()->assign('remain', $remain);
         }
 
+        if (empty($id)) {
+            $id = $this->getModel('extended')->slugToId($slug);
+        }
+
         $details = Entity::getEntity($id);
         $params  = array();
         
@@ -74,26 +78,30 @@ class ArticleController extends ActionController
         if (empty($details['active'])) {
             return $this->jumpToException(__('The article requested is not active'), 503);
         }
+        $route = '.' . Service::getRouteName();
         if (strval($slug) != $details['slug']) {
             $routeParams = array(
-                'time'      => date('Ymd', $details['time_publish']),
-                'id'        => $id,
-                'slug'      => $details['slug'],
-                'p'         => $page,
+                'time'       => date('Ymd', $details['time_publish']),
+                'id'         => $id,
+                'slug'       => $details['slug'],
+                'p'          => $page,
+                'controller' => 'article',
+                'action'     => 'detail',
             );
             if ($remain) {
                 $params['r'] = $remain;
             }
-            return $this->redirect()->setStatusCode(301)->toRoute('', array_merge($routeParams, $params));
+            return $this->redirect()->setStatusCode(301)->toRoute($route, array_merge($routeParams, $params));
         }
         
-        $route = '.' . Service::getRouteName();
         foreach ($details['content'] as &$value) {
             $value['url'] = $this->url($route, array_merge(array(
                 'time'       => date('Ymd', $details['time_publish']),
                 'id'         => $id,
                 'slug'       => $slug,
                 'p'          => $value['page'],
+                'controller' => 'article',
+                'action'     => 'detail',
             ), $params));
             if (isset($value['title']) and preg_replace('/&nbsp;/', '', trim($value['title'])) !== '') {
                 $showTitle = true;
@@ -106,12 +114,16 @@ class ArticleController extends ActionController
             'id'          => $id,
             'slug'        => $slug,
             'r'           => 0,
+            'controller'  => 'article',
+            'action'      => 'detail',
         ), $params));
         $details['remain'] = $this->url($route, array_merge(array(
             'time'        => date('Ymd', $details['time_publish']),
             'id'          => $id,
             'slug'        => $slug,
             'r'           => $page,
+            'controller'  => 'article',
+            'action'      => 'detail',
         ), $params));
 
         $this->view()->assign(array(
@@ -184,10 +196,7 @@ class ArticleController extends ActionController
         $modelAsset->delete(array('article' => $ids));*/
 
         // Update status
-        $modelArticle->update(
-            array('status' => Article::FIELD_STATUS_DELETED),
-            array('id' => $ids)
-        );
+        $modelArticle->delete(array('id' => $ids));
 
         // Clear cache
         Pi::service('render')->flushCache($module);
@@ -304,8 +313,7 @@ class ArticleController extends ActionController
         }
 
         // Save as draft
-        $draftRow = $draftModel->createRow($draft);
-        $draftRow->save();
+        $draftRow = $draftModel->saveRow($draft);
 
         $draftId = $draftRow->id;
 
@@ -423,7 +431,7 @@ class ArticleController extends ActionController
             'data'       => $data,
             'form'       => $form,
             'paginator'  => $paginator,
-            'summary'    => Service::getSummary('all'),
+            'summary'    => Service::getSummary($from),
             'category'   => $category,
             'filter'     => $filter,
             'categories' => Cache::getCategoryList(),
