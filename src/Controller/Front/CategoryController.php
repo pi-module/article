@@ -33,6 +33,7 @@ use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Cache;
 use Module\Article\Model\Article;
+use Module\Article\Entity;
 
 /**
  * Public action controller for operating category
@@ -202,7 +203,7 @@ class CategoryController extends ActionController
 
         // Get articles
         $columns            = array('id', 'subject', 'time_publish', 'category');
-        $resultsetArticle   = Service::getAvailableArticlePage($where, $page, $limit, $columns, null, $module);
+        $resultsetArticle   = Entity::getAvailableArticlePage($where, $page, $limit, $columns, null, $module);
 
         // Total count
         $cacheKey   = $this->getCacheKey($categoryId);

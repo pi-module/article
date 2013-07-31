@@ -33,6 +33,7 @@ use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Cache;
 use Module\Article\Role;
+use Module\Article\Entity;
 use Module\Article\Model\Extended;
 
 /**
@@ -64,7 +65,7 @@ class ArticleController extends ActionController
             $this->view()->assign('remain', $remain);
         }
 
-        $details = Service::getEntity($id);
+        $details = Entity::getEntity($id);
         $params  = array();
         
         if (!$id or ($details['time_publish'] > time())) {
@@ -379,7 +380,7 @@ class ArticleController extends ActionController
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
 
         // Retrieve data
-        $data = Service::getArticlePage($where, $page, $limit, null, $order, $module);
+        $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);
 
         // Total count
         $select = $modelArticle->select()
@@ -455,7 +456,7 @@ class ArticleController extends ActionController
         }
 
         // Retrieve data
-        $data = Service::getArticlePage($where, $page, $limit, null, null, $module);
+        $data = Entity::getArticlePage($where, $page, $limit, null, null, $module);
 
         // Total count
         $totalCount = $modelArticle->getSearchRowsCount($where);

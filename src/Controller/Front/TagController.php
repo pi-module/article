@@ -25,6 +25,7 @@ use Pi\Paginator\Paginator;
 use Module\Article\Model\Article;
 use Module\Article\Upload;
 use Module\Article\Service;
+use Module\Article\Entity;
 use Zend\View\Helper\Placeholder\Container\AbstractContainer;
 
 /**
@@ -64,7 +65,7 @@ class TagController extends ActionController
             $articles       = array_flip($articleIds);
             $columns        = array('id', 'subject', 'time_publish', 'category');
 
-            $resultsetArticle   = Service::getAvailableArticlePage($where, 1, $limit, $columns, '', $module);
+            $resultsetArticle   = Entity::getAvailableArticlePage($where, 1, $limit, $columns, '', $module);
 
             foreach ($resultsetArticle as $key => $val) {
                 $articles[$key] = $val;
