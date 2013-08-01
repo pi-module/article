@@ -257,6 +257,11 @@ class CategoryController extends ActionController
      */
     public function addAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $parent = $this->params('parent', 0);
 
         $form   = $this->getCategoryForm('add');
@@ -301,6 +306,11 @@ class CategoryController extends ActionController
      */
     public function editAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Category Info'));
         
@@ -349,6 +359,11 @@ class CategoryController extends ActionController
      */
     public function deleteAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $id     = $this->params('id');
 
         if ($id == 1) {
@@ -394,6 +409,11 @@ class CategoryController extends ActionController
      */
     public function listCategoryAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $model = $this->getModel('category');
         $rowset = $model->enumerate(null, null, true);
 
@@ -408,6 +428,11 @@ class CategoryController extends ActionController
      */
     public function mergeAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $form = new CategoryMergeForm();
         $this->view()->assign('form', $form);
         $this->view()->assign('title', __('Merge Category'));
@@ -474,6 +499,11 @@ class CategoryController extends ActionController
      */
     public function moveAction()
     {
+        $allowed = Service::getPermission('category');
+        if (!$allowed) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $form = new CategoryMoveForm();
         $this->view()->assign('form', $form);
         $this->view()->assign('title', __('Move Category'));

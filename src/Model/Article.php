@@ -161,22 +161,6 @@ class Article extends Model
         );
     }
 
-    public function setRecommendedStatus($ids, $recomended)
-    {
-        return $this->update(
-            array('recommended' => $recomended),
-            array('id' => $ids)
-        );
-    }
-
-    public function visit($article)
-    {
-        return $this->update(
-            array('visits' => new Expression('visits + 1')),
-            array('id' => $article)
-        );
-    }
-
     public function checkSubjectExists($subject, $id = null)
     {
         $result = false;

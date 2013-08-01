@@ -32,7 +32,16 @@ $this->Backbone();
         </a>
     </li>
     <li style="margin-left:20px;">
-        <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn"><?php _e('Compose'); ?></a>
+        <?php $allowCompose = false;
+        foreach ($rules as $rule) {
+            if ($rule['compose']) {
+                $allowCompose = true;
+                break;
+            }
+        } ?>
+        <?php if ($allowCompose) { ?>
+            <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn"><?php _e('Compose'); ?></a>
+        <?php } ?>
     </li>
 </ul>
 <script>
