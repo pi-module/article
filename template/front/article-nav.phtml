@@ -15,9 +15,18 @@
             <?php _e('Pending'); ?>(<?php echo $summary['pending']; ?>)
         </a>
     </li>
-    <li style="margin-left:20px;">
-       <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn">
-           <?php _e('Compose'); ?>
-       </a>
-    </li>
+    <?php $allowCompose = false;
+    foreach ($rules as $rule) {
+        if ($rule['compose']) {
+            $allowCompose = true;
+            break;
+        }
+    } ?>
+    <?php if ($allowCompose) { ?>
+        <li style="margin-left:20px;">
+        <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn">
+            <?php _e('Compose'); ?>
+        </a>
+        </li>
+    <?php } ?>
 </ul>

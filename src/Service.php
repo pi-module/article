@@ -599,6 +599,36 @@ class Service
     }
     
     /**
+     * Changing status number to slug string
+     * 
+     * @param int  $status
+     * @return string 
+     */
+    public static function getStatusSlug($status)
+    {
+        $slug = '';
+        switch ($status) {
+            case Draft::FIELD_STATUS_DRAFT:
+                $slug = 'draft';
+                break;
+            case Draft::FIELD_STATUS_PENDING:
+                $slug = 'pending';
+                break;
+            case Draft::FIELD_STATUS_REJECTED:
+                $slug = 'approve';
+                break;
+            case Article::FIELD_STATUS_PUBLISHED:
+                $slug = 'publish';
+                break;
+            default:
+                $slug = 'draft';
+                break;
+        }
+        
+        return $slug;
+    }
+    
+    /**
      * Getting user permission according to given category or operation name.
      * The return array has a format such as:
      * array('{Category ID}' => array('{Operation name}' => true));
@@ -611,21 +641,14 @@ class Service
     public static function getPermission($isMine = false, $operation = null, $category = null, $uid = null)
     {
         $rules = array(
-            2   => array(
-                'compose'      => false,
-                'approve'      => false,
-                'pending-edit' => true,
-                'draft-edit'   => false,
-                'publish-edit' => false,
-                'approve-delete' => true,
-                'pending-delete' => true,
-            ),
+            
             3   => array(
                 'compose'      => false,
                 'approve'      => false,
-                'pending-edit' => false,
+                'pending-edit' => true,
                 'publish-edit' => true,
                 'approve-delete' => false,
+                'active'         => true,
             ),
             4   => array(
                 'compose'      => true,
@@ -634,6 +657,7 @@ class Service
                 'draft-edit'   => true,
                 'publish-edit' => true,
                 'approve-delete' => false,
+                'publish-delete' => true,
             ),
             6   => array(
                 'compose'      => false,
@@ -647,17 +671,17 @@ class Service
             $category = Pi::model('category', $module)->getList(array('id'));
             $myRules  = array();
             foreach (array_keys($category) as $key) {
-                if (!(isset($rules[$key]['compose']) and $rules[$key]['compose'])) {
-                    continue;
+                $categoryRule = array();
+                if (isset($rules[$key]['compose']) and $rules[$key]['compose']) {
+                    $categoryRule = array(
+                        'draft-edit'      => true,
+                        'draft-delete'    => true,
+                        'pending-edit'    => true,
+                        'pending-delete'  => true,
+                        'rejected-edit'   => true,
+                        'rejected-delete' => true,
+                    );
                 }
-                $categoryRule = array(
-                    'draft-edit'      => true,
-                    'draft-delete'    => true,
-                    'pending-edit'    => true,
-                    'pending-delete'  => true,
-                    'rejected-edit'   => true,
-                    'rejected-delete' => true,
-                );
                 $myRules[$key] = array_merge(isset($rules[$key]) ? $rules[$key] : array(), $categoryRule);
             }
             $rules = $myRules;
