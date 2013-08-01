@@ -314,7 +314,7 @@ class ArticleController extends ActionController
         $rowDraft   = $draftModel->find($id, 'article');
 
         if ($rowDraft) {
-            Service::deleteDraft($rowDraft->id, $module);
+            $draftModel->delete(array('id' => $rowDraft->id));
         }
 
         // Create new draft if no draft exists

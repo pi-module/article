@@ -641,7 +641,15 @@ class Service
     public static function getPermission($isMine = false, $operation = null, $category = null, $uid = null)
     {
         $rules = array(
-            
+            2   => array(
+                'compose'      => false,
+                'approve'      => false,
+                'pending-edit' => true,
+                'draft-edit'   => false,
+                'publish-edit' => true,
+                'approve-delete' => true,
+                'pending-delete' => true,
+            ),
             3   => array(
                 'compose'      => false,
                 'approve'      => false,

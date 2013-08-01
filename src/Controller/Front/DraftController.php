@@ -369,7 +369,7 @@ class DraftController extends ActionController
         }
         
         $modelDraft = $this->getModel('draft');
-        $rowDraft   = $modelDraft->find($id);
+        $rowDraft   = $modelDraft->findRow($id, 'id', false);
 
         if (!$rowDraft->id or !$rowDraft->article) {
             $result['message'] = __('Invalid draft.');
@@ -516,7 +516,7 @@ class DraftController extends ActionController
         }
 
         // Delete draft
-        $rowDraft->delete();
+        $modelDraft->delete(array('id' => $rowDraft->id));
 
         $result['status']   = self::RESULT_TRUE;
         $result['data']['redirect'] = $this->url('', array('action' => 'published', 'controller' => 'article'));
