@@ -24,7 +24,7 @@ $this->Backbone();
             <select class="search-cate">
                 <option value=""><?php echo __('All categories'); ?></option>
                 <?php foreach ($categories as $val) { ?>
-                <option value="<?php echo $val['id']; ?>" <?php if($category==$val['id']){ echo "selected"; } ?>><?php echo $val['title']; ?></option>
+                <option value="<?php echo $this->escape($val['id']) ?>" <?php if ($category == $val['id']) echo "selected" ?>><?php echo $this->escape($val['title']) ?></option>
                 <?php } ?>
             </select>
         </div>
@@ -137,7 +137,7 @@ $this->Backbone();
            this.toggleBulk();
        },
        search:function(){
-          var url=  "<?php echo $this->url('', array('action' => 'published')) ?>";
+          var url=  "<?php echo $this->url('', array('action' => 'published', 'from' => 'all')) ?>";
           location.href=url+"?filter="+this.$(".search-status").val()+"&category="+this.$(".search-cate").val()+"&channel="+page.channel;
        },
        bulk:function(){

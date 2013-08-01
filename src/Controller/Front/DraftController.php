@@ -1044,13 +1044,38 @@ class DraftController extends ActionController
             throw new \Exception(__('Invalid draft id'));
         }
         
-        Service::deleteDraft($ids, $this->getModule());
+        // Deleting draft articles that user has permission to do
+        $model = $this->getModel('draft');
+        $rules = Service::getPermission();
+        if (1 == count($ids)) {
+            $row      = $model->find($ids[0]);
+            $slug     = Service::getStatusSlug($row->status);
+            $resource = $slug . '-delete';
+            if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
+                return $this->jumpToDenied('__Denied__');
+            }
+        } else {
+            $rows     = $model->select(array('id' => $ids));
+            $ids      = array();
+            foreach ($rows as $row) {
+                $slug     = Service::getStatusSlug($row->status);
+                $resource = $slug . '-delete';
+                if (isset($rules[$row->category][$resource]) and $rules[$row->category][$resource]) {
+                    $ids[] = $row->id;
+                }
+            }
+        }
+        
+        // Deleting draft
+        if (!empty($ids)) {
+            $model->delete(array('id' => $ids));
+        }
 
+        // Redirecting to original page
         if ($from) {
             $from = urldecode($from);
             $this->redirect()->toUrl($from);
         } else {
-            // Go to list page
             $this->redirect()->toRoute('', array(
                 'action'        => 'list',
                 'controller'    => 'draft',
@@ -1067,6 +1092,10 @@ class DraftController extends ActionController
      */
     public function publishAction()
     {
+        if (!$this->request->isPost()) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $result = array(
             'status'    => self::RESULT_FALSE,
             'message'   => array(),
@@ -1097,18 +1126,6 @@ class DraftController extends ActionController
         }
         
         $result = $this->publish($id);
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        /*$allowApprove = Role::isAllowed(PermController::PERM_EDITOR, 'pending-approve-reject');
-        $editor       = Pi::service('api')->channel(array('role', 'isEditor'), null, $data['channel']);
-        $acl          = new \Pi\Acl\Acl('admin');
-        if ('admin' === $acl->getRole()) {
-            $result['data']['approve'] = true;
-        } else {
-            $result['data']['approve'] = ($allowApprove and $editor) ? true : false;
-        }*/
-        /**#@-*/
 
         return $result;
     }
@@ -1139,6 +1156,12 @@ class DraftController extends ActionController
             return array('message' => __('Invalid draft.'));
         }
         
+        // Getting permission and checking it
+        $rules = Service::getPermission();
+        if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $row->status        = Draft::FIELD_STATUS_REJECTED;
         $row->reject_reason = $rejectReason;
         $row->save();
@@ -1156,18 +1179,6 @@ class DraftController extends ActionController
      */
     public function approveAction()
     {
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        /*$rules = Role::isAllowed(PermController::PERM_EDITOR, 'pending-approve-reject');
-        if (!isset($rules)) {
-            return array(
-                'status'   => PermController::AJAX_RESULT_FALSE,
-                'message'  => PermController::DENIED_MESSAGE,
-            );
-        }*/
-        /**#@-*/
-        
         $result = array(
             'status'    => self::RESULT_FALSE,
             'message'   => array(),
@@ -1197,6 +1208,13 @@ class DraftController extends ActionController
         if (!$id) {
             return array('message' => __('Failed to save draft.'));
         }
+        $row = $this->getModel('draft')->findRow($id);
+        
+        // Getting permission and checking it
+        $rules = Service::getPermission();
+        if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
+            return $this->jumpToDenied('__Denied__');
+        }
         
         $result = $this->approve($id, $options['elements']);
         $result['message'] = __('approve successfully.');
@@ -1215,6 +1233,24 @@ class DraftController extends ActionController
 
         $options = Service::getFormConfig();
         if ($ids) {
+            // To approve articles that user has permission to approve
+            $model = $this->getModel('draft');
+            $rules = Service::getPermission();
+            if (1 == count($ids)) {
+                $row = $model->find($ids[0]);
+                if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
+                    return $this->jumpToDenied('__Denied__');
+                }
+            } else {
+                $rows = $model->select(array('id' => $ids));
+                $ids  = array();
+                foreach ($rows as $row) {
+                    if (isset($rules[$row->category]['approve']) and $rules[$row->category]['approve']) {
+                        $ids[] = $row->id;
+                    }
+                }
+            }
+            // Approve articles
             foreach ($ids as $id) {
                 $this->approve($id, $options['elements']);
             }
