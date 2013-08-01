@@ -152,6 +152,27 @@ class ArticleController extends ActionController
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
         //$modelAsset     = $this->getModel('asset');
+        
+        // Deleting articles that user has permission to do
+        $rules = Service::getPermission();
+        if (1 == count($ids)) {
+            $row      = $modelArticle->find($ids[0]);
+            $slug     = Service::getStatusSlug($row->status);
+            $resource = $slug . '-delete';
+            if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
+                return $this->jumpToDenied('__Denied__');
+            }
+        } else {
+            $rows     = $modelArticle->select(array('id' => $ids));
+            $ids      = array();
+            foreach ($rows as $row) {
+                $slug     = Service::getStatusSlug($row->status);
+                $resource = $slug . '-delete';
+                if (isset($rules[$row->category][$resource]) and $rules[$row->category][$resource]) {
+                    $ids[] = $row->id;
+                }
+            }
+        }
 
         $resultsetArticle = $modelArticle->select(array('id' => $ids));
 
@@ -163,7 +184,7 @@ class ArticleController extends ActionController
                 unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
             }
         }
-
+        
         // Batch operation
         // Deleting extended fields
         $this->getModel('extended')->delete(array('article' => $ids));
@@ -218,7 +239,7 @@ class ArticleController extends ActionController
      * Active or deactivate article 
      */
     public function activateAction()
-    {      
+    {
         $id     = Service::getParam($this, 'id', '');
         $ids    = array_filter(explode(',', $id));
         $status = Service::getParam($this, 'status', 0);
@@ -227,6 +248,24 @@ class ArticleController extends ActionController
         if ($ids) {
             $module         = $this->getModule();
             $modelArticle   = $this->getModel('article');
+            
+            // Activing articles that user has permission to do
+            $rules = Service::getPermission();
+            if (1 == count($ids)) {
+                $row      = $modelArticle->find($ids[0]);
+                if (!(isset($rules[$row->category]['active']) and $rules[$row->category]['active'])) {
+                    return $this->jumpToDenied('__Denied__');
+                }
+            } else {
+                $rows     = $modelArticle->select(array('id' => $ids));
+                $ids      = array();
+                foreach ($rows as $row) {
+                    if (isset($rules[$row->category]['active']) and $rules[$row->category]['active']) {
+                        $ids[] = $row->id;
+                    }
+                }
+            }
+            
             $modelArticle->setActiveStatus($ids, $status ? 1 : 0);
 
             // Clear cache
@@ -259,6 +298,17 @@ class ArticleController extends ActionController
             return $this->jumpTo404(__('Invalid article ID'));
         }
         
+        $model = $this->getModel('article');
+        $row   = $model->find($id);
+
+        // Checking user has permission to edit
+        $rules = Service::getPermission();
+        $slug  = Service::getStatusSlug($row->status);
+        $resource = $slug . '-edit';
+        if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         // Check if draft exists
         $draftModel = $this->getModel('draft');
         $rowDraft   = $draftModel->find($id, 'article');
@@ -268,13 +318,9 @@ class ArticleController extends ActionController
         }
 
         // Create new draft if no draft exists
-        $model = $this->getModel('article');
-        $row   = $model->find($id);
-
         if (!$row->id or $row->status != Article::FIELD_STATUS_PUBLISHED) {
             return $this->jumpTo404(__('Can not create draft'));
         }
-        
         $draft = array(
             'article'         => $row->id,
             'subject'         => $row->subject,
@@ -357,12 +403,20 @@ class ArticleController extends ActionController
      */
     public function publishedAction()
     {
-        $where  = $whereChannel = array();
+        $where  = array();
         $page   = Service::getParam($this, 'page', 1);
         $limit  = Service::getParam($this, 'limit', 20);
         $from   = Service::getParam($this, 'from', 'my');
         $order  = 'time_publish DESC';
 
+        // Getting permission
+        $rules = Service::getPermission();
+        $categories = array();
+        foreach (array_keys($rules) as $key) {
+            $categories[$key] = true;
+        }
+        $where['category'] = array_keys($categories);
+        
         $data   = $ids = array();
 
         $module         = $this->getModule();
@@ -434,11 +488,12 @@ class ArticleController extends ActionController
             'summary'    => Service::getSummary($from),
             'category'   => $category,
             'filter'     => $filter,
-            'categories' => Cache::getCategoryList(),
+            'categories' => array_intersect_key(Cache::getCategoryList(), $categories),
             'action'     => 'published',
             'flags'      => $flags,
             'status'     => Article::FIELD_STATUS_PUBLISHED,
             'from'       => $from,
+            'rules'      => $rules,
         ));
         
         if ('my' == $from) {
@@ -446,6 +501,9 @@ class ArticleController extends ActionController
         }
     }
 
+    /**
+     * Searching articles for manager. 
+     */
     public function searchAction()
     {
         $keyword    = Service::getParam($this, 'keyword', '');

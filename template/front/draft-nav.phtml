@@ -10,6 +10,12 @@ $this->Backbone();
     'from'       => $from,
 ); ?>
 
+<?php if ($status == $flags['published']) {
+    $controller = 'article';
+} else {
+    $controller = 'draft';
+} ?>
+
 <ul class="nav nav-pills">
     <li class="<?php if ($status == $flags['published']) echo 'active' ?>">
         <a href="<?php echo $this->url('', array('action' => 'published', 'controller' => 'article', 'from' => $from)) ?>">
@@ -48,7 +54,7 @@ $this->Backbone();
 $(function(){
     var page={ 
         el:$("#jsList"),
-        url: "<?php echo $this->url('', array('action' => 'delete', 'controller' => 'draft')) ?>",
+        url: "<?php echo $this->url('', array('action' => 'delete', 'controller' => $controller)) ?>",
         $:function(selector){
             return this.el.find(selector);
         },
