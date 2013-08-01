@@ -625,7 +625,7 @@ class DraftController extends ActionController
     public function showDraftPage($status, $from = 'my', $options = array())
     {
         $where  = array();
-        $page   = Service::getParam($this, 'page', 1);
+        $page   = Service::getParam($this, 'p', 1);
         $limit  = Service::getParam($this, 'limit', 20);
 
         $where['status']        = $status;
@@ -650,7 +650,6 @@ class DraftController extends ActionController
         $paginator->setItemCountPerPage($limit)
                   ->setCurrentPageNumber($page)
                   ->setUrlOptions(array(
-                    'pageParam' => 'page',
                     'router'    => $this->getEvent()->getRouter(),
                     'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
                     'params'    => array(
@@ -681,6 +680,10 @@ class DraftController extends ActionController
      */
     public function saveAction()
     {
+        if (!$this->request->isPost()) {
+            return $this->jumpTo404();
+        }
+        
         $result = array(
             'status'    => self::RESULT_FALSE,
             'message'   => array(),
@@ -739,6 +742,9 @@ class DraftController extends ActionController
             throw new \Exception(__('Invalid source'));
         }
         
+        // Getting permission
+        $rules = Service::getPermission('my' == $from ? true : false);
+        
         $this->showDraftPage($status, $from, $where);
         
         $title  = '';
@@ -767,6 +773,7 @@ class DraftController extends ActionController
             'title'   => $title,
             'summary' => Service::getSummary($from),
             'flags'   => $flags,
+            'rules'   => $rules,
         ));
         
         if ('all' == $from) {
@@ -782,9 +789,32 @@ class DraftController extends ActionController
      */
     public function addAction()
     {
+        $rules        = Service::getPermission();
+        $denied       = true;
+        $listCategory = array();
+        $approve      = array();
+        $delete       = array();
+        foreach ($rules as $key => $rule) {
+            if (isset($rule['compose']) and $rule['compose']) {
+                $denied = false;
+                $listCategory[$key] = true;
+            }
+            if (isset($rule['approve']) and $rule['approve']) {
+                $approve[] = $key;
+            }
+            if (isset($rule['approve-delete']) and $rule['approve-delete']) {
+                $delete[] = $key;
+            }
+        }
+        if ($denied) {
+            return $this->jumpToDenied('__Denied__');
+        }
+        
         $options = Service::getFormConfig();
         $form    = $this->getDraftForm('add', $options);
-
+        $categories = $form->get('category')->getValueOptions();
+        $form->get('category')->setValueOptions(array_intersect_key($categories, $listCategory));
+        
         $form->setData(array(
             'category'      => $this->config('default_category'),
             'source'        => $this->config('default_source'),
@@ -798,6 +828,10 @@ class DraftController extends ActionController
             'form'      => $form,
             'config'    => Pi::service('module')->config('', $this->getModule()),
             'elements'  => $options['elements'],
+            'rules'     => $rules,
+            'approve'   => $approve,
+            'delete'    => $delete,
+            'status'    => Draft::FIELD_STATUS_DRAFT,
         ));
         $this->view()->setTemplate('draft-edit');
     }
@@ -819,55 +853,52 @@ class DraftController extends ActionController
         }
         
         $draftModel = $this->getModel('draft');
-        $row        = $draftModel->findRow($id);
+        $row        = $draftModel->findRow($id, 'id', false);
 
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        /*$status = '';
+        // Generating user permissions, including article approving, deleting, etc.
+        $status = '';
         switch ((int) $row->status) {
-            case 1:
+            case Draft::FIELD_STATUS_DRAFT:
                 $status = 'draft';
                 break;
-            case 2:
+            case Draft::FIELD_STATUS_PENDING:
                 $status = 'pending';
                 break;
-            case 3:
+            case Draft::FIELD_STATUS_REJECTED:
                 $status = 'rejected';
                 break;
         }
-        if ('all' === Service::getParam($this, 'from')) {
-            $role   = PermController::PERM_EDITOR;
-            $status = 'draft' === $status ? 'published' : $status;
-        } else {
-            $role = PermController::PERM_WRITER;
+        if ($row->article) {
+            $status = 'publish';
         }
-        $rules    = Role::getAllowedResources($this, $role, $status);
-        if (PermController::PERM_WRITER === $role) {
-            $isAllowed = Role::isAllowed(PermController::PERM_EDITOR, 'pending-approve-reject');
-            $isEditor  = Pi::service('api')->channel(array('role', 'isEditor'), null, $row->channel);
-            $acl       = new \Pi\Acl\Acl('admin');
-            if ('admin' === $acl->getRole()) {
-                $rules['approve-reject'] = true;
-            } else {
-                $rules['approve-reject'] = ($isAllowed and $isEditor);
+        $rules    = Service::getPermission(Service::isMine($row->uid));
+        if (!(isset($rules[$row->category][$status . '-edit']) and $rules[$row->category][$status . '-edit'])) {
+            return $this->jumpToDenied('__denied__');
+        }
+        $categories = array();
+        $approve    = array();
+        $delete     = array();
+        foreach ($rules as $key => $rule) {
+            if (isset($rule[$status . '-edit']) and $rule[$status . '-edit']) {
+                $categories[$key] = true;
+            }
+            // Getting approving and deleting permission for draft article
+            if (isset($rule['approve']) and $rule['approve']) {
+                $approve[] = $key;
+            }
+            if (isset($rule['approve-delete']) and $rule['approve-delete']) {
+                $delete[] = $key;
             }
         }
-        $channels = Pi::service('api')->channel(array('role', 'getListByRole'), $role);
-        foreach ($channels as $key => $channel) {
-            $channels[$key] = $channel['title'];
-        }
-        if (!$rules['edit'] or !in_array($row->channel, array_keys($channels))) {
-            return $this->jumpToDenied('__denied__');
-        }*/
-        /**#@-*/
+        $currentDelete = (isset($rules[$row->category][$status . '-delete']) and $rules[$row->category][$status . '-delete']) ? true : false;
+        $currentApprove = (isset($rules[$row->category]['approve']) and $rules[$row->category]['approve']) ? true : false;
 
         if (empty($row)) {
             return ;
         }
         
         // prepare data
-        $data                 = $row;
+        $data                 = (array) $row;
         $data['category']     = $data['category'] ?: $this->config('default_category');
         $data['related']      = $data['related'] ? implode(self::TAG_DELIMITER, $data['related']) : '';
         $data['tag']          = $data['tag'] ? implode(self::TAG_DELIMITER, $data['tag']) : '';
@@ -879,12 +910,8 @@ class DraftController extends ActionController
         $featureThumb = $data['image'] ? Pi::url(Upload::getThumbFromOriginal($data['image'])) : '';
 
         $form = $this->getDraftForm('edit', $options);
-        /**#@+
-        * Added by Zongshu Lin
-        */
-        /*$channels = array(0 => __('Select channel')) + $channels;
-        $form->get('channel')->setValueOptions($channels);*/
-        /**#@-*/
+        $allCategory = $form->get('category')->getValueOptions();
+        $form->get('category')->setValueOptions(array_intersect_key($allCategory, $categories));
         $form->setData($data);
 
         // Get author info
@@ -984,7 +1011,7 @@ class DraftController extends ActionController
         $this->view()->assign(array(
             'title'         => __('Edit Article'),
             'form'          => $form,
-            'draft'         => $row,
+            'draft'         => (array) $row,
             'related'       => $related,
             'attachments'   => $attachments,
             'images'        => $images,
@@ -993,11 +1020,12 @@ class DraftController extends ActionController
             'config'        => Pi::service('module')->config('', $module),
             'from'          => Service::getParam($this, 'from', ''),
             'elements'      => $elements,
-            /**#@+
-            * Added by Zongshu Lin
-            */
-            //'rules'         => $rules,
-            /**#@-*/
+            'status'        => $row->article ? Article::FIELD_STATUS_PUBLISHED : $row->status,
+            'rules'         => $rules,
+            'approve'       => $approve,
+            'delete'        => $delete,
+            'currentDelete' => $currentDelete,
+            'currentApprove' => $currentApprove,
         ));
     }
 
