@@ -581,4 +581,88 @@ class Service
         
         return $name;
     }
+    
+    /**
+     * Checking whether a given user is current loged user.
+     * 
+     * @param int  $uid  User ID
+     * @return boolean 
+     */
+    public static function isMine($uid)
+    {
+        $user   = Pi::service('user')->getUser();
+        if ($uid == $user->account->id) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Getting user permission according to given category or operation name.
+     * The return array has a format such as:
+     * array('{Category ID}' => array('{Operation name}' => true));
+     * 
+     * @param string      $operation  Operation name
+     * @param string|int  $category   Category name or ID
+     * @param int         $uid
+     * @return array|bool
+     */
+    public static function getPermission($isMine = false, $operation = null, $category = null, $uid = null)
+    {
+        $rules = array(
+            2   => array(
+                'compose'      => false,
+                'approve'      => false,
+                'pending-edit' => true,
+                'draft-edit'   => false,
+                'publish-edit' => false,
+                'approve-delete' => true,
+                'pending-delete' => true,
+            ),
+            3   => array(
+                'compose'      => false,
+                'approve'      => false,
+                'pending-edit' => false,
+                'publish-edit' => true,
+                'approve-delete' => false,
+            ),
+            4   => array(
+                'compose'      => true,
+                'approve'      => true,
+                'pending-edit' => true,
+                'draft-edit'   => true,
+                'publish-edit' => true,
+                'approve-delete' => false,
+            ),
+            6   => array(
+                'compose'      => false,
+                'pending-edit' => false,
+                'publish-edit' => false,
+            ),
+        );
+        
+        if ($isMine) {
+            $module   = Pi::service('module')->current();
+            $category = Pi::model('category', $module)->getList(array('id'));
+            $myRules  = array();
+            foreach (array_keys($category) as $key) {
+                if (!(isset($rules[$key]['compose']) and $rules[$key]['compose'])) {
+                    continue;
+                }
+                $categoryRule = array(
+                    'draft-edit'      => true,
+                    'draft-delete'    => true,
+                    'pending-edit'    => true,
+                    'pending-delete'  => true,
+                    'rejected-edit'   => true,
+                    'rejected-delete' => true,
+                );
+                $myRules[$key] = array_merge(isset($rules[$key]) ? $rules[$key] : array(), $categoryRule);
+            }
+            $rules = $myRules;
+        }
+        d($rules);
+        return $rules;
+    }
 }

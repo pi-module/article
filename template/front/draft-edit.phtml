@@ -273,36 +273,40 @@
                         <?php } ?> 
                     </p>
                 </div>
-                <div class="clearfix" style="margin-top:10px;">
+                <div id="article-management-operation" class="clearfix" style="margin-top:10px;">
                     <?php if ($draft['article']) { ?>
                     <button class="btn btn-primary pull-right update"><?php _e('Update'); ?></button>    
                     <?php } elseif ($draft['status'] == 2) { ?>
-                    <div class="btn-group pull-right">
-                        <button class="btn btn-primary approve"><?php _e('Approve'); ?></button>
-                        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                            <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="javascript:void(0)" data-target="#rejectModel" data-toggle="modal" data-backdrop="false"><?php _e('Reject'); ?></a></li>
-                        </ul>
-                    </div>
-                    <div id="rejectModel" class="modal hide fade">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                            <?php _e('Reject reason') ?>
+                    <?php if ($currentApprove) { ?>
+                        <div class="btn-group pull-right">
+                            <button class="btn btn-primary approve"><?php _e('Approve'); ?></button>
+                            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="javascript:void(0)" data-target="#rejectModel" data-toggle="modal" data-backdrop="false"><?php _e('Reject'); ?></a></li>
+                            </ul>
                         </div>
-                        <div class="modal-body">
-                            <textarea class="span12 memo"></textarea>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-primary reject"><?php _e('Reject') ?></button>
-                        </div>
-                    </div>             
+                    <?php } ?>
                     <?php } else { ?>    
                     <button class="btn btn-primary pull-right pending"><?php _e('Submit') ?></button>
                     <?php } ?>
-                    <span class="link-btn delete"><?php _e('Delete') ?></span>
+                    <?php if ($currentDelete) { ?>
+                        <span class="link-btn delete"><?php _e('Delete') ?></span>
+                    <?php } ?>
+                </div>
+                <div id="rejectModel" class="modal hide fade">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <?php _e('Reject reason') ?>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="span12 memo"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary reject"><?php _e('Reject') ?></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -562,6 +566,7 @@
 </script>
 <script>
 var obj;
+var currentStatus;
 var response;
 (function($){
 var page = {
@@ -832,13 +837,36 @@ var ReleaseProcess = Backbone.View.extend({
            url: "<?php echo $this->url('',array('action' => 'publish')); ?>",
            fn:function(resp){
                response = resp;
+               currentStatus = 2;
                self.$(".status").html(resp.status);
-               //if (!resp.approve) {
-               //    btn.remove();
-               //} else {
+               var approve = '<?php echo implode(',', $approve) ?>';
+               var approves = new Array;
+               approves = approve.split(',');
+               var category = $('select[name="category"]').val();
+               var allowed = false;
+               for (i = 0; i < approves.length; i++) {
+                   if (category == approves[i]) {
+                       allowed = true;
+                   }
+               }
+               if (!allowed) {
+                   btn.remove();
+               } else {
                    btn.removeAttr("disabled").html(resp.btn_value).removeClass("pending").addClass("approve");
                    $('input[name="time_submit"]').val(resp.time_submit);
-               //}
+               }
+               var approveDelete  = '<?php echo implode(',', $delete) ?>';
+               var approveDeletes = new Array;
+               approveDeletes = approveDelete.split(',');
+               var deleteAllowed = false;
+               for (i = 0; i < approveDeletes.length; i++) {
+                   if (category == approveDeletes[i]) {
+                       deleteAllowed = true;
+                   }
+               }
+               if (!deleteAllowed) {
+                   $('span.delete').remove();
+               }
            },
            fail:function(){
                btn.removeAttr("disabled");
@@ -1480,4 +1508,47 @@ new TipListView({
 
 })(jQuery)
 
+</script>
+<script>
+    $('select[name="category"]').change(function() {
+        var approve = '<?php echo implode(',', $approve) ?>';
+        var approves = new Array();
+        approves = approve.split(',');
+        var category = $(this).val();
+        var allowed = false;
+        for (i = 0; i < approves.length; i++) {
+            if (category == approves[i]) {
+                allowed = true;
+            }
+        }
+        var prevStatus = '<?php echo $status ?>';
+        var content = '';
+        if ($('span.link-btn.delete').length) {
+            content = '<span class="link-btn delete" style="display: block;">Delete</span>';
+        }
+        if ((1 == prevStatus || 3 == prevStatus) && 2 == currentStatus) {
+            if (allowed) {
+                content = '<button class="btn btn-primary pull-right approve">Approve</button>' + content;
+            }
+            $('#article-management-operation').html(content);
+        } else if (2 == prevStatus) {
+            if (allowed) {
+                content = '<div class="btn-group pull-right">'
+                        + '<button class="btn btn-primary approve">' 
+                        + '<?php _e('Approve'); ?>'
+                        + '</button>'
+                        + '<button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">'
+                        + '<span class="caret"></span>'
+                        + '</button>'
+                        + '<ul class="dropdown-menu">'
+                        + '<li>'
+                        + '<a href="javascript:void(0)" data-target="#rejectModel" data-toggle="modal" data-backdrop="false">'
+                        + '<?php _e('Reject'); ?>'
+                        + '</a>'
+                        + '</ul>'
+                        + '</div>' + content;
+            }
+            $('#article-management-operation').html(content);
+        }
+    });
 </script>
