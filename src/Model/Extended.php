@@ -26,8 +26,10 @@ class Extended extends Model
 {
     public function getValidColumns()
     {
-        $table = $this->getTable();
-        $sql = 'select COLUMN_NAME as name from information_schema.columns where table_name=\'' . $table . '\'';
+        $table    = $this->getTable();
+        $database = Pi::config()->load('service.database.php');
+        $schema   = $database['schema'];
+        $sql      = 'select COLUMN_NAME as name from information_schema.columns where table_name=\'' . $table . '\' and table_schema=\'' . $schema . '\'';
         try {
             $rowset = Pi::db()->getAdapter()->query($sql, 'prepare')->execute();
         } catch (\Exception $exception) {

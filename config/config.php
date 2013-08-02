@@ -226,6 +226,12 @@ return array(
             'description' => _t('Path to upload feature image of article.'),
             'value'       => 'upload/article/feature',
         ),
+        'path_topic'    => array(
+            'category'    => 'media',
+            'title'       => _t('Topic Path'),
+            'description' => _t('Path to upload image of topic.'),
+            'value'       => 'upload/article/topic',
+        ),
         'sub_dir_pattern' => array(
             'category'    => 'media',
             'title'       => _t('Pattern'),
@@ -281,6 +287,26 @@ return array(
             'title'       => _t('Default Category Image'),
             'description' => _t('Path to default image of category.'),
             'value'       => 'image/default-category.png',
+        ),
+        'topic_width'     => array(
+            'category'    => 'media',
+            'title'       => _t('Topic Image Width'),
+            'description' => _t('Topic image width'),
+            'value'       => 40,
+            'filter'      => 'number_int',
+        ),
+        'topic_height'    => array(
+            'category'    => 'media',
+            'title'       => _t('Topic Image Height'),
+            'description' => _t('Topic image height'),
+            'value'       => 40,
+            'filter'      => 'number_int',
+        ),
+        'default_topic_image' => array(
+            'category'    => 'media',
+            'title'       => _t('Default Topic Image'),
+            'description' => _t('Path to default image of topic.'),
+            'value'       => 'image/default-topic.png',
         ),
         'feature_width'   => array(
             'category'    => 'media',

@@ -1,0 +1,86 @@
+<?php
+$this->css($this->assetModule('script/article-ui.css'));
+$this->jQuery('extension/fileupload-min.js');
+$this->Backbone();
+?>
+<h2 class="page-header"><?php echo $this->escape($title) ?></h2>
+
+<?php if (isset($error)) { ?>
+<div class="alert alert-error">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($error) ?>
+</div>
+<?php } elseif (isset($message)) { ?>
+<div class="alert alert-success">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($message) ?>
+</div>
+<?php } ?>
+
+<?php include $this->templateComponent('form'); ?>
+<script id="temp-upload" type="text/template">
+    <div id="jsUpload">
+        <div class="upload-image-bg">
+            <?php $src = $form->get('image')->getValue() ?>
+            <?php if ($src) { ?>
+                <div class="black-bg"><i class="icon-remove"></i></div>    
+                <img src="<?php echo Pi::url($src) ?>">
+                <?php } else { ?>    
+                <i class="icon-columns"></i>
+            <?php } ?>
+        </div>
+        <span class="btn upload fileinput-button">
+            <?php _e('Upload'); ?> <input type="file" name="upload">
+        </span>
+    </div>
+</script>
+<script>
+//(function($){
+var page={
+    id: function(){
+        return "<?php echo $form->get('id')->getValue()?'id-'.$form->get('id')->getValue():'fake_id-'.$form->get('fake_id')->getValue(); ?>";
+    },
+    form:$("form.form-horizontal"),
+    $:function(selector){
+       return this.form.find(selector);
+    }
+};
+var UploadView=Backbone.View.extend({
+   template:_.template('<div class="black-bg"><i class="icon-remove"></i></div><img src="<%=preview_url %>">'),
+   events:{
+       "click .icon-remove":"remove"
+   },
+   initialize:function(){
+       page.$("[name=image]").parents(".control-group:first").find(".controls").html($("#temp-upload").html());
+       this.$el=$("#jsUpload");
+       this.input=this.$("[name=upload]");
+       this.fileupload();
+   },
+   fileupload:function(){
+       var self=this;
+       this.input.fileupload({
+           forceIframeTransport:true,
+           url: '<?php echo $this->url('',array('controller' => 'upload', 'action' => 'topic-image')); ?>'+page.id(),
+           done:function(e,data){
+               var d=$.parseJSON($.trim($(data.result).text()));
+               if(d.status==1){
+                   self.render(d.data);
+               }else{
+                   alert(_.values(d.message).join(","));
+               }
+           }
+       });  
+   },
+   remove:function(){
+       var self=this;
+       $.getJSON('<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'removeCategoryImage')); ?>'+page.id()).done(function(){
+           self.$(".upload-image-bg").html('<i class="icon-columns"></i>');
+       });  
+   },
+   render:function(obj){
+       this.$(".upload-image-bg").html(this.template(obj));
+   }
+});
+new UploadView;
+//})(jQuery)
+</script>
