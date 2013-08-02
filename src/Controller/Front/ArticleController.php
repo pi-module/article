@@ -404,7 +404,7 @@ class ArticleController extends ActionController
     public function publishedAction()
     {
         $where  = array();
-        $page   = Service::getParam($this, 'page', 1);
+        $page   = Service::getParam($this, 'p', 1);
         $limit  = Service::getParam($this, 'limit', 20);
         $from   = Service::getParam($this, 'from', 'my');
         $order  = 'time_publish DESC';
@@ -440,6 +440,11 @@ class ArticleController extends ActionController
 
         // Build where
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
+        
+        $keyword = Service::getParam($this, 'keyword', '');
+        if (!empty($keyword)) {
+            $where['subject like ?'] = sprintf('%%%s%%', $keyword);
+        }
 
         // Retrieve data
         $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);
@@ -456,7 +461,6 @@ class ArticleController extends ActionController
         $paginator->setItemCountPerPage($limit)
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
-            'pageParam' => 'page',
             'router'    => $this->getEvent()->getRouter(),
             'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
             'params'    => array_filter(array(
@@ -470,7 +474,6 @@ class ArticleController extends ActionController
 
         // Prepare search form
         $form = new SimpleSearchForm;
-
         $form->setData($this->params()->fromQuery());
         
         $flags = array(
@@ -499,59 +502,5 @@ class ArticleController extends ActionController
         if ('my' == $from) {
             $this->view()->setTemplate('draft-list');
         }
-    }
-
-    /**
-     * Searching articles for manager. 
-     */
-    public function searchAction()
-    {
-        $keyword    = Service::getParam($this, 'keyword', '');
-        $page       = Service::getParam($this, 'page', 1);
-        $limit      = Service::getParam($this, 'limit', 20);
-
-        $data       = $where = array();
-
-        $module         = $this->getModule();
-        $modelArticle   = $this->getModel('article');
-
-        // Build where
-        $where = array('status' => Article::FIELD_STATUS_PUBLISHED);
-        if ($keyword) {
-            $where['subject like ?'] = sprintf('%%%s%%', $keyword);
-        }
-
-        // Retrieve data
-        $data = Entity::getArticlePage($where, $page, $limit, null, null, $module);
-
-        // Total count
-        $totalCount = $modelArticle->getSearchRowsCount($where);
-
-        // Paginator
-        $paginator = Paginator::factory($totalCount);
-        $paginator->setItemCountPerPage($limit)
-            ->setCurrentPageNumber($page)
-            ->setUrlOptions(array(
-            'pageParam' => 'page',
-            'router'    => $this->getEvent()->getRouter(),
-            'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
-            'params'    => array_filter(array(
-                'module'        => $module,
-                'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
-                'keyword'       => $keyword,
-                'limit'         => $limit,
-            )),
-        ));
-
-        $this->view()->assign(array(
-            'title'     => __('Pending'),
-            'data'      => $data,
-            'keyword'   => $keyword,
-            'page'      => $page,
-            'limit'     => $limit,
-            'paginator' => $paginator,
-            'summary'   => $this->getSummary(),
-        ));
     }
 }

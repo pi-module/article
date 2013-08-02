@@ -1,0 +1,17 @@
+<ul class="nav nav-pills">
+    <li class="<?php if ('list-article' == $action) echo 'active' ?>">
+        <a href="<?php echo $this->url('', array('action' => 'list-article')) ?>">
+            <?php echo __('List Topic Articles') ?>
+        </a>
+    </li>
+    <li class="<?php if ('list-topic' == $action) echo 'active' ?>">
+        <a href="<?php echo $this->url('', array('action' => 'list-topic')) ?>">
+            <?php echo __('List Topics') ?>
+        </a>
+    </li>
+    <li class="<?php if ('pull' == $action) echo 'active' ?>">
+        <a href="<?php echo $this->url('', array('action' => 'pull')) ?>">
+            <?php echo __('Pull Articles') ?>
+        </a>
+    </li>
+</ul>
