@@ -119,33 +119,12 @@ class TopicController extends ActionController
         return $id;
     }
     
-    protected function getCacheKey($category)
-    {
-        $result = false;
-
-        switch ($category) {
-            case '2':
-                $result = Cache::KEY_ARTICLE_NEWS_COUNT;
-                break;
-            case '3':
-                $result = Cache::KEY_ARTICLE_PRODUCT_COUNT;
-                break;
-            case '4':
-                $result = Cache::KEY_ARTICLE_DESIGN_COUNT;
-                break;
-        }
-
-        return $result;
-    }
-
     /**
-     * Category index page, which will redirect to category article list page
+     * Topic index page
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array(
-            'action'    => 'list',
-        ));
+        
     }
     
     /**
@@ -159,49 +138,37 @@ class TopicController extends ActionController
         $topicId    = is_numeric($topic) ? (int) $topic : $modelTopic->slugToId($topic);
         $page       = Service::getParam($this, 'p', 1);
         $page       = $page > 0 ? $page : 1;
-        $offset     = ($page - 1) * $limit;
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_limit_management'] ?: 20;
-        $where  = array();
+        $limit  = (int) $config['page_topic_front'] ?: 20;
         
-        $route  = '.' . Service::getRouteName();
-
-        // Get category info
-        $categories = Cache::getCategoryList();
-        foreach ($categories as &$row) {
-            $row['url'] = $this->url($route, array(
-                'category' => $row['slug'] ?: $row['id'],
-            ));
+        // Getting relations
+        $modelRelation = $this->getModel('article_topic');
+        $rowRelation   = $modelRelation->select(array('topic' => $topicId));
+        $articleIds    = array();
+        foreach ($rowRelation as $row) {
+            $articleIds[] = $row['article'];
         }
-        $categoryIds = $modelCategory->getDescendantIds($categoryId);
-        if (empty($categoryIds)) {
-            return $this->jumpTo404(__('Invalid category id'));
-        }
-        $where['category']  = $categoryIds;
-        $categoryInfo       = $categories[$categoryId];
-
+        
+        $where = array(
+            'id' => $articleIds,
+        );
+        
         // Get articles
-        $columns            = array('id', 'subject', 'time_publish', 'category');
-        $resultsetArticle   = Entity::getAvailableArticlePage($where, $page, $limit, $columns, null, $module);
+        $resultsetArticle = Entity::getAvailableArticlePage($where, $page, $limit, null, null, $module);
 
         // Total count
-        $cacheKey   = $this->getCacheKey($categoryId);
-        $totalCount = (int) Cache::getSimple($cacheKey);
-        if (empty($totalCount)) {
-            $where = array_merge($where, array(
-                'time_publish <= ?' => time(),
-                'status'            => Article::FIELD_STATUS_PUBLISHED,
-                'active'            => 1,
-            ));
-            $modelArticle   = $this->getModel('article');
-            $totalCount     = $modelArticle->getSearchRowsCount($where);
-
-            Cache::setSimple($cacheKey, $totalCount);
-        }
+        $where = array_merge($where, array(
+            'time_publish <= ?' => time(),
+            'status'            => Article::FIELD_STATUS_PUBLISHED,
+            'active'            => 1,
+        ));
+        $modelArticle   = $this->getModel('article');
+        $totalCount     = $modelArticle->getSearchRowsCount($where);
 
         // Pagination
+        $route     = '.' . Service::getRouteName();
         $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit)
             ->setCurrentPageNumber($page)
@@ -209,26 +176,15 @@ class TopicController extends ActionController
                 'router'    => $this->getEvent()->getRouter(),
                 'route'     => $route,
                 'params'    => array(
-                    'category'      => $category,
+                    'topic'      => $topic,
+                    'list'       => 'all',
                 ),
             ));
 
         $this->view()->assign(array(
-            'title'         => __('Article List in Category'),
+            'title'         => __('Topic Articles'),
             'articles'      => $resultsetArticle,
             'paginator'     => $paginator,
-            'categories'    => $categories,
-            'categoryInfo'  => $categoryInfo,
-            'category'      => $category,
-            'p'             => $page,
-            'config'        => $config,
-            //'seo'           => $this->setupSeo($categoryId),
-            'action'        => 'list',
-        ));
-
-        $this->view()->viewModel()->getRoot()->setVariables(array(
-            'breadCrumbs' => true,
-            'Tag'         => $categoryInfo['title'],
         ));
     }
     

@@ -184,7 +184,14 @@ class Article extends Standard
             }
             unset($mergedParams['time']);
         } elseif (isset($mergedParams['list']) and 'all' == $mergedParams['list']) {
-            $url .= 'list';
+            if (isset ($mergedParams['topic'])) {
+                $url .= 'topic';
+                $url .= $this->structureDelimiter . 'list';
+                $url .= $this->keyValueDelimiter . $mergedParams['topic'];
+                unset($mergedParams['topic']);
+            } else {
+                $url .= 'list';
+            }
             unset($mergedParams['list']);
         } elseif (isset($mergedParams['category'])) {
             $url .= 'list' . $this->keyValueDelimiter . urlencode($mergedParams['category']);
@@ -194,13 +201,7 @@ class Article extends Standard
             unset($mergedParams['tag']);
         } elseif (isset($mergedParams['topic'])) {
             $url .= 'topic';
-            if (isset($mergedParams['list']) and 'all' == $mergedParams['list']) {
-                $url .= $this->structureDelimiter . 'list';
-                $url .= $this->keyValueDelimiter . $mergedParams['topic'];
-                unset($mergedParams['list']);
-            } else {
-                $url .= $this->structureDelimiter . $mergedParams['topic'];
-            }
+            $url .= $this->structureDelimiter . $mergedParams['topic'];
             unset($mergedParams['topic']);
         }
         
