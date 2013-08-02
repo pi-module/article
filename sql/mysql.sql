@@ -137,3 +137,28 @@ CREATE TABLE `{statistics}` (
   UNIQUE KEY `article`  (`article`),
   KEY `article_visits`  (`article`, `visits`)
 );
+
+CREATE TABLE `{topic}` (
+  `id`              int(10) UNSIGNED      NOT NULL AUTO_INCREMENT,
+  `name`            varchar(64)           NOT NULL DEFAULT '',
+  `content`         text                  NOT NULL DEFAULT '',
+  `title`           varchar(255)          NOT NULL DEFAULT '',
+  `image`           varchar(255)          NOT NULL DEFAULT '',
+  `slug`            varchar(64)           DEFAULT NULL,
+  `description`     varchar(255)          NOT NULL DEFAULT '',
+  `active`          tinyint(1)            NOT NULL DEFAULT 1,
+
+  PRIMARY KEY           (`id`),
+  UNIQUE KEY `name`     (`name`),
+  UNIQUE KEY `slug`     (`slug`)
+);
+
+CREATE TABLE `{article_topic}` (
+  `id`              int(10) UNSIGNED      NOT NULL AUTO_INCREMENT,
+  `article`         int(10) UNSIGNED      NOT NULL DEFAULT 0,
+  `topic`           int(10) UNSIGNED      NOT NULL DEFAULT 0,
+
+  PRIMARY KEY           (`id`),
+  KEY `article`         (`article`),
+  KEY `topic`           (`topic`)
+);

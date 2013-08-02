@@ -3,24 +3,34 @@ $this->bootstrap();
 $this->css($this->assetModule('script/article-ui.css'));
 $this->jQuery();
 $this->Backbone();
+$this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
 ?>
+<?php include 'topic-nav.phtml' ?>
+
 <div class="row-fluid">
     <div class="span12">
-    <?php include "article-nav.phtml"; ?> 
     <div id="jsList">
         <div class="clearfix">
-         <div class="pull-left form-inline">
-            <select class="bulk-operation hide">
-                <option value=""><?php echo __('Bulk operation'); ?></option>
-                <option value="activate"  data-status="1"><?php echo __('Activate'); ?></option>
-                <option value="activate"  data-status="0"><?php echo __('Deactivate'); ?></option>
-                <option value="delete"><?php echo __('Delete'); ?></option>
-            </select>
-            <select class="search-status">
-                <option value=""><?php echo __('All articles'); ?></option>
-                <option value="deactive" <?php if ($filter == 'deactive') echo "selected" ?>><?php _e('Deactive') ?></option>
-                <option value="active" <?php if ($filter == 'active') echo "selected" ?> ><?php _e('Active'); ?></option>
-            </select>
+        <div class="pull-left form-inline">
+            <a class="btn btn-primary" id="article-pull" data-toggle="modal" href="#show-topics" data-content="<?php echo $this->url('', array('action' => 'pull-article', 'id' => '')) ?>"><?php _e('Pull') ?></a>
+            <div id="show-topics" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h3 id="myModelLabel"><?php echo __('Choose a topic') ?></h3>
+                </div>
+                <div class="modal-body">
+                    <select name="topics">
+                        <?php foreach ($topics as $key => $title) { ?>
+                        <option value="<?php echo $this->escape($key) ?>"><?php echo $this->escape($title) ?></option>
+                        <?php } ?>
+                    </select>
+                    <input type="hidden" name="pull-url" value="" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true"><?php echo __('Cancel') ?></button>
+                    <button id="pull-topic" class="btn btn-primary" data-dismiss="modal"><?php echo __('Pull') ?></button>
+                </div>
+            </div>
             <select class="search-cate">
                 <option value=""><?php echo __('All categories'); ?></option>
                 <?php foreach ($categories as $val) { ?>
@@ -30,7 +40,7 @@ $this->Backbone();
         </div>
             <?php
             $form->setAttributes(array(
-                'action' => $this->url('', array('action' => 'published', 'from' => $from)),
+                'action' => $this->url('', array('action' => 'pull')),
                 'method' => 'get',
                 'class'  => 'pull-right form-search',
             ));
@@ -59,12 +69,13 @@ $this->Backbone();
                 </th>
                 <th><?php _e('Title'); ?></th>
                 <th style="width:10%;"><?php _e('Category'); ?></th>
+                <th style="width:15%"><?php _e('Topic') ?></th>
                 <th style="width:14%"><?php _e('Tag'); ?></th>
                 <th style="width:8%"><?php _e('Submitter'); ?></th>
                 <th style="width:8%"><?php _e('View'); ?></th>
                 <th style="width:100px;"><?php _e('Publish date'); ?></th>
             </tr>
-            <?php $now=time(); ?>    
+            <?php $now = time(); ?>    
             <?php foreach ($data as $article) { ?>
             <tr data-id="<?php echo $article['id']; ?>">
                 <td>
@@ -79,21 +90,13 @@ $this->Backbone();
                     <?php if ($article['active'] == 0) { ?> - <strong class="text-warning"><?php _e('Deactive'); ?></strong> <?php } ?>
                     <?php if ($article['image']) { ?><i class="icon-picture" title="<?php _e('Feature image'); ?>"></i> <?php } ?>
                     <div class="row-actions">
-                        <a href="<?php echo $this->url('', array('controller' => 'article', 'action' => 'edit', 'id' => $article['id'])); ?>?from=all"><?php _e('Edit'); ?></a>
-                        <span class="divider">|</span>
-                        <a href="javascript:void(0)" class="one-action" data-value="delete"><?php _e('Delete'); ?></a>
-                        <?php if ($article['active']) { ?>
-                        <span class="divider">|</span>
-                        <a class="one-action" data-value="activate" data-status="0" href="javascript:void(0)"><?php _e('Deactivate'); ?></a>
-                        <?php } else { ?>
-                        <span class="divider">|</span> 
-                        <a class="one-action" data-value="activate" data-status="1" href="javascript:void(0)"><?php _e('Activate'); ?></a>
-                        <?php } ?>   
+                        <a class="one-action" data-toggle="modal" href="#show-topics" data-value="pull" data-content="<?php echo $this->url('', array('action' => 'pull-article', 'id' => '')) ?>"><?php _e('Pull') ?></a>   
                     </div>
                 </td>
                 <td>
                     <?php echo $this->escape($article['category_title']); ?>
                 </td>
+                <td><?php echo isset($relation[$article['id']]) ? $this->escape($relation[$article['id']]) : '' ?></td>
                 <td><?php echo !empty($article['tag']) ? $this->escape(join($article['tag'], ',')) : '&nbsp;'; ?></td>
                 <td><?php echo !empty($article['user_name']) ? $this->escape($article['user_name']) : '&nbsp;'; ?></td>
                 <td><?php echo $article['visits']; ?></td>
@@ -102,7 +105,7 @@ $this->Backbone();
             <?php } ?>
             </tbody>
         </table>
-       <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-right')); ?>
+       <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml', array('class' => 'pagination-right')); ?>
     </div>
     </div>
 </div>
@@ -117,11 +120,11 @@ $this->Backbone();
        init:function(){
            _.bindAll(this);
            this.$(".check-all").click(this.checkAll);
-           this.$(".search-status").change(this.search);
            this.$(".search-cate").change(this.search);
-           this.$(".bulk-operation").change(this.bulk);
            this.$(".check-one").click(this.clickOne);
            this.$(".one-action").click(this.oneAction);
+           this.$("#article-pull").click(this.pullArticle);
+           this.$("#pull-topic").click(this.pullToTopic);
        },
        checkAll:function(){
            var flag=this.$(".check-all").prop("checked");
@@ -135,36 +138,9 @@ $this->Backbone();
            });
            this.toggleBulk();
        },
-       search:function(){
-          var url=  "<?php echo $this->url('', array('action' => 'published', 'from' => 'all')) ?>";
-          location.href=url+"?filter="+this.$(".search-status").val()+"&category="+this.$(".search-cate").val()+"&channel="+page.channel;
-       },
-       bulk:function(){
-          var id=[],
-              val=this.$(".bulk-operation").val(),
-              status= this.$(".bulk-operation").find("option:selected").attr("data-status"),
-              fn=function(){
-                    this.$(".check-one:checked").each(function(){
-                        id.push($(this).val()); 
-                    });
-                    if(!_.isUndefined(status)){
-                        location.href= this.url+val+"?id="+id.join(",")+"&status="+status+"&from="+this.encodeUrl();
-                    }else{
-                        location.href= this.url+val+"?id="+id.join(",")+"&from="+this.encodeUrl();
-                    }
-              };
-          if(val){
-              if(val=="delete"){
-                  if(confirm("<?php _e('Are you sure delete selected article'); ?>")){
-                      fn.call(this);
-                  }else{
-                      this.$(".bulk-operation").val("");
-                  }
-              }else{
-                  fn.call(this);
-              }
-            
-          }    
+       search: function() {
+          var url = "<?php echo $this->url('', array('action' => 'pull')) ?>";
+          location.href = url + "?category=" + this.$(".search-cate").val();
        },
        clickOne:function(e){
            var el=$(e.target),
@@ -174,34 +150,42 @@ $this->Backbone();
            }else{
                tr.removeClass("info");
            }
-           this.toggleBulk();
        },
-       toggleBulk:function(){
-           if(this.$(".check-one:checked").length){
-               this.$(".bulk-operation").show();
-           }else{
-               this.$(".bulk-operation").hide();
-           }
-       },
-       oneAction:function(e){
-           var el=$(e.target),
-               id=el.parents("tr:first").attr("data-id"),
-               val=el.attr("data-value"),
-               status=el.attr("data-status");
-          if(val == "delete"){
-              if(confirm("<?php _e('Are you sure delete this article'); ?>")){
-                  location.href=this.url+"delete?id="+id+"&from="+ this.encodeUrl(); 
-              }
-          }else if(status){
-               location.href=this.url+val+"?id="+id+"&status="+status+"&from="+this.encodeUrl();
-          }else{
-               location.href=this.url+val+"?id="+id +"&from="+this.encodeUrl();
-          }
+       oneAction: function(e) {
+            var el  = $(e.target),
+               id   = el.parents("tr:first").attr("data-id"),
+               val  = el.attr("data-value");
+            if ('pull' == val) {
+                var url = el.attr('data-content');
+                url += id;
+
+                this.$('input[name="pull-url"]').val(url);
+            } else {
+                location.href=this.url+val+"?id="+id +"&from="+this.encodeUrl();
+            }
        },
        encodeUrl:function(){
            return encodeURIComponent(location.href);
-       }
-   }
-   page.init();
+       },
+        pullArticle: function(e) {
+            var el  = $(e.target);
+            var url = el.attr('data-content');
+           
+            var id = [];
+            this.$(".check-one:checked").each(function() {
+                id.push($(this).val()); 
+            });
+            var ids = id.join(',');
+            url += ids;
+            
+            this.$('input[name="pull-url"]').val(url);
+        },
+        pullToTopic: function(e) {
+            var url = this.$('input[name="pull-url"]').val();
+            var topic = this.$('select[name="topics"]').val();
+            location.href = url + '/topic-' + topic + "?from=" + this.encodeUrl();
+        }
+    }
+    page.init();
 })(jQuery)
 </script>

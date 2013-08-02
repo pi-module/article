@@ -295,7 +295,7 @@ class CategoryController extends ActionController
             if (!$id) {
                 return Service::renderForm($this, $form, __('Can not save data!'), true);
             }
-            return $this->redirect()->toRoute('', array('action'=>'list-category'));
+            return $this->redirect()->toRoute('', array('action' => 'list-category'));
         }
     }
 
@@ -332,7 +332,7 @@ class CategoryController extends ActionController
         
         $id     = $this->params('id', 0);
         if (empty($id)) {
-            $this->jumpto404(__('Invalid author id!'));
+            $this->jumpto404(__('Invalid category id!'));
         }
 
         $model = $this->getModel('category');
@@ -341,7 +341,6 @@ class CategoryController extends ActionController
             return $this->jumpTo404(__('Can not find category!'));
         }
         
-        $form = $this->getCategoryForm('edit');
         $form->setData($row->toArray());
 
         $parent = $model->getParentNode($row->id);
@@ -397,7 +396,7 @@ class CategoryController extends ActionController
             $categoryModel->remove($id);
 
             // Go to list page
-            $this->redirect()->toRoute('', array('action'=>'list-category'));
+            $this->redirect()->toRoute('', array('action' => 'list-category'));
             $this->view()->setTemplate(false);
         } else {
             throw new \Exception(__('Invalid category id'));

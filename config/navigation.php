@@ -98,7 +98,7 @@ return array(
                 'label'         => _t('Topic'),
                 'route'         => 'default',
                 'controller'    => 'topic',
-                'action'        => 'article-list',
+                'action'        => 'list-article',
             ),
             'media'             => array(
                 'label'         => _t('Media'),
