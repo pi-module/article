@@ -1,0 +1,19 @@
+<?php
+$this->css($this->assetModule('script/article-ui.css'));
+$this->Backbone();
+?>
+<h2 class="page-header"><?php echo $this->escape($title) ?></h2>
+
+<?php if (isset($error)) { ?>
+<div class="alert alert-error">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($error) ?>
+</div>
+<?php } elseif (isset($message)) { ?>
+<div class="alert alert-success">
+    <button class="close" data-dismiss="alert" type="button">×</button>
+    <?php echo $this->escape($message) ?>
+</div>
+<?php } ?>
+
+<?php include $this->templateComponent('form'); ?>
