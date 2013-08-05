@@ -26,6 +26,21 @@ use Pi\Form\Form as BaseForm;
  */
 class LevelEditForm extends BaseForm
 {
+    protected $resources = array();
+    
+    /**
+     * Initializing parameters.
+     * 
+     * @param string  $name
+     * @param array   $options 
+     */
+    public function __construct($name, $options)
+    {
+        $this->resources = isset($options['resources']) ? $options['resources'] : array();
+        
+        parent::__construct($name);
+    }
+
     /**
      * Initializing form 
      */
@@ -62,8 +77,27 @@ class LevelEditForm extends BaseForm
                 'type'        => 'textarea',
                 'description' => __('Display in the website depends on theme.'),
             ),
-            
         ));
+        
+        foreach ($this->resources as $key => $res) {
+            if ('controller' == $key) {
+                continue;
+            }
+            
+            foreach ($res as $key => $resource) {
+                list($label, $description) = explode('-', $resource);
+                $this->add(array(
+                    'name'        => $key,
+                    'attributes'  => array(
+                        'description' => ucfirst($description),
+                    ),
+                    'options'     => array(
+                        'label'       => ucfirst($label),
+                    ),
+                    'type'        => 'checkbox',
+                ));
+            }
+        }
         
         $this->add(array(
             'name'       => 'security',
