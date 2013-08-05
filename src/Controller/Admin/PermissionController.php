@@ -22,6 +22,8 @@ use Pi\Mvc\Controller\ActionController;
 use Pi;
 use Module\Article\Form\LevelEditForm;
 use Module\Article\Form\LevelEditFilter;
+use Module\Article\Form\UserLevelEditForm;
+use Module\Article\Form\UserLevelEditFilter;
 use Module\Article\Service;
 use Zend\Db\Sql\Expression;
 use Pi\Paginator\Paginator;
@@ -103,6 +105,12 @@ class PermissionController extends ActionController
         return true;
     }
     
+    /**
+     * Getting module rules.
+     * 
+     * @param string  $role  Role name
+     * @return array 
+     */
     protected function getRules($role)
     {
         $resources  = $this->getResources(true);
@@ -154,6 +162,48 @@ class PermissionController extends ActionController
         }
 
         return $columns;
+    }
+    
+    /**
+     * Getting user level form object
+     * 
+     * @param string $action  Form name
+     * @return \Module\Article\Form\UserLevelEditForm 
+     */
+    protected function getUserLevelForm($action = 'add')
+    {
+        $form = new UserLevelEditForm;
+        $form->setAttributes(array(
+            'action'  => $this->url('', array('action' => $action)),
+            'method'  => 'post',
+            'class'   => 'form-horizontal',
+        ));
+
+        return $form;
+    }
+    
+    /**
+     * Getting category id and title by passed un-resolve category ids.
+     * 
+     * @param string|array  $categoryIds
+     * @return array 
+     */
+    protected function resolveCategory($categoryIds)
+    {
+        if (!is_array($categoryIds)) {
+            $categoryIds = explode(',', $categoryIds);
+        }
+        
+        $rowCategory = $this->getModel('category')->getRows($categoryIds, array('id', 'title'));
+        $categories  = array();
+        foreach ($rowCategory as $row) {
+            if (!in_array($row['id'], $categoryIds)) {
+                continue;
+            }
+            $categories[$row['id']] = $row['title'];
+        }
+        
+        return $categories;
     }
     
     /**
@@ -380,5 +430,155 @@ class PermissionController extends ActionController
         } else {
             return $this->redirect()->toRoute('', array('action' => 'list-level'));
         }
+    }
+    
+    /**
+     * Listing user levels. 
+     */
+    public function listAction()
+    {
+        $module = $this->getModule();
+        $config = Pi::service('module')->config('', $module);
+        $limit  = (int) $config['page_limit_management'] ?: 20;
+        $page   = Service::getParam($this, 'p', 1);
+        $page   = $page > 0 ? $page : 1;
+        $offset = ($page - 1) * $limit;
+        
+        // Getting user level
+        $model  = $this->getModel('user_level');
+        $select = $model->select()
+                        ->offset($offset)
+                        ->limit($limit);
+        $rowset = $model->selectWith($select);
+        $userLevels  = array();
+        $categoryIds = array(0);
+        $levelIds    = array(0);
+        $uids        = array(0);
+        foreach ($rowset as $row) {
+            $item                 = $row->toArray();
+            $item['category']     = explode(',', $row->category);
+            $userLevels[$row->id] = $item;
+            
+            foreach ($item['category'] as $category) {
+                $categoryIds[$category] = $category;
+            }
+            $levelIds[$item['level']] = $item['level'];
+            $uids[$item['uid']]       = $item['uid'];
+        }
+        
+        // Getting category
+        $rowCategory = $this->getModel('category')->select(array('id' => $categoryIds));
+        $categories  = array();
+        foreach ($rowCategory as $row) {
+            $categories[$row->id] = $row->title;
+        }
+        
+        // Getting level
+        $rowLevel = $this->getModel('level')->select(array('id' => $levelIds));
+        $levels   = array();
+        foreach ($rowLevel as $row) {
+            $levels[$row->id] = $row->title;
+        }
+        
+        // Getting users
+        $rowUser = Pi::model('user_account')->select(array('id' => $uids));
+        $users   = array();
+        foreach ($rowUser as $row) {
+            $users[$row->id] = $row->name;
+        }
+        
+        $select = $model->select()->columns(array('count' => new Expression('count(*)')));
+        $count  = (int) $model->selectWith($select)->current()->count;
+        
+        $paginator = Paginator::factory($count);
+        $paginator->setItemCountPerPage($limit);
+        $paginator->setCurrentPageNumber($page);
+        $paginator->setUrlOptions(array(
+            'router'        => $this->getEvent()->getRouter(),
+            'route'         => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'params'        => array(
+                'module'        => $module,
+                'controller'    => 'permission',
+                'action'        => 'list',
+            ),
+        ));
+
+        $this->view()->assign(array(
+            'userLevels'   => $userLevels,
+            'title'        => __('User Level List'),
+            'action'       => 'list',
+            'categories'   => $categories,
+            'levels'       => $levels,
+            'users'        => $users,
+        ));
+    }
+    
+    public function addAction()
+    {
+        $form      = $this->getUserLevelForm('add');
+
+        $this->view()->assign(array(
+            'title'     => __('Add User Level'),
+            'form'      => $form,
+        ));
+        $this->view()->setTemplate('permission-edit');
+        
+        if ($this->request->isPost()) {
+            $post = $this->request->getPost();
+            $form->setData($post);
+            $form->setInputFilter(new UserLevelEditFilter);
+            $columns = array('id', 'uid', 'category', 'level');
+            $form->setValidationGroup($columns);
+            $this->view()->assign('categories', $this->resolveCategory($post['category']));
+            if (!$form->isValid()) {
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+            }
+            
+            $data = $form->getData();
+            if (empty($data['uid']) or empty($data['level'])) {
+                return Service::renderForm($this, $form, __('Invalid user or level!'), true);
+            }
+            
+            $row = $this->getModel('user_level')->createRow($data);
+            $row->save();
+            if (!$row->id) {
+                return Service::renderForm($this, $form, __('Can not save data!'), true);
+            }
+            
+            return $this->redirect()->toRoute('', array('action' => 'list'));
+        }
+    }
+    
+    /**
+     * Getting available categories by AJAX.
+     * 
+     * @return JSON 
+     */
+    public function getCategoryAction()
+    {
+        $title  = $this->params('category', '');
+        
+        $result = array();
+        
+        $model  = $this->getModel('category');
+        if (!empty($title)) {
+            $rows = $model->select(array('title like ?' => '%' . $title . '%'))->toArray();
+        } else {
+            $rows   = $model->getList(array('id', 'title'));
+        }
+        $categories = array();
+        foreach ($rows as $row) {
+            $categories[$row['id']] = $row['title'];
+        }
+        
+        if (empty($categories)) {
+            $result['status'] = false;
+            $result['content'] = __('No category availabled!');
+        } else {
+            $result['status'] = true;
+            $result['content'] = $categories;
+        }
+        
+        return json_encode($result);
     }
 }
