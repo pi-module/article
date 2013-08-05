@@ -456,7 +456,7 @@ class PermissionController extends ActionController
         $uids        = array(0);
         foreach ($rowset as $row) {
             $item                 = $row->toArray();
-            $item['category']     = explode(',', $row->category);
+            $item['category']     = array_filter(explode(',', $row->category));
             $userLevels[$row->id] = $item;
             
             foreach ($item['category'] as $category) {
@@ -513,6 +513,11 @@ class PermissionController extends ActionController
         ));
     }
     
+    /**
+     * Adding user level.
+     * 
+     * @return ViewModel 
+     */
     public function addAction()
     {
         $form      = $this->getUserLevelForm('add');
@@ -547,6 +552,81 @@ class PermissionController extends ActionController
             
             return $this->redirect()->toRoute('', array('action' => 'list'));
         }
+    }
+    
+    /**
+     * Editing user level.
+     * 
+     * @return ViewModel 
+     */
+    public function editAction()
+    {
+        $this->view()->assign('title', __('Edit User Level'));
+        
+        $form = $this->getUserLevelForm('edit');
+        
+        if ($this->request->isPost()) {
+            $post = $this->request->getPost();
+            $form->setData($post);
+            $form->setInputFilter(new UserLevelEditFilter);
+            $columns = array('id', 'uid', 'category', 'level');
+            $form->setValidationGroup($columns);
+            $this->view()->assign('categories', $this->resolveCategory($post['category']));
+            if (!$form->isValid()) {
+                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+            }
+            
+            $data = $form->getData();
+            if (empty($data['uid']) or empty($data['level'])) {
+                return Service::renderForm($this, $form, __('Invalid user or level!'), true);
+            }
+            
+            // Saving user level
+            $this->getModel('user_level')->update($data, array('id' => $data['id']));
+            
+            return $this->redirect()->toRoute('', array('action' => 'list'));
+        }
+        
+        $id     = $this->params('id', 0);
+        if (empty($id)) {
+            $this->jumpto404(__('Invalid user level id!'));
+        }
+
+        $model = $this->getModel('user_level');
+        $row   = $model->find($id);
+        if (!$row->id) {
+            return $this->jumpTo404(__('Can not find user level!'));
+        }
+        
+        $form->setData($row->toArray());
+        
+        $this->view()->assign(array(
+            'form'       => $form,
+            'categories' => $this->resolveCategory($row->category),
+        ));
+    }
+    
+    /**
+     * Deleting user level.
+     * 
+     * @return ViewModel
+     * @throws \Exception 
+     */
+    public function deleteAction()
+    {
+        $id     = $this->params('id');
+        if (empty($id)) {
+            throw new \Exception(__('Invalid level id'));
+        }
+
+        $levelModel = $this->getModel('user_level');
+        $rowLevel   = $levelModel->find($id);
+
+        // Remove level
+        $rowLevel->delete();
+
+        // Go to list page
+        return $this->redirect()->toRoute('', array('action' => 'list'));
     }
     
     /**

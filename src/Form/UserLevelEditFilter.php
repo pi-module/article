@@ -43,7 +43,7 @@ class UserLevelEditFilter extends InputFilter
         
         $this->add(array(
             'name'     => 'category',
-            'required' => true,
+            'required' => false,
             'filters'  => array(
                 array(
                     'name' => 'StringTrim',
