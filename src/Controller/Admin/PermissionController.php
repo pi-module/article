@@ -25,12 +25,100 @@ use Module\Article\Form\LevelEditFilter;
 use Module\Article\Service;
 use Zend\Db\Sql\Expression;
 use Pi\Paginator\Paginator;
+use Pi\Acl\Acl;
 
 /**
  * Public class for operating permission
  */
 class PermissionController extends ActionController
 {
+    /**
+     * Getting module resources.
+     * 
+     * @param  bool   $columns  Whether to fetch columns or full resources
+     * @return array 
+     */
+    protected function getResources($column = false)
+    {
+        $resources = array(
+            // Article resources
+            __('article')    => array(
+                'active'             => __('publish') . '-' . __('active'),
+                'publish-edit'       => __('publish') . '-' . __('edit'),
+                'publish-delete'     => __('publish') . '-' . __('delete'),
+            ),
+
+            // Draft resources
+            __('draft')      => array(
+                'compose'            => __('draft') . '-' . __('compose'),
+                'rejected-edit'      => __('rejected') . '-' . __('edit'),
+                'rejected-delete'    => __('rejected') . '-' . __('delete'),
+                'pending-edit'       => __('pending') . '-' . __('edit'),
+                'pending-delete'     => __('pending') . '-' . __('delete'),
+                'approve'            => __('pending') . '-' . __('approve'),
+            ),
+
+            // Controller resources, this will not be display in level page
+            'controller'     => array(
+                'topic'              => 'topic',
+                'media'              => 'media',
+                'author'             => 'author',
+                'category'           => 'category',
+            ),
+        );
+        
+        // Return only valid columns
+        $columns = array();
+        if ($column) {
+            foreach ($resources as $key => $res) {
+                if ('controller' == $key) {
+                    continue;
+                }
+
+                foreach (array_keys($res) as $item) {
+                    $columns[$key][] = $item;
+                }
+            }
+            
+            return $columns;
+        }
+        
+        return $resources;
+    }
+    
+    /**
+     * Setting module rules.
+     * 
+     * @param string  $role   Role name
+     * @param array   $rules  Resource name and its permission
+     * @return boolean 
+     */
+    protected function setRules($role, $rules)
+    {
+        $aclHandler = new Acl('admin');
+        foreach ($rules as $name => $permission) {
+            $aclHandler->setRule($permission, $role, 'admin', $this->getModule(), $name);
+        }
+        
+        return true;
+    }
+    
+    protected function getRules($role)
+    {
+        $resources  = $this->getResources(true);
+        
+        $aclHandler = new Acl('admin');
+        $aclHandler->setModule($this->getModule());
+        $rules      = array();
+        foreach ($resources as $row) {
+            foreach ($row as $resource) {
+                $rules[$resource] = $aclHandler->isAllowed($role, $resource);
+            }
+        }
+        
+        return $rules;
+    }
+
     /**
      * Getting level form object
      * 
@@ -39,7 +127,10 @@ class PermissionController extends ActionController
      */
     protected function getLevelForm($action = 'add-level')
     {
-        $form = new LevelEditForm();
+        $options = array(
+            'resources'  => $this->getResources(),
+        );
+        $form = new LevelEditForm('level', $options);
         $form->setAttributes(array(
             'action'  => $this->url('', array('action' => $action)),
             'method'  => 'post',
@@ -50,6 +141,22 @@ class PermissionController extends ActionController
     }
     
     /**
+     * Getting valid column name.
+     * 
+     * @return array 
+     */
+    protected function getValidColumns()
+    {
+        $columns   = array('id', 'name', 'title', 'description');
+        $resources = $this->getResources(true);
+        foreach ($resources as $row) {
+            $columns = array_merge($columns, $row);
+        }
+
+        return $columns;
+    }
+    
+    /**
      * Default page, jump to user level list page
      */
     public function indexAction()
@@ -57,6 +164,10 @@ class PermissionController extends ActionController
         $this->redirect()->toRoute('admin', array('action' => 'list'));
     }
     
+    /**
+     * Listing levels.
+     *  
+     */
     public function listLevelAction()
     {
         $module = $this->getModule();
@@ -100,11 +211,13 @@ class PermissionController extends ActionController
      */
     public function addLevelAction()
     {
-        $form   = $this->getLevelForm('add-level');
+        $form      = $this->getLevelForm('add-level');
 
+        $resources = $this->getResources(true);
         $this->view()->assign(array(
-            'title'   => __('Add Level Info'),
-            'form'    => $form,
+            'title'     => __('Add Level Info'),
+            'form'      => $form,
+            'resources' => $resources,
         ));
         $this->view()->setTemplate('permission-edit-level');
         
@@ -112,22 +225,33 @@ class PermissionController extends ActionController
             $post = $this->request->getPost();
             $form->setData($post);
             $form->setInputFilter(new LevelEditFilter);
-            $columns = array('id', 'name', 'title', 'description');
-            $form->setValidationGroup($columns);
+            $form->setValidationGroup($this->getValidColumns());
             if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             
             $data = $form->getData();
+            
+            $rules = array();
+            foreach ($resources as $row) {
+                foreach ($row as $resource) {
+                    $rules[$resource] = $data[$resource];
+                    unset($data[$resource]);
+                }
+            }
+            
+            // Storing user level
             $data['active']      = 1;
             $data['time_create'] = time();
-            
             $row = $this->getModel('level')->createRow($data);
             $row->save();
-            
             if (!$row->id) {
                 return Service::renderForm($this, $form, __('Can not save data!'), true);
             }
+            
+            // Setting rules
+            $this->setRules($data['name'], $rules);
+            
             return $this->redirect()->toRoute('', array('action' => 'list-level'));
         }
     }
@@ -143,19 +267,31 @@ class PermissionController extends ActionController
         
         $form = $this->getLevelForm('edit-level');
         
+        $resources = $this->getResources(true);
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
             $form->setInputFilter(new LevelEditFilter);
-            $columns = array('id', 'name', 'title', 'description');
-            $form->setValidationGroup($columns);
+            $form->setValidationGroup($this->getValidColumns());
             if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             $data = $form->getData();
-            $data['time_update'] = time();
             
+            $rules = array();
+            foreach ($resources as $row) {
+                foreach ($row as $resource) {
+                    $rules[$resource] = $data[$resource];
+                    unset($data[$resource]);
+                }
+            }
+            
+            // Saving level
+            $data['time_update'] = time();
             $this->getModel('level')->update($data, array('id' => $data['id']));
+            
+            // Updating rules
+            $this->setRules($data['name'], $rules);
 
             return $this->redirect()->toRoute('', array('action' => 'list-level'));
         }
@@ -171,9 +307,12 @@ class PermissionController extends ActionController
             return $this->jumpTo404(__('Can not find level!'));
         }
         
-        $form->setData($row->toArray());
+        $rules = $this->getRules($row->name);
+        
+        $form->setData(array_merge($row->toArray(), $rules));
 
         $this->view()->assign('form', $form);
+        $this->view()->assign('resources', $resources);
     }
     
     /**
@@ -190,12 +329,22 @@ class PermissionController extends ActionController
         }
 
         $levelModel = $this->getModel('level');
+        $rowLevel   = $levelModel->find($id);
 
         // Remove relationship between level and user
         $this->getModel('user_level')->delete(array('level' => $id));
+        
+        // Remove rules
+        $aclHandler = new Acl('admin');
+        $resources  = $this->getResources(true);
+        foreach ($resources as $row) {
+            foreach ($row as $resource) {
+                $aclHandler->removeRule($rowLevel->name, 'admin', $this->getModule(), $resource);
+            }
+        }
 
         // Remove level
-        $levelModel->delete(array('id' => $id));
+        $rowLevel->delete();
 
         // Go to list page
         return $this->redirect()->toRoute('', array('action' => 'list-level'));
