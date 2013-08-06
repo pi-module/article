@@ -109,6 +109,17 @@ class TopicEditForm extends BaseForm
         ));
         
         $this->add(array(
+            'name'       => 'theme',
+            'options'    => array(
+                'label'       => __('Theme'),
+            ),
+            'attributes' => array(
+                'description' => __('Topic theme'),
+            ),
+            'type'       => 'Module\Article\Form\Element\Theme',
+        ));
+        
+        $this->add(array(
             'name'       => 'description',
             'options'    => array(
                 'label'       => __('Description'),
