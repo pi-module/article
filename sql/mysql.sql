@@ -145,6 +145,7 @@ CREATE TABLE `{topic}` (
   `title`           varchar(255)          NOT NULL DEFAULT '',
   `image`           varchar(255)          NOT NULL DEFAULT '',
   `slug`            varchar(64)           DEFAULT NULL,
+  `theme`           varchar(64)           NOT NULL DEFAULT '',
   `description`     varchar(255)          NOT NULL DEFAULT '',
   `active`          tinyint(1)            NOT NULL DEFAULT 1,
 

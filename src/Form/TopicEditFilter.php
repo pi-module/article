@@ -62,6 +62,16 @@ class TopicEditFilter extends InputFilter
         ));
         
         $this->add(array(
+            'name'     => 'theme',
+            'required' => true,
+            'filters'  => array(
+                array(
+                    'name' => 'StringTrim',
+                ),
+            ),
+        ));
+        
+        $this->add(array(
             'name'     => 'content',
             'required' => false,
         ));

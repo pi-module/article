@@ -15,6 +15,7 @@ $this->Backbone();
             <tr>
                 <th><?php _e('Image') ?></th>
                 <th><?php _e('Title') ?></th>
+                <th><?php _e('Theme') ?></th>
                 <th><?php _e('Description') ?></th>
             </tr>
             <?php foreach ($topics as $topic) { ?>
@@ -35,7 +36,8 @@ $this->Backbone();
                         <?php } ?>
                     </div>
                 </td>
-                <td><?php echo $topic['description']; ?></td>
+                <td><?php echo $this->escape($topic['theme']) ?></td>
+                <td><?php echo $this->escape($topic['description']) ?></td>
             </tr>
             <?php } ?>
         </tbody>
