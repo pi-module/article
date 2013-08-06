@@ -137,9 +137,9 @@ class AuthorController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getPermission('author');
+        $allowed = Service::getModuleResourcePermission('author');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $form = $this->getAuthorForm('add');
@@ -179,9 +179,9 @@ class AuthorController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getPermission('author');
+        $allowed = Service::getModuleResourcePermission('author');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $form = $this->getAuthorForm('edit');
@@ -224,9 +224,9 @@ class AuthorController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getPermission('author');
+        $allowed = Service::getModuleResourcePermission('author');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $id     = $this->params('id');
@@ -259,9 +259,9 @@ class AuthorController extends ActionController
      */
     public function listAction()
     {
-        $allowed = Service::getPermission('author');
+        $allowed = Service::getModuleResourcePermission('author');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $page   = Service::getParam($this, 'p', 1);

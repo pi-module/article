@@ -807,7 +807,7 @@ class DraftController extends ActionController
             }
         }
         if ($denied) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $options = Service::getFormConfig();
@@ -873,7 +873,7 @@ class DraftController extends ActionController
         }
         $rules    = Service::getPermission(Service::isMine($row->uid));
         if (!(isset($rules[$row->category][$status . '-edit']) and $rules[$row->category][$status . '-edit'])) {
-            return $this->jumpToDenied('__denied__');
+            return $this->jumpToDenied();
         }
         $categories = array();
         $approve    = array();
@@ -1052,7 +1052,7 @@ class DraftController extends ActionController
             $slug     = Service::getStatusSlug($row->status);
             $resource = $slug . '-delete';
             if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
-                return $this->jumpToDenied('__Denied__');
+                return $this->jumpToDenied();
             }
         } else {
             $rows     = $model->select(array('id' => $ids));
@@ -1093,7 +1093,7 @@ class DraftController extends ActionController
     public function publishAction()
     {
         if (!$this->request->isPost()) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $result = array(
@@ -1159,7 +1159,7 @@ class DraftController extends ActionController
         // Getting permission and checking it
         $rules = Service::getPermission();
         if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $row->status        = Draft::FIELD_STATUS_REJECTED;
@@ -1213,7 +1213,7 @@ class DraftController extends ActionController
         // Getting permission and checking it
         $rules = Service::getPermission();
         if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $result = $this->approve($id, $options['elements']);
@@ -1239,7 +1239,7 @@ class DraftController extends ActionController
             if (1 == count($ids)) {
                 $row = $model->find($ids[0]);
                 if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
-                    return $this->jumpToDenied('__Denied__');
+                    return $this->jumpToDenied();
                 }
             } else {
                 $rows = $model->select(array('id' => $ids));

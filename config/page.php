@@ -67,4 +67,25 @@ return array(
             'block'      => 1,
         ),
     ),
+    
+    'admin'   => array(
+        array(
+            'controller'   => 'config',
+            'permission'   => array(
+                'parent'       => 'config',
+            ),
+        ),
+        array(
+            'controller'   => 'permission',
+            'permission'   => array(
+                'parent'       => 'permission',
+            ),
+        ),
+        array(
+            'controller'   => 'statistics',
+            'permission'   => array(
+                'parent'       => 'statistics',
+            ),
+        ),
+    ),
 );

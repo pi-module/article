@@ -257,9 +257,9 @@ class CategoryController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $parent = $this->params('parent', 0);
@@ -306,9 +306,9 @@ class CategoryController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         Service::setModuleConfig($this);
@@ -358,9 +358,9 @@ class CategoryController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $id     = $this->params('id');
@@ -408,9 +408,9 @@ class CategoryController extends ActionController
      */
     public function listCategoryAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $model = $this->getModel('category');
@@ -427,9 +427,9 @@ class CategoryController extends ActionController
      */
     public function mergeAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $form = new CategoryMergeForm();
@@ -498,9 +498,9 @@ class CategoryController extends ActionController
      */
     public function moveAction()
     {
-        $allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('category');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         $form = new CategoryMoveForm();

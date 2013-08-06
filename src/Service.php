@@ -732,4 +732,36 @@ class Service
         
         return array_filter($rules);
     }
+    
+    /**
+     * Getting permission of resources which define in acl config.
+     * 
+     * @param string  $resource
+     * @param int     $uid
+     * @return boolean 
+     */
+    public static function getModuleResourcePermission($resource, $uid = null)
+    {
+        $module     = Pi::service('module')->current();
+        $identity   = Pi::service('authentication')->getIdentity();
+        // If the backend role is admin, given it all permission, this will be
+        // replaced when the front-end has global role
+        if ('admin' == $identity) {
+            return true;
+        }
+        
+        // Getting front-end role of user
+        if (empty($uid)) {
+            $user   = Pi::service('user')->getUser();
+            $uid    = $user->account->id ?: 0;
+        }
+        $rowRole = Pi::model('user_role')->find($uid, 'user');
+        
+        // Getting permission
+        $aclHandler = new \Pi\Acl\Acl('front');
+        $aclHandler->setModule($module);
+        $result     = $aclHandler->isAllowed($rowRole->role, $resource);
+        
+        return $result;
+    }
 }
