@@ -35,10 +35,11 @@ class Account extends Select
     {
         if (empty($this->valueOptions)) {
             // Getting children role of article module
-            $rowRole = Pi::model('acl_role')->getChildren('member');
-            $roles   = array(0);
-            foreach ($rowRole as $row) {
-                $roles[$row->id] = $row->name; 
+            
+            $rowRole = Pi::model('acl_role')->getChildren('article-manager');
+            $roles   = array('article-manager');
+            foreach ($rowRole as $role) {
+                $roles[] = $role;
             }
             
             // Getting account ID
@@ -51,6 +52,7 @@ class Account extends Select
             // Getting active account
             $where  = array(
                 'active'  => 1,
+                'id'      => $ids,
             );
             $model  = Pi::model('user');
             $select = $model->select()->where($where)
