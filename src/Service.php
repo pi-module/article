@@ -689,7 +689,11 @@ class Service
             $needCategories = empty($category) ? $userCategories : (in_array($category, $userCategories) ? (array) $category : '');
             $levelIds[]     = $level['level'];
             if (!empty($needCategories)) {
-                $levelCategory[$level['level']] = $needCategories;
+                if (isset($levelCategory[$level['level']])) {
+                    $levelCategory[$level['level']] = array_merge($levelCategory[$level['level']], $needCategories);
+                } else {
+                    $levelCategory[$level['level']] = $needCategories;
+                }
             }
         }
         
@@ -698,14 +702,19 @@ class Service
         $aclHandler->setModule($module);
         $rowLevel = Pi::model('level', $module)->select(array('id' => $levelIds));
         foreach ($rowLevel as $row) {
+            // Skip if level is not active
+            if (!$row->active) {
+                continue;
+            }
+            
             $rule = array();
             foreach ($resources as $name) {
                 if (!empty($operation) and $name != $operation) {
                     continue;
                 }
-                $rule[$name] = $aclHandler->isAllowed($row['name'], $name);
+                $rule[$name] = $aclHandler->isAllowed($row->name, $name);
             }
-            foreach ($levelCategory[$row['id']] as $categoryId) {
+            foreach ($levelCategory[$row->id] as $categoryId) {
                 $rules[$categoryId] = $rule;
             }
         }

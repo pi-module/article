@@ -21,6 +21,8 @@ namespace Module\Article;
 use Pi;
 use Module\Article\Service;
 use Module\Article\Entity;
+use Module\Article\Model\Article;
+use Zend\Db\Sql\Expression;
 
 /**
  * Public APIs for article module itself 
@@ -120,8 +122,68 @@ class Topic
         return $topics;
     }
     
+    /**
+     * Getting top visits in period of topic articles.
+     * 
+     * @param int     $days
+     * @param int     $limit
+     * @param int     $category
+     * @param int     $topic
+     * @param string  $module
+     * @return array 
+     */
     public static function getVisitsRecently($days, $limit = null, $category = null, $topic = null, $module = null)
     {
+        $module = $module ?: Pi::service('module')->current();
         
+        $dateTo   = time();
+        $dateFrom = $dateTo - 24 * 3600 * $days;
+        
+        $where    = array(
+            'active'   => 1,
+            'status'   => Article::FIELD_STATUS_PUBLISHED,
+        );
+        $where['time >= ?'] = $dateFrom;
+        $where['time < ?']  = $dateTo;
+        
+        $modelCategory  = Pi::model('category', $module);
+        if ($category && $category > 1) {
+            $categoryIds = $modelCategory->getDescendantIds($category);
+
+            if ($categoryIds) {
+                $where['category'] = $categoryIds;
+            }
+        }
+        
+        if ($topic) {
+            $where['r.topic'] = $topic;
+        }
+        
+        $modelVisit    = Pi::model('visit', $module);
+        $modelArticle  = Pi::model('article', $module);
+        $modelRelation = Pi::model('article_topic', $module);
+        $tableVisit    = $modelVisit->getTable();
+        $tableArticle  = $modelArticle->getTable();
+        $tableRelation = $modelRelation->getTable();
+        $select = $modelVisit->select()
+                             ->columns(array('article', 'total' => new Expression('count(*)')))
+                             ->join(array('a' => $tableArticle), sprintf('%s.article = a.id', $tableVisit))
+                             ->join(array('r' => $tableRelation), 'a.id = r.article')
+                             ->where($where)
+                             ->offset(0)
+                             ->group(array(sprintf('%s.article', $tableVisit)))
+                             ->limit($limit)
+                             ->order('total DESC');
+        $rowset = $modelVisit->selectWith($select);
+        
+        $articleIds = array();
+        foreach ($rowset as $row) {
+            $articleIds[] = $row['article'];
+        }
+        
+        $where = array(
+            'id' => $articleIds,
+        );
+        return Entity::getAvailableArticlePage($where, 1, $limit, null, null, $module);
     }
 }

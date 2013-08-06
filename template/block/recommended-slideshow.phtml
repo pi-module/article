@@ -1,0 +1,22 @@
+<?php
+$style    = $block['style'];
+$target   = $block['target'];
+$articles = $block['articles'];
+?>
+
+<div class="span4" style="float: left">
+    <ul>
+        <?php foreach ($block['images'] as $image) { ?>
+        <li>
+            <a href="<?php echo $this->escape($image['link']) ?>">
+                <img src="<?php echo $this->escape($image['url']) ?>" />
+            </a>
+        </li>
+        <?php } ?>
+    </ul>
+</div>
+<div class="span4" style="float: right">
+    <?php $template = 'list-' . $style . '.phtml';
+    include $template;
+    ?>
+</div>

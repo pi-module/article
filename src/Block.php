@@ -302,7 +302,11 @@ class Block
         $day    = $options['day-range'] ? intval($options['day-range']) : 7;
 
         if ($options['is-topic']) {
-            $articles = Topic::getVisitsRecently($day, $limit, null, $module);
+            $params   = Pi::engine()->application()->getRouteMatch()->getParams();
+            if (is_string($params)) {
+                $params['topic'] = Pi::model('topic', $module)->slugToId($params['topic']);
+            }
+            $articles = Topic::getVisitsRecently($day, $limit, null, $params['topic'], $module);
         } else {
             $articles = Entity::getVisitsRecently($day, $limit, null, $module);
         }
@@ -312,6 +316,78 @@ class Block
             'target'             => $target,
             'max_subject_length' => $length,
             'options'            => $options,
+        );
+    }
+    
+    /**
+     * Listing custom articles and with a slideshow besides article list.
+     * 
+     * @param array   $options
+     * @param string  $module
+     * @return boolean 
+     */
+    public static function recommendedSlideshow($options = array(), $module = null)
+    {
+        if (!$module) {
+            return false;
+        }
+        
+        // Getting custom article list
+        $columns  = array('subject', 'summary', 'time_publish', 'image');
+        $ids      = explode(',', $options['articles']);
+        foreach ($ids as &$id) {
+            $id = trim($id);
+        }
+        $where    = array('id' => $ids);
+        $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
+        
+        if ($options['max_subject_length'] > 0) {
+            foreach ($articles as &$article) {
+                $article['subject'] = substr($article['subject'], 0, $options['max_subject_length']);
+                $article['image']   = $article['image'] ?: $image;
+            }
+        }
+        
+        // Getting image link url
+        $urlRows    = explode('\n', $options['image-link']);
+        $imageLinks = array();
+        foreach ($urlRows as $row) {
+            list($id, $url) = explode(':', trim($row), 2);
+            $imageLinks[trim($id)] = trim($url);
+        }
+        
+        // Fetching image ID
+        $images   = explode(',', $options['images']);
+        $imageIds = array();
+        foreach ($images as $key => &$image) {
+            $image = trim($image);
+            if (is_numeric($image)) {
+                $imageIds[] = $image;
+            } else {
+                $url   = !empty($image) ? $image : 'image/default-recommended.png';
+                $image = array(
+                    'url'  => Pi::service('asset')->getModuleAsset($url, $module),
+                    'link' => $imageLinks[$key + 1],
+                );
+            }
+        }
+        
+        if (!empty($imageIds)) {
+            $images = array();
+            $rowset = Pi::model('media', $module)->select(array('id' => $imageIds));
+            foreach ($rowset as $row) {
+                $images[] = array(
+                    'url'  => Pi::url($row['url']),
+                    'link' => $imageLinks[$row['id']],
+                );
+            }
+        }
+        
+        return array(
+            'articles'  => $articles,
+            'target'    => $options['target'],
+            'style'     => $options['block-style'],
+            'images'    => $images,
         );
     }
 }
