@@ -41,7 +41,7 @@ class TopicController extends ActionController
      * Getting topic form object
      * 
      * @param string $action  Form name
-     * @return \Module\Article\Form\CategoryEditForm 
+     * @return \Module\Article\Form\TopicEditForm 
      */
     protected function getTopicForm($action = 'add')
     {
@@ -193,6 +193,12 @@ class TopicController extends ActionController
      */
     public function listArticleAction()
     {
+        // Checking permission
+        $allowed = Service::getModuleResourcePermission('topic');
+        if (!$allowed) {
+            return $this->jumpToDenied();
+        }
+        
         $modelTopic = $this->getModel('topic');
 
         $topic      = Service::getParam($this, 'topic', '');
@@ -234,9 +240,7 @@ class TopicController extends ActionController
             $topics[$row['id']] = $row['title'];
         }
         
-        // Get category info
-        $categories    = Cache::getCategoryList();
-
+        // Get topic info
         $select        = $modelRelation->select()
                                        ->where($where)
                                        ->columns(array('count' => new Expression('count(id)')));
@@ -281,10 +285,10 @@ class TopicController extends ActionController
     public function pullAction()
     {
         // Checking permission
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $where  = array();
         $page   = Service::getParam($this, 'page', 1);
@@ -375,10 +379,10 @@ class TopicController extends ActionController
     public function pullArticleAction()
     {
         // Checking permission
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $topic = Service::getParam($this, 'topic', '');
         $id    = Service::getParam($this, 'id', 0);
@@ -417,12 +421,17 @@ class TopicController extends ActionController
         }
     }
     
+    /**
+     * Removing pull articles.
+     * 
+     * @return ViewModel 
+     */
     public function removePullAction()
     {
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $id    = Service::getParam($this, 'id', 0);
         $ids   = array_filter(explode(',', $id));
@@ -448,10 +457,10 @@ class TopicController extends ActionController
      */
     public function addAction()
     {
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $form   = $this->getTopicForm('add');
         $form->setData(array(
@@ -490,10 +499,10 @@ class TopicController extends ActionController
      */
     public function editAction()
     {
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Topic Info'));
@@ -537,10 +546,10 @@ class TopicController extends ActionController
      */
     public function deleteAction()
     {
-        /*$allowed = Service::getPermission('topic');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $id     = $this->params('id');
         if (empty($id)) {
@@ -570,10 +579,10 @@ class TopicController extends ActionController
      */
     public function listTopicAction()
     {
-        /*$allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
@@ -616,10 +625,10 @@ class TopicController extends ActionController
      */
     public function activeAction()
     {
-        /*$allowed = Service::getPermission('category');
+        $allowed = Service::getModuleResourcePermission('topic');
         if (!$allowed) {
-            return $this->jumpToDenied('__Denied__');
-        }*/
+            return $this->jumpToDenied();
+        }
         
         $status = Service::getParam($this, 'status', 0);
         $id     = Service::getParam($this, 'id', 0);
