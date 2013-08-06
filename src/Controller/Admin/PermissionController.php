@@ -195,6 +195,40 @@ class PermissionController extends ActionController
     }
     
     /**
+     * Checking whether user and category is already exisits.
+     * 
+     * @param int     $uid
+     * @param string  $category
+     * @return boolean 
+     */
+    protected function isUserCategoryExists($uid, $category, $ownId = null)
+    {
+        $category = is_numeric($category) ? (array) $category : explode(',', $category);
+        $category = array_filter($category);
+        
+        $model  = $this->getModel('user_level');
+        $rowset = $model->select(array('uid' => $uid));
+        foreach ($rowset as $row) {
+            // All category have been added to user
+            if (empty($category)) {
+                return false;
+            }
+            // Skip if checking itself row
+            if ($ownId and $ownId == $row->id) {
+                continue;
+            }
+            // Checking whether category is exists
+            $existCategory = explode(',', $row->category);
+            $result        = array_intersect($category, $existCategory);
+            if (!empty($result)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
      * Default page, jump to user level list page
      */
     public function indexAction()
@@ -531,6 +565,9 @@ class PermissionController extends ActionController
             if (empty($data['uid']) or empty($data['level'])) {
                 return Service::renderForm($this, $form, __('Invalid user or level!'), true);
             }
+            if (!$this->isUserCategoryExists($data['uid'], $data['category'])) {
+                return Service::renderForm($this, $form, __('User and category is already exists!'), true);
+            }
             
             $row = $this->getModel('user_level')->createRow($data);
             $row->save();
@@ -567,6 +604,9 @@ class PermissionController extends ActionController
             $data = $form->getData();
             if (empty($data['uid']) or empty($data['level'])) {
                 return Service::renderForm($this, $form, __('Invalid user or level!'), true);
+            }
+            if (!$this->isUserCategoryExists($data['uid'], $data['category'], $data['id'])) {
+                return Service::renderForm($this, $form, __('User and category is already exists!'), true);
             }
             
             // Saving user level
