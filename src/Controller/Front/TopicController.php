@@ -124,7 +124,18 @@ class TopicController extends ActionController
      */
     public function indexAction()
     {
+        $topic   = Service::getParam($this, 'topic', '');
+        if (is_numeric($topic)) {
+            $row = $this->getModel('topic')->find($topic);
+        } else {
+            $row = $this->getModel('topic')->find($topic, 'slug');
+        }
+        // Return 503 code if topic is not active
+        if (!$row->active) {
+            return $this->jumpToException(__('The topic requested is not active'), 503);
+        }
         
+        Pi::service('theme')->setTheme($row->theme);
     }
     
     /**
@@ -132,10 +143,18 @@ class TopicController extends ActionController
      */
     public function listAction()
     {
-        $modelTopic = $this->getModel('topic');
-
-        $topic      = Service::getParam($this, 'topic', '');
-        $topicId    = is_numeric($topic) ? (int) $topic : $modelTopic->slugToId($topic);
+        $topic   = Service::getParam($this, 'topic', '');
+        if (is_numeric($topic)) {
+            $row = $this->getModel('topic')->find($topic);
+        } else {
+            $row = $this->getModel('topic')->find($topic, 'slug');
+        }
+        // Return 503 code if topic is not active
+        if (!$row->active) {
+            return $this->jumpToException(__('The topic requested is not active'), 503);
+        }
+        
+        $topicId    = $row->id;
         $page       = Service::getParam($this, 'p', 1);
         $page       = $page > 0 ? $page : 1;
 

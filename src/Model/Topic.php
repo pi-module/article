@@ -33,7 +33,7 @@ class Topic extends Model
      */
     public static function getAvailableFields()
     {
-        return array('id', 'name', 'slug', 'title', 'description', 'image', 'content');
+        return array('id', 'name', 'slug', 'title', 'theme', 'description', 'image', 'content');
     }
 
     /**
@@ -43,7 +43,7 @@ class Topic extends Model
      */
     public static function getDefaultColumns()
     {
-        return array('id', 'slug', 'title', 'image');
+        return array('id', 'slug', 'title', 'image', 'theme');
     }
 
     /**

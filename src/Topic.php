@@ -115,7 +115,7 @@ class Topic
             $topics[$id]['url'] = Pi::engine()->application()
                                               ->getRouter()
                                               ->assemble(array(
-                                                  'topic' => $row->name,
+                                                  'topic' => $row->slug,
                                               ), array('name' => $route));
         }
         
