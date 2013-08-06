@@ -155,6 +155,13 @@ return array(
                 'filter'       => 'string',
                 'value'        => 'image/default-recommended.png',
             ),
+            'image-link'       => array(
+                'title'        => _t('Image Link'),
+                'description'  => _t('URL to redirect when click image'),
+                'edit'         => 'textarea',
+                'filter'       => 'string',
+                'value'        => '',
+            ),
             'target'           => array(
                 'title'        => _t('Target'),
                 'description'  => _t('Open url in which window'),
