@@ -32,6 +32,7 @@ use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;
 use Module\Article\Statistics;
+use Module\Article\Controller\Admin\PermissionController as Perm;
 
 /**
  * Public APIs for article module itself 
@@ -636,49 +637,83 @@ class Service
      * @param string      $operation  Operation name
      * @param string|int  $category   Category name or ID
      * @param int         $uid
-     * @return array|bool
+     * @return array
      */
     public static function getPermission($isMine = false, $operation = null, $category = null, $uid = null)
     {
-        $rules = array(
-            2   => array(
-                'compose'      => false,
-                'approve'      => false,
-                'pending-edit' => true,
-                'draft-edit'   => false,
-                'publish-edit' => true,
-                'approve-delete' => true,
-                'pending-delete' => true,
-            ),
-            3   => array(
-                'compose'      => false,
-                'approve'      => false,
-                'pending-edit' => true,
-                'publish-edit' => true,
-                'approve-delete' => false,
-                'active'         => true,
-            ),
-            4   => array(
-                'compose'      => true,
-                'approve'      => true,
-                'pending-edit' => true,
-                'draft-edit'   => true,
-                'publish-edit' => true,
-                'approve-delete' => false,
-                'publish-delete' => true,
-            ),
-            6   => array(
-                'compose'      => false,
-                'pending-edit' => false,
-                'publish-edit' => false,
-            ),
-        );
+        $module     = Pi::service('module')->current();
+        $identity   = Pi::service('authentication')->getIdentity();
         
+        // Getting categories and resources
+        if (is_string($category)) {
+            $category = Pi::model('category', $module)->slugToId($category);
+        }
+        $categories = Pi::model('category', $module)->getList(array('id'));
+        $allResources = Perm::getResources();
+        $resources  = array();
+        foreach ($allResources as $row) {
+            $resources = array_merge($resources, array_keys($row));
+        }
+        
+        $rules      = array();
+        // Fetching rules of admin account
+        if (empty($uid) and 'admin' == $identity) {
+            foreach (array_keys($categories) as $key) {
+                if (!empty($category) and $key != $category) {
+                    continue;
+                }
+                foreach ($resources as $resource) {
+                    if (!empty($operation) and $resource != $operation) {
+                        continue;
+                    }
+                    $rules[$key][$resource] = true;
+                }
+            }
+            return $rules;
+        }
+        
+        // Fetching rules by passed condition
+        $where = array();
+        if (empty($uid)) {
+            $user   = Pi::service('user')->getUser();
+            $uid    = $user->account->id ?: 0;
+        }
+        $where['uid'] = $uid;
+        
+        $userLevels = Pi::model('user_level', $module)->select($where);
+        $levelIds   = array(0);
+        $levelCategory = array();
+        foreach ($userLevels as $level) {
+            $userCategories = explode(',', $level['category']);
+            $userCategories = !empty($userCategories) ? $userCategories : array_keys($categories);
+            $needCategories = empty($category) ? $userCategories : (in_array($category, $userCategories) ? (array) $category : '');
+            $levelIds[]     = $level['level'];
+            if (!empty($needCategories)) {
+                $levelCategory[$level['level']] = $needCategories;
+            }
+        }
+        
+        // Getting Rules
+        $aclHandler = new \Pi\Acl\Acl('admin');
+        $aclHandler->setModule($module);
+        $rowLevel = Pi::model('level', $module)->select(array('id' => $levelIds));
+        foreach ($rowLevel as $row) {
+            $rule = array();
+            foreach ($resources as $name) {
+                if (!empty($operation) and $name != $operation) {
+                    continue;
+                }
+                $rule[$name] = $aclHandler->isAllowed($row['name'], $name);
+            }
+            foreach ($levelCategory[$row['id']] as $categoryId) {
+                $rules[$categoryId] = $rule;
+            }
+        }
+        
+        // If user operating its own draft, given the edit and delete permission
         if ($isMine) {
-            $module   = Pi::service('module')->current();
-            $category = Pi::model('category', $module)->getList(array('id'));
             $myRules  = array();
-            foreach (array_keys($category) as $key) {
+            foreach (array_keys($categories) as $key) {
                 $categoryRule = array();
                 if (isset($rules[$key]['compose']) and $rules[$key]['compose']) {
                     $categoryRule = array(
@@ -694,7 +729,7 @@ class Service
             }
             $rules = $myRules;
         }
-        d($rules);
-        return $rules;
+        
+        return array_filter($rules);
     }
 }

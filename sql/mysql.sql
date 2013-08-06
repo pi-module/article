@@ -183,6 +183,5 @@ CREATE TABLE `{user_level}` (
   `category`        varchar(255)          NOT NULL DEFAULT '',
   `level`           int(10) UNSIGNED      NOT NULL DEFAULT 0,
 
-  PRIMARY KEY           (`id`),
-  UNIQUE KEY `uid`      (`uid`)
+  PRIMARY KEY           (`id`)
 );

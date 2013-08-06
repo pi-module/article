@@ -80,10 +80,6 @@ class LevelEditForm extends BaseForm
         ));
         
         foreach ($this->resources as $key => $res) {
-            if ('controller' == $key) {
-                continue;
-            }
-            
             foreach ($res as $key => $resource) {
                 list($label, $description) = explode('-', $resource);
                 $this->add(array(

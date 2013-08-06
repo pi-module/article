@@ -40,7 +40,7 @@ class PermissionController extends ActionController
      * @param  bool   $columns  Whether to fetch columns or full resources
      * @return array 
      */
-    protected function getResources($column = false)
+    public static function getResources($column = false)
     {
         $resources = array(
             // Article resources
@@ -59,24 +59,12 @@ class PermissionController extends ActionController
                 'pending-delete'     => __('pending') . '-' . __('delete'),
                 'approve'            => __('pending') . '-' . __('approve'),
             ),
-
-            // Controller resources, this will not be display in level page
-            'controller'     => array(
-                'topic'              => 'topic',
-                'media'              => 'media',
-                'author'             => 'author',
-                'category'           => 'category',
-            ),
         );
         
         // Return only valid columns
         $columns = array();
         if ($column) {
             foreach ($resources as $key => $res) {
-                if ('controller' == $key) {
-                    continue;
-                }
-
                 foreach (array_keys($res) as $item) {
                     $columns[$key][] = $item;
                 }
@@ -113,7 +101,7 @@ class PermissionController extends ActionController
      */
     protected function getRules($role)
     {
-        $resources  = $this->getResources(true);
+        $resources  = self::getResources(true);
         
         $aclHandler = new Acl('admin');
         $aclHandler->setModule($this->getModule());
@@ -136,7 +124,7 @@ class PermissionController extends ActionController
     protected function getLevelForm($action = 'add-level')
     {
         $options = array(
-            'resources'  => $this->getResources(),
+            'resources'  => self::getResources(),
         );
         $form = new LevelEditForm('level', $options);
         $form->setAttributes(array(
@@ -156,7 +144,7 @@ class PermissionController extends ActionController
     protected function getValidColumns()
     {
         $columns   = array('id', 'name', 'title', 'description');
-        $resources = $this->getResources(true);
+        $resources = self::getResources(true);
         foreach ($resources as $row) {
             $columns = array_merge($columns, $row);
         }
@@ -263,7 +251,7 @@ class PermissionController extends ActionController
     {
         $form      = $this->getLevelForm('add-level');
 
-        $resources = $this->getResources(true);
+        $resources = self::getResources(true);
         $this->view()->assign(array(
             'title'     => __('Add Level Info'),
             'form'      => $form,
@@ -317,7 +305,7 @@ class PermissionController extends ActionController
         
         $form = $this->getLevelForm('edit-level');
         
-        $resources = $this->getResources(true);
+        $resources = self::getResources(true);
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
@@ -386,7 +374,7 @@ class PermissionController extends ActionController
         
         // Remove rules
         $aclHandler = new Acl('admin');
-        $resources  = $this->getResources(true);
+        $resources  = self::getResources(true);
         foreach ($resources as $row) {
             foreach ($row as $resource) {
                 $aclHandler->removeRule($rowLevel->name, 'admin', $this->getModule(), $resource);

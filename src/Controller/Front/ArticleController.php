@@ -46,7 +46,7 @@ class ArticleController extends ActionController
      */
     public function indexAction()
     {
-
+        d(Service::getPermission(true, 'approve', null, 7));
     }
     
     /**
