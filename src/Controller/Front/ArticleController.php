@@ -46,7 +46,7 @@ class ArticleController extends ActionController
      */
     public function indexAction()
     {
-        d(Service::getPermission(true, 'approve', null, 7));
+
     }
     
     /**
@@ -160,7 +160,7 @@ class ArticleController extends ActionController
             $slug     = Service::getStatusSlug($row->status);
             $resource = $slug . '-delete';
             if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
-                return $this->jumpToDenied('__Denied__');
+                return $this->jumpToDenied();
             }
         } else {
             $rows     = $modelArticle->select(array('id' => $ids));
@@ -254,7 +254,7 @@ class ArticleController extends ActionController
             if (1 == count($ids)) {
                 $row      = $modelArticle->find($ids[0]);
                 if (!(isset($rules[$row->category]['active']) and $rules[$row->category]['active'])) {
-                    return $this->jumpToDenied('__Denied__');
+                    return $this->jumpToDenied();
                 }
             } else {
                 $rows     = $modelArticle->select(array('id' => $ids));
@@ -306,7 +306,7 @@ class ArticleController extends ActionController
         $slug  = Service::getStatusSlug($row->status);
         $resource = $slug . '-edit';
         if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
-            return $this->jumpToDenied('__Denied__');
+            return $this->jumpToDenied();
         }
         
         // Check if draft exists
