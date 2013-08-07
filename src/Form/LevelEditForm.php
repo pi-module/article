@@ -81,14 +81,13 @@ class LevelEditForm extends BaseForm
         
         foreach ($this->resources as $key => $res) {
             foreach ($res as $key => $resource) {
-                list($label, $description) = explode('-', $resource);
                 $this->add(array(
                     'name'        => $key,
                     'attributes'  => array(
-                        'description' => ucfirst($description),
+                        'description' => ucfirst(str_replace('-', ' ', $resource)),
                     ),
                     'options'     => array(
-                        'label'       => ucfirst($label),
+                        'label'       => '',
                     ),
                     'type'        => 'checkbox',
                 ));
