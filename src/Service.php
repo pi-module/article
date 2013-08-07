@@ -380,8 +380,17 @@ class Service
      * @param type $from
      * @return type 
      */
-    public static function getSummary($from = 'my')
+    public static function getSummary($from = 'my', $rules = array())
     {
+        // Processing user managment category
+        $pendingCategories = array();
+        foreach ($rules as $categoryId => $resources) {
+            if (isset($resources['approve']) and $resources['approve']) {
+                $pendingCategories[] = $categoryId;
+            }
+        }
+        $publishCategories = array_keys($rules);
+                    
         $module = Pi::service('module')->current();
         
         $result = array(
@@ -397,23 +406,28 @@ class Service
         }
         $modelDraft = Pi::model('draft', $module);
         $select     = $modelDraft->select()
-            ->columns(array('status', 'total' => new Expression('count(status)')))
+            ->columns(array('status', 'total' => new Expression('count(status)'), 'category'))
             ->where($where)
-            ->group(array('status'));
+            ->group(array('status', 'category'));
         $resultset  = $modelDraft->selectWith($select);
         foreach ($resultset as $row) {
             if (Draft::FIELD_STATUS_DRAFT == $row->status) {
-                $result['draft'] = $row->total;
+                $result['draft'] += $row->total;
             } else if (Draft::FIELD_STATUS_PENDING == $row->status) {
-                $result['pending'] = $row->total;
+                if ('all' == $from and in_array($row->category, $pendingCategories)) {
+                    $result['pending'] += $row->total;
+                } elseif ('my' == $from) {
+                    $result['pending'] += $row->total;
+                }
             } else if (Draft::FIELD_STATUS_REJECTED == $row->status) {
-                $result['rejected'] = $row->total;
+                $result['rejected'] += $row->total;
             }
         }
 
         $modelArticle = Pi::model('article', $module);
         $where        = array(
-            'status' => Article::FIELD_STATUS_PUBLISHED,
+            'status'   => Article::FIELD_STATUS_PUBLISHED,
+            'category' => $publishCategories,
         );
         if ('my' == $from) {
             $where['uid'] = Pi::registry('user')->id;

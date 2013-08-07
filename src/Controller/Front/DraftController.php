@@ -778,7 +778,7 @@ class DraftController extends ActionController
 
         $this->view()->assign(array(
             'title'   => $title,
-            'summary' => Service::getSummary($from),
+            'summary' => Service::getSummary($from, $rules),
             'flags'   => $flags,
             'rules'   => $rules,
         ));

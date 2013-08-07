@@ -494,7 +494,7 @@ class ArticleController extends ActionController
             'data'       => $data,
             'form'       => $form,
             'paginator'  => $paginator,
-            'summary'    => Service::getSummary($from),
+            'summary'    => Service::getSummary($from, $rules),
             'category'   => $category,
             'filter'     => $filter,
             'categories' => array_intersect_key(Cache::getCategoryList(), $categories),
