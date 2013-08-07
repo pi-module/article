@@ -6,8 +6,10 @@ $this->css($this->assetModule('script/article-ui.css'));
     <div class="clearfix form-inline">
         <a class="btn" href="<?php echo $this->url('',array('action' => 'add')) ?>"><?php _e('Add') ?></a>
         <form class="pull-right form-search" method="get" action="<?php echo $this->url('',array('action' => 'list')) ?>">
-            <input type="text" value="" placeholder="<?php _e('Name') ?>" class="input-medium search-query" name="name"> 
-            <input type="submit" value="<?php _e('Search') ?>" name="submit" class="btn">          
+            <div class="input-append">
+                <input type="text" value="" placeholder="<?php _e('Name') ?>" class="input-medium search-query" name="name"> 
+                <button type="submit" class="btn"><?php _e('Search') ?></button>
+            </div>
         </form>
     </div>
     <table class="table table-striped">

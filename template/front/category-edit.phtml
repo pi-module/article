@@ -17,11 +17,11 @@ $this->Backbone();
 </div>
 <?php } ?>
 
-<?php include $this->templateComponent('form'); ?>
+<?php include $this->templateComponent('form') ?>
 <script id="temp-upload" type="text/template">
     <div id="jsUpload">
         <div class="upload-image-bg">
-            <?php $src= $form->get('image')->getValue() ?>
+            <?php $src = $form->get('image')->getValue() ?>
             <?php if ($src) { ?>
                 <div class="black-bg"><i class="icon-remove"></i></div>    
                 <img src="<?php echo Pi::url($src) ?>">
@@ -30,15 +30,15 @@ $this->Backbone();
             <?php } ?>
         </div>
         <span class="btn upload fileinput-button">
-            <?php _e('Upload'); ?> <input type="file" name="upload">
+            <?php _e('Upload') ?> <input type="file" name="upload">
         </span>
     </div>
 </script>
 <script>
 //(function($){
-var page={
-    id: function(){
-        return "<?php echo $form->get('id')->getValue()?'id-'.$form->get('id')->getValue():'fake_id-'.$form->get('fake_id')->getValue(); ?>";
+var page = {
+    id : function() {
+        return "<?php echo $form->get('id')->getValue() ? 'id-' . $form->get('id')->getValue() : 'fake_id-' . $form->get('fake_id')->getValue() ?>";
     },
     form:$("form.form-horizontal"),
     $:function(selector){

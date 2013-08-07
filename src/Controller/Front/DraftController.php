@@ -624,7 +624,7 @@ class DraftController extends ActionController
      */
     public function showDraftPage($status, $from = 'my', $options = array())
     {
-        $where  = array();
+        $where  = $options;
         $page   = Service::getParam($this, 'p', 1);
         $limit  = Service::getParam($this, 'limit', 20);
 
@@ -743,7 +743,14 @@ class DraftController extends ActionController
         }
         
         // Getting permission
-        $rules = Service::getPermission('my' == $from ? true : false);
+        $rules      = Service::getPermission('my' == $from ? true : false);
+        $categories = array(0);
+        foreach ($rules as $categoryId => $resources) {
+            if (isset($resources['approve']) and $resources['approve']) {
+                $categories[] = $categoryId;
+            }
+        }
+        $where['category'] = array_filter($categories);
         
         $this->showDraftPage($status, $from, $where);
         
@@ -771,7 +778,7 @@ class DraftController extends ActionController
 
         $this->view()->assign(array(
             'title'   => $title,
-            'summary' => Service::getSummary($from),
+            'summary' => Service::getSummary($from, $rules),
             'flags'   => $flags,
             'rules'   => $rules,
         ));
@@ -1212,7 +1219,7 @@ class DraftController extends ActionController
         
         // Getting permission and checking it
         $rules = Service::getPermission();
-        if (!(isset($rules[$row->category]['approve']) and $rules[$row->category]['approve'])) {
+        if (!(isset($rules[$row['category']]['approve']) and $rules[$row['category']]['approve'])) {
             return $this->jumpToDenied();
         }
         
