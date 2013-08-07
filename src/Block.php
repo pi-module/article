@@ -137,6 +137,7 @@ class Block
         
         $category = $options['category'] ? $options['category'] : (isset($params['category']) ? $params['category'] : 0);
         $topic    = $options['topic'] ? $options['topic'] : (isset($params['topic']) ? $params['topic'] : 0);
+        $topic    = is_numeric($topic) ? $topic : Pi::model('topic', $module)->slugToId($topic);
         $limit    = ($options['list-count'] <= 0) ? 10 : $options['list-count'];
         $page     = 1;
         $order    = 'time_publish DESC';
