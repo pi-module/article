@@ -411,6 +411,9 @@ class ArticleController extends ActionController
 
         // Getting permission
         $rules = Service::getPermission();
+        if (empty($rules)) {
+            return $this->jumpToDenied();
+        }
         $categories = array();
         foreach (array_keys($rules) as $key) {
             $categories[$key] = true;
@@ -424,6 +427,9 @@ class ArticleController extends ActionController
         $categoryModel  = $this->getModel('category');
 
         $category = Service::getParam($this, 'category', 0);
+        if (!empty($category) and !in_array($category, $where['category'])) {
+            return $this->jumpToDenied();
+        }
         if ($category > 1) {
             $categoryIds = $categoryModel->getDescendantIds($category);
             if ($categoryIds) {
