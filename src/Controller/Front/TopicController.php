@@ -279,10 +279,6 @@ class TopicController extends ActionController
                     'topic'         => $topic,
                 )),
             ));
-        
-        // Prepare search form
-        $form = new SimpleSearchForm;
-        $form->setData($this->params()->fromQuery());
 
         $this->view()->assign(array(
             'title'         => __('Article List in Topic'),
@@ -294,7 +290,6 @@ class TopicController extends ActionController
             'p'             => $page,
             'config'        => $config,
             'action'        => 'list-article',
-            'form'          => $form,
         ));
     }
     
@@ -375,6 +370,7 @@ class TopicController extends ActionController
                 'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
                 'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
                 'category'      => $category,
+                'keyword'       => $keyword,
             )),
         ));
 

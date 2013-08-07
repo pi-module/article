@@ -475,6 +475,7 @@ class ArticleController extends ActionController
                 'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
                 'category'      => $category,
                 'filter'        => $filter,
+                'keyword'       => $keyword,
             )),
         ));
 
