@@ -42,7 +42,7 @@ class Article extends Model
 
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'image', 'uid', 'author', 'time_publish', 'category', 'active');
+        return array('id', 'subject', 'summary', 'image', 'uid', 'author', 'time_publish', 'category', 'active');
     }
 
     /**
