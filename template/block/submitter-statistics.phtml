@@ -1,121 +1,75 @@
-<style type="text/css">
-    #pi-block-article-top-select {
-        /*width: 230px;*/
-    }
-    #article-tab-title ul {
-        float: left;
-        list-style: none;
-        padding: 0px;
-        margin: 0px;
-    }
-    #article-tab-title ul li {
-        float: left;
-        width: 57px;
-        height: 34px;
-        text-align: center;
-    }
+<?php $this->bootstrap('js/bootstrap.min.js'); ?>
 
-    #article-tab-title ul li a {
-        width: 55px;
-        height: 32px;
-        line-height: 32px;
-        border-bottom: 1px solid #E6E6E6;
-        border-top: 1px solid #FAFAFA;
-        border-left: 1px solid #FAFAFA;
-        border-right: 1px solid #FAFAFA;
-        display: block;
-        text-decoration: none;
-        background-color: #FAFAFA;
+<style>
+    .tab-pane li {
+        color: #999999;
     }
-    #article-tab-title ul li a.over {
-        border-top: 1px solid #E6E6E6;
-        border-left: 1px solid #E6E6E6;
-        border-right: 1px solid #E6E6E6;
-        border-bottom: 1px solid #FFF;
-        background-color: #FFF;
+    .list-content {
+        color: #48484C;
+        font-weight: bolder;
     }
-    #article-tab-content {
-        width: 226px;
-        float: left;
-        border-left: 1px solid #E6E6E6;
-        border-right: 1px solid #E6E6E6;
-        border-bottom: 1px solid #E6E6E6;
-        /*border-top: 1px solid #e6e6e6;*/
-        background-color: #FFF;
-        padding-bottom: 20px;
+    .block-nopadding {
+        padding: 0;
+        margin: 0;
     }
-    #article-tab-content div {
-        display:none;
-    }
-    .article-tab-content-row {
-        float: left;
-        margin-left: 15px;
-        margin-top: 10px;
-    }
-    .article-tab-content-row li {
-        width: 190px;
-        margin-left: 10px;
+    .article-block-submitter-statistics {
+        padding: 10px;
     }
 </style>
+
+<div class="article-block-submitter-statistics">
+    <div class="tabbable">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#today" data-toggle="tab"><?php echo __('Today') ?></a></li>
+            <li><a href="#7days" data-toggle="tab"><?php echo __('7 days') ?></a></li>
+            <li><a href="#30days" data-toggle="tab"><?php echo __('30 days') ?></a></li>
+            <li><a href="#all" data-toggle="tab"><?php echo __('All') ?></a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="today">
+                <ul>
+                    <?php foreach ($block['day'] as $detail) { ?>
+                    <li>
+                        <span class="list-content"><?php echo $this->escape($detail['identity']) ?></span>
+                        <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+            </div>
+            <div class="tab-pane" id="7days">
+                <ul>
+                    <?php foreach ($block['week'] as $detail) { ?>
+                    <li>
+                        <span class="list-content"><?php echo $this->escape($detail['identity']) ?></span>
+                        <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+            </div>
+            <div class="tab-pane" id="30days">
+                <ul>
+                    <?php foreach ($block['month'] as $detail) { ?>
+                    <li>
+                        <span class="list-content"><?php echo $this->escape($detail['identity']) ?></span>
+                        <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+            </div>
+            <div class="tab-pane" id="all">
+                <ul>
+                    <?php foreach ($block['history'] as $detail) { ?>
+                    <li>
+                        <span class="list-content"><?php echo $this->escape($detail['identity']) ?></span>
+                        <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
+                    </li>
+                    <?php } ?>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    function show(n)
-    {
-        var o = document.getElementById('article-tab-title').getElementsByTagName("a");
-        var c = document.getElementById('article-tab-content').getElementsByTagName("div");
-        for(i = 0; l = o.length, i < l; o[i].className = '',c[i].style.display = 'none',i++ );
-        o[n].className = 'over';
-        c[n].style.display = 'block';
-    }
+    $('.article-block-submitter-statistics').parent().addClass('block-nopadding');
 </script>
-<div id="article-tab-title">
-    <ul>
-        <li><a href="#today" onclick="show(0)" class="over"><?php echo __('Today') ?></a></li>
-        <li><a href="#7days" onclick="show(1)"><?php echo __('7d') ?></a></li>
-        <li><a href="#30days" onclick="show(2)"><?php echo __('30d') ?></a></li>
-        <li><a href="#all" onclick="show(3)"><?php echo __('All') ?></a></li>
-    </ul>
-</div>
-
-
-<div id="article-tab-content" class="muted">
-    <div style="display:block">
-        <ul class="article-tab-content-row">
-            <?php foreach ($block['day'] as $detail) { ?>
-            <li>
-                <span><?php echo $this->escape($detail['identity']) ?></span>
-                <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
-            </li>
-            <?php } ?>
-        </ul>
-    </div>
-    <div>
-        <ul class="article-tab-content-row">
-            <?php foreach ($block['week'] as $detail) { ?>
-            <li>
-                <span><?php echo $this->escape($detail['identity']) ?></span>
-                <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
-            </li>
-            <?php } ?>
-        </ul>
-    </div>
-    <div>
-        <ul class="article-tab-content-row">
-            <?php foreach ($block['month'] as $detail) { ?>
-            <li>
-                <span><?php echo $this->escape($detail['identity']) ?></span>
-                <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
-            </li>
-            <?php } ?>
-        </ul>
-    </div>
-    <div>
-        <ul class="article-tab-content-row">
-            <?php foreach ($block['history'] as $detail) { ?>
-            <li>
-                <span><?php echo $this->escape($detail['identity']) ?></span>
-                <span style="float: right"><?php echo $this->escape($detail['total']) ?></span>
-            </li>
-            <?php } ?>
-        </ul>
-    </div>
-</div>

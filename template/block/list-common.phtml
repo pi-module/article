@@ -2,7 +2,7 @@
 $topArticle = array_shift($articles);
 ?>
 <div>
-    <h4>
+    <h4 style="padding-top: 5px">
         <strong>
             <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($topArticle['url']) ?>">
                 <?php echo $this->escape($topArticle['subject']) ?>
@@ -10,10 +10,10 @@ $topArticle = array_shift($articles);
         </strong>
     </h4>
     <div>
-        <ul>
+        <ul style="margin-left: 15px">
             <?php foreach ($articles as $article) { ?>
-            <li>
-                <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>">
+            <li class="muted" style="padding: 2px">
+                <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C">
             <?php echo $this->escape($article['subject']) ?>
         </a>
             </li>

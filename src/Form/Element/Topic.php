@@ -35,7 +35,13 @@ class Topic extends Select
     {
         if (empty($this->valueOptions)) {
             $module = $this->getOption('module') ?: Pi::service('module')->current();
-            $this->valueOptions = array(0 => __('Null'));
+            $model  = Pi::model('topic', $module);
+            $rowset = $model->select(array());
+            $topics = array();
+            foreach ($rowset as $row) {
+                $topics[$row->id] = $row->title;
+            }
+            $this->valueOptions = array(0 => __('Null')) + $topics;
         }
 
         return $this->valueOptions;

@@ -1,6 +1,23 @@
-<form class="form-search" action="<?php echo $block['url'] ?>" method="post">
-    <div class="input-append">
-        <input name="keyword" class="span2 search-query" type="text" placeholder="<?php _e('Keyword') ?>" />
-        <button class="btn" type="submit"><?php _e('Search') ?></button>
-    </div>
-</form>
+<style>
+    .block-nopadding {
+        padding: 0;
+        margin: 0;
+    }
+    .block-noborder {
+        border: 0;
+        box-shadow: 0 0 0;
+        border-radius: 0 0 0 0;
+    }
+</style>
+<div class="article-search">
+    <form action="<?php echo $block['url'] ?>" method="post" style="margin-bottom: 0px; width: 100%">
+        <div class="input-append" style="margin-bottom: 0 !important; width: 100%">
+            <input name="keyword" type="text" placeholder="<?php _e('Keyword') ?>" />
+            <button class="btn" style="width: 60px" type="submit"><?php _e('Search') ?></button>
+        </div>
+    </form>
+</div>
+
+<script>
+    $('.article-search').parent().addClass('block-nopadding');
+</script>
