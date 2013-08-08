@@ -68,6 +68,17 @@ return array(
                 'filter'       => 'string',
                 'value'        => 0,
             ),
+            'is-topic'         => array(
+                'title'        => _t('Is Topic'),
+                'description'  => _t('Whether to list topic articles'),
+                'edit'         => array(
+                    'type'        => 'checkbox',
+                    'attributes'  => array(
+                        'value'      => 0,
+                    ),
+                ),
+                'filter'       => 'number_int',
+            ),
             'topic'            => array(
                 'title'        => _t('Topic'),
                 'description'  => _t('Which topic article want to list'),
@@ -87,6 +98,7 @@ return array(
                             'common'    => _t('Common'),
                             'summary'   => _t('With summary'),
                             'feature'   => _t('With feature'),
+                            'double'    => _t('Double columns'),
                         ),
                     ),
                 ),
@@ -211,6 +223,7 @@ return array(
                             'common'    => _t('Common'),
                             'summary'   => _t('With summary'),
                             'feature'   => _t('With feature'),
+                            'double'    => _t('Double columns'),
                         ),
                     ),
                 ),
@@ -303,6 +316,24 @@ return array(
                 'edit'         => 'text',
                 'filter'       => 'number_int',
                 'value'        => 7,
+            ),
+            'block-style'      => array(
+                'title'        => _t('Template Style'),
+                'description'  => _t('The template style of list'),
+                'edit'         => array(
+                    'type'        => 'radio',
+                    'attributes'  => array(
+                        'options'    => array(
+                            'common'    => _t('Common'),
+                            'summary'   => _t('With summary'),
+                            'feature'   => _t('With feature'),
+                            'double'    => _t('Double columns'),
+                            'rank'      => _t('With rank number'),
+                        ),
+                    ),
+                ),
+                'filter'       => 'string',
+                'value'        => 'common',
             ),
             'target'           => array(
                 'title'        => _t('Target'),

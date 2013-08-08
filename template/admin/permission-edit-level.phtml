@@ -1,6 +1,6 @@
 <?php
 $this->jQuery();
-$this->bootstrap('js/bootstrap.min.js');
+$this->bootstrap();
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
@@ -29,7 +29,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('name') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
         <?php if ($this->formElementErrors($element)) { ?>
             <div class="alert alert-error" style="margin-top: 8px">
@@ -42,7 +42,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('title') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
         <?php if ($this->formElementErrors($element)) { ?>
             <div class="alert alert-error" style="margin-top: 8px">
@@ -55,7 +55,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('description') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
         <?php if ($this->formElementErrors($element)) { ?>
             <div class="alert alert-error" style="margin-top: 8px">
@@ -68,13 +68,12 @@ $this->bootstrap('js/bootstrap.min.js');
 
 <div class="span12">
     <?php foreach ($resources as $key => $row) { ?>
-    <div class="span12">
-        <h3 class="page-header"><?php echo $this->escape($key) ?></h3>
+    <div class="span12" style="margin-bottom: 10px">
+        <h4 class="page-header"><?php echo $this->escape($key) ?></h4>
         <?php foreach ($row as $resource) { ?>
-            <div class="span4">
+            <div class="span3">
             <?php $element = $form->get($resource) ?>
-                <div class="span1"><?php echo $this->formLabel($element) ?></div>
-                <div class="span1"><?php echo $this->formElement($element) ?></div>
+                <div class="span2"><?php echo $this->formElement($element) ?></div>
             </div>
         <?php } ?>
     </div>
@@ -97,5 +96,5 @@ $this->bootstrap('js/bootstrap.min.js');
 <?php $this->form()->closeTag() ?>
 
 <script>
-    $('.what-this').tooltip();
+    $('.icon-question-sign').tooltip();
 </script>

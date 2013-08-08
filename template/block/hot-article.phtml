@@ -1,12 +1,26 @@
-<ul class="list list-rank">
-    <?php 
-    $i = 0;
-    foreach ($block['articles'] as $article) { ?>
-        <li>
-            <span style="_margin-left:-10px;" <?php if ($i <= 2) echo 'class="strong"' ?>><?php if ($i++ < 9) echo 0 ?><?php echo $i ?></span>
-            <a target="_blank" href="<?php echo $this->escape($article['url']) ?>" title="<?php echo $this->escape($article['subject']) ?>">
-                <?php echo $this->escape($article['subject']) ?>
-            </a>
-        </li>
-    <?php } ?>    
-</ul>
+<?php
+$style    = $block['style'];
+$target   = $block['target'];
+$articles = $block['articles'];
+
+$template = 'list-' . $style . '.phtml';
+?>
+
+<style>
+    .block-nopadding {
+        padding: 0;
+        margin: 0;
+    }
+    .article-block-hot-article {
+        padding: 5px 15px 5px 15px;
+    }
+</style>
+
+<div class="article-block-hot-article">
+    <?php include $template; ?>
+</div>
+
+<script>
+    $('.article-block-hot-article').parent().addClass('block-nopadding');
+</script>
+

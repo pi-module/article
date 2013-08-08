@@ -29,7 +29,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('uid') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
         <?php if ($this->formElementErrors($element)) { ?>
             <div class="alert alert-error" style="margin-top: 8px">
@@ -47,7 +47,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('category') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls">
             <div class="input-append">
                 <input name="select-category" class="span3" type="text" />
@@ -56,7 +56,7 @@ $this->bootstrap('js/bootstrap.min.js');
                     <button class="btn dropdown-toggle" data-url="<?php echo $this->url('admin', array('action' => 'get-category')) ?>" data-toggle="dropdown">
                         <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" style='left: -150px'>
+                    <ul class="dropdown-menu" style='left: -220px'>
                         <li><a><?php echo __('Please wait ...') ?></a></li>
                     </ul>
                 </div>
@@ -85,7 +85,7 @@ $this->bootstrap('js/bootstrap.min.js');
     <div class="control-group">
     <?php $element = $form->get('level') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
-        <span class="what-this" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>">?</span>
+        <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
         <?php if ($this->formElementErrors($element)) { ?>
             <div class="alert alert-error" style="margin-top: 8px">
@@ -112,7 +112,7 @@ $this->bootstrap('js/bootstrap.min.js');
 <?php $this->form()->closeTag() ?>
 
 <script>
-    $('.what-this').tooltip();
+    $('.icon-question-sign').tooltip();
     
     // Display delete button when hover category title 
     $('.all-categories').on({'mouseenter' : function() {

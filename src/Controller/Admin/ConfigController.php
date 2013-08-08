@@ -164,6 +164,7 @@ EOD;
         $this->view()->assign('title', __('Configuration Form'));
         $this->view()->assign('form', $form);
         $this->view()->assign('custom', self::FORM_MODE_CUSTOM);
+        $this->view()->assign('action', 'form');
         
         if ($this->request->isPost()) {
             $post = $this->request->getPost();

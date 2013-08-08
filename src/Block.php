@@ -133,7 +133,8 @@ class Block
         $params   = Pi::engine()->application()->getRouteMatch()->getParams();
         
         $config   = Pi::service('module')->config('', $module);
-        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_image'], $module);
+        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
+        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
         
         $category = $options['category'] ? $options['category'] : (isset($params['category']) ? $params['category'] : 0);
         $topic    = $options['topic'] ? $options['topic'] : (isset($params['topic']) ? $params['topic'] : 0);
@@ -146,18 +147,18 @@ class Block
         if (!empty($category)) {
             $where['category'] = $category;
         }
-        if (!empty($topic)) {
-            $where['topic'] = $topic;
+        if (!empty($options['is-topic'])) {
+            if (!empty($topic)) {
+                $where['topic'] = $topic;
+            }
             $articles = Topic::getTopicArticles($where, $page, $limit, $columns, $order, $module);
         } else {
             $articles = Entity::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
         }
         
-        if ($options['max_subject_length'] > 0) {
-            foreach ($articles as &$article) {
-                $article['subject'] = substr($article['subject'], 0, $options['max_subject_length']);
-                $article['image']   = $article['image'] ?: $image;
-            }
+        foreach ($articles as &$article) {
+            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['image']   = $article['image'] ?: $image;
         }
         
         return array(
@@ -181,7 +182,8 @@ class Block
         }
         
         $config   = Pi::service('module')->config('', $module);
-        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_image'], $module);
+        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
+        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
         
         $columns  = array('subject', 'summary', 'time_publish', 'image');
         $ids      = explode(',', $options['articles']);
@@ -191,11 +193,9 @@ class Block
         $where    = array('id' => $ids);
         $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
         
-        if ($options['max_subject_length'] > 0) {
-            foreach ($articles as &$article) {
-                $article['subject'] = substr($article['subject'], 0, $options['max_subject_length']);
-                $article['image']   = $article['image'] ?: $image;
-            }
+        foreach ($articles as &$article) {
+            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['image']   = $article['image'] ?: $image;
         }
         
         return array(
@@ -299,7 +299,9 @@ class Block
         
         $limit  = isset($options['list-count']) ? intval($options['list-count']) : 10;
         $target = isset($options['target']) ?: '_blank';
-        $length = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 0;
+        $config = Pi::service('module')->config('', $module);
+        $image  = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
+        $length = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
         $day    = $options['day-range'] ? intval($options['day-range']) : 7;
 
         if ($options['is-topic']) {
@@ -311,12 +313,16 @@ class Block
         } else {
             $articles = Entity::getVisitsRecently($day, $limit, null, $module);
         }
+        
+        foreach ($articles as &$article) {
+            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['image']   = $article['image'] ?: $image;
+        }
 
         return array(
             'articles'           => $articles,
             'target'             => $target,
-            'max_subject_length' => $length,
-            'options'            => $options,
+            'style'              => $options['block-style'],
         );
     }
     
@@ -342,11 +348,11 @@ class Block
         $where    = array('id' => $ids);
         $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
         
-        if ($options['max_subject_length'] > 0) {
-            foreach ($articles as &$article) {
-                $article['subject'] = substr($article['subject'], 0, $options['max_subject_length']);
-                $article['image']   = $article['image'] ?: $image;
-            }
+        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
+        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
+        foreach ($articles as &$article) {
+            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['image']   = $article['image'] ?: $image;
         }
         
         // Getting image link url
@@ -367,8 +373,10 @@ class Block
             } else {
                 $url   = !empty($image) ? $image : 'image/default-recommended.png';
                 $image = array(
-                    'url'  => Pi::service('asset')->getModuleAsset($url, $module),
-                    'link' => $imageLinks[$key + 1],
+                    'url'         => Pi::service('asset')->getModuleAsset($url, $module),
+                    'link'        => $imageLinks[$key + 1],
+                    'title'       => __('This is default recommended image'),
+                    'description' => __('You should to add your own images and its title and description!'),
                 );
             }
         }
@@ -378,8 +386,10 @@ class Block
             $rowset = Pi::model('media', $module)->select(array('id' => $imageIds));
             foreach ($rowset as $row) {
                 $images[] = array(
-                    'url'  => Pi::url($row['url']),
-                    'link' => $imageLinks[$row['id']],
+                    'url'         => Pi::url($row['url']),
+                    'link'        => $imageLinks[$row['id']],
+                    'title'       => $row['title'],
+                    'description' => $row['description'],
                 );
             }
         }

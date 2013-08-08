@@ -60,14 +60,15 @@ class Topic
     public static function getTopicArticles($where, $page, $limit, $columns = null, $order = null, $module = null)
     {
         $module     = $module ?: Pi::service('module')->current();
-        $topicId    = is_numeric($where['topic']) ? $where['topic'] : self::getTopicId($where['topic'], $module);
-        if (empty($where['topic'])) {
-            return array();
+        $topicWhere = array();
+        if (!empty($where['topic'])) {
+            $topicId = is_numeric($where['topic']) ? $where['topic'] : self::getTopicId($where['topic'], $module);
+            $topicWhere['topic'] = $topicId;
+            unset($where['topic']);
         }
-        unset($where['topic']);
         
         $modelTopic = Pi::model('article_topic', $module);
-        $rowTopic   = $modelTopic->select(array('topic' => $topicId));
+        $rowTopic   = $modelTopic->select($topicWhere);
         $articleIds = array();
         foreach ($rowTopic as $row) {
             $articleIds[] = $row['article'];

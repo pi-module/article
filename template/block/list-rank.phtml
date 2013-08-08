@@ -1,0 +1,12 @@
+<ul class="list list-rank unstyled">
+    <?php 
+    $i = 0;
+    foreach ($block['articles'] as $article) { ?>
+        <li>
+            <span style="margin-left:-5px;" <?php if ($i <= 2) echo 'class="strong"' ?>><?php if ($i < 9) echo 0 ?><?php echo ++$i ?></span>
+            <a target="_blank" href="<?php echo $this->escape($article['url']) ?>" title="<?php echo $this->escape($article['subject']) ?>">
+                <?php echo $this->escape($article['subject']) ?>
+            </a>
+        </li>
+    <?php } ?>
+</ul>
