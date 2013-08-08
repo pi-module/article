@@ -292,7 +292,7 @@ class DraftController extends ActionController
         $rowCompiled->save();
 
         // Transform foreign images
-        $content = Service::transformArticleImages($row->content, $module);
+        //$content = Service::transformArticleImages($row->content, $module);
         if ($content) {
             $rowArticle->content = $content;
             $refreshArticle      = true;
@@ -596,8 +596,8 @@ class DraftController extends ActionController
             $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
 
             if ($uploadInfo) {
-                $rowDraft->image = $uploadInfo['tmp_name'];
-                $rowDraft->save();
+                $data['image'] = $uploadInfo['tmp_name'];
+                Pi::model('draft', $module)->updateRow($data, array('id' => $id));
             }
 
             unset($session->$id);
