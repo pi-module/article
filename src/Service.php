@@ -676,6 +676,8 @@ class Service
                 if (!empty($category) and $key != $category) {
                     continue;
                 }
+                $resources[] = 'draft-edit';
+                $resources[] = 'draft-delete';
                 foreach ($resources as $resource) {
                     if (!empty($operation) and $resource != $operation) {
                         continue;

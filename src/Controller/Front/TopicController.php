@@ -125,10 +125,16 @@ class TopicController extends ActionController
     public function indexAction()
     {
         $topic   = Service::getParam($this, 'topic', '');
+        if (empty($topic)) {
+            return $this->jumpTo404(__('Invalid topic ID!'));
+        }
         if (is_numeric($topic)) {
             $row = $this->getModel('topic')->find($topic);
         } else {
             $row = $this->getModel('topic')->find($topic, 'slug');
+        }
+        if (!$row->id) {
+            return $this->jumpTo404(__('Topic is not exists!'));
         }
         // Return 503 code if topic is not active
         if (!$row->active) {
@@ -144,11 +150,15 @@ class TopicController extends ActionController
     public function listAction()
     {
         $topic   = Service::getParam($this, 'topic', '');
+        if (empty($topic)) {
+            return $this->jumpTo404(__('Invalid topic ID!'));
+        }
         if (is_numeric($topic)) {
             $row = $this->getModel('topic')->find($topic);
         } else {
             $row = $this->getModel('topic')->find($topic, 'slug');
         }
+        $title = $row->title;
         // Return 503 code if topic is not active
         if (!$row->active) {
             return $this->jumpToException(__('The topic requested is not active'), 503);
@@ -201,7 +211,7 @@ class TopicController extends ActionController
             ));
 
         $this->view()->assign(array(
-            'title'         => __('Topic Articles'),
+            'title'         => empty($topic) ? __('All') : $title,
             'articles'      => $resultsetArticle,
             'paginator'     => $paginator,
         ));

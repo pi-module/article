@@ -1,37 +1,30 @@
-<div class="main-block">
-    <div class="block-header-bg"></div>    
-    <div class="block-header block-header40 mb10" style="padding-right: 0 !important;">
-        <div class="pull-right muted">
-        <?php 
-        $count = count($categories);
-        $index = 0;
-        foreach ($categories as $category) {
-            if ($category['id'] == $currentCategory) {
-                continue;
-            } ?>
-            <a href="<?php echo $this->escape($category['url']) ?>" title="<?php echo $this->escape($category['category_title']) ?>"><?php echo $this->escape($category['category_title']) ?></a>
-            <?php if (++$index !== ($count - 1)) { ?>
-                <span class="divider"> | </span>
-            <?php } ?>
-        <?php } ?>
-        </div>
-        <span class="title title18"><?php echo $this->escape($breadCrumbs['category']['name']) ?></span>
+<?php
+$this->css($this->assetModule('script/article-front.css'));
+$this->bootstrap('js/bootstrap.min.js');
+?>
+
+<div class="pi-block">
+    <div class="clearfix pi-block-header">
+        <h4 class="pi-block-title"><?php _e('All') ?></h4>
     </div>
-    <div>
+    <div class="article-list-content">
         <ul class="list list14">
             <?php $index = 0; ?>
             <?php foreach ($articles as $row) { ?>
-                <li>
+                <li class="muted">
                     <div class="list-hover">
-                        <span class="muted pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
-                        <a target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
+                        <span class="pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
+                        <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
                     </div>
                 </li>
                 <?php if (!(++$index % 5)) { ?>
                     <li class="dashed"></li>    
                 <?php } ?>    
-            <?php } ?>   
+            <?php } ?>
         </ul>
         <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-centered')); ?>
     </div>
 </div>
+<script>
+    $("#jsList").find(".dashed:last").css("marginBottom","0");
+</script>

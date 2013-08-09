@@ -105,3 +105,13 @@
     font: normal 14px/20px "KaiTi","KaiTi_GB2312","BiauKai";
     color: #555;
 }
+.article-list-content {
+    margin: 10px 10px 20px 10px;
+}
+.article-list-title {
+    color: #333333;
+}
+.dashed {
+    height: 20px;
+    list-style: none;
+}
