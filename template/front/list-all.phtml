@@ -25,3 +25,6 @@ $this->bootstrap('js/bootstrap.min.js');
         <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-centered')); ?>
     </div>
 </div>
+<script>
+    $("#jsList").find(".dashed:last").css("marginBottom","0");
+</script>
