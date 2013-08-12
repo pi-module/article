@@ -182,7 +182,7 @@ class Upload
 
     public static function getUploadSession($module = null, $type = 'default')
     {
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
         $ns     = sprintf('%s_%s_upload', $module, $type);
 
         return Pi::service('session')->$ns;
@@ -195,7 +195,7 @@ class Upload
 
     public static function getTargetDir($section, $module = null, $autoCreate = false, $autoSplit = true)
     {
-        $module     = $module ?: self::$module;
+        $module     = $module ?: Pi::service('module')->current();
         $config     = Pi::service('module')->config('', $module);
         $pathKey    = sprintf('path_%s', strtolower($section));
         $path       = isset($config[$pathKey]) ? $config[$pathKey] : '';
@@ -309,6 +309,47 @@ class Upload
         }
 
         return $result;
+    }
+    
+    public static function saveImage($uploadInfo)
+    {
+        $result = false;
+        $size   = array();
+
+        $fileName       = $uploadInfo['tmp_name'];
+        $absoluteName   = Pi::path($fileName);
+
+        $size = array(
+            'w' => $uploadInfo['w'],
+            'h' => $uploadInfo['h'],
+        );
+
+        $image = new Image($absoluteName);
+
+        if ($image->isValid()) {
+            $result = $image->save($absoluteName, $size, Image::OP_TYPE_SCALE, $image->getType());
+        }
+        
+        if (!empty($uploadInfo['thumb_w']) or !empty($uploadInfo['thumb_h'])) {
+            $thumbName      = self::getThumbFromOriginal($fileName);
+            $absoluteThumb  = Pi::path($thumbName);
+
+            // Create thumb
+            if ($result) {
+                $imageThumb = new Image($absoluteName);
+
+                if ($imageThumb->isValid()) {
+                    $sizeThumb = array(
+                        'w' => $uploadInfo['thumb_w'],
+                        'h' => $uploadInfo['thumb_h'],
+                    );
+
+                    $imageThumb->save($absoluteThumb, $sizeThumb, Image::OP_TYPE_RESIZE, $imageThumb->getType());
+                }
+            }
+        }
+
+        return $result ? $fileName : false;
     }
 
     public static function saveAuthorPhoto($uploadInfo)
@@ -424,7 +465,7 @@ class Upload
 
     public static function remoteToLocal($remote, $module)
     {
-        $module = $module ?: self::$module;
+        $module = $module ?: Pi::service('module')->current();
         $result = $data = false;
         $dest   = $absolutePath = '';
 
