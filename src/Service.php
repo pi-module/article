@@ -67,10 +67,11 @@ class Service
      */
     public static function setModuleConfig(ActionController $handler)
     {
+        
         $handler->view()->assign(array(
             'width'            => $handler->config('author_width'),
             'height'           => $handler->config('author_height'),
-            'image_extension'  => $handler->config('image_extension'),
+            'image_extension'  => array_map('trim', explode(',', $handler->config('image_extension'))),
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
             'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),

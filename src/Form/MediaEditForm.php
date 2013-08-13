@@ -67,9 +67,9 @@ class MediaEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'url',
+            'name'       => 'media',
             'options'    => array(
-                'label'       => __('URL'),
+                'label'       => __('Media'),
             ),
             'attributes' => array(
                 'type'        => '',
