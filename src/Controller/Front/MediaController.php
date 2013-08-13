@@ -29,6 +29,8 @@ use Module\Article\Service;
 use Zend\Db\Sql\Expression;
 use Module\Article\Media;
 use Pi\File\Transfer\Upload as UploadHandler;
+use Pi\File\Transfer\Download;
+use ZipArchive;
 
 /**
  * Public action controller for operating media
@@ -531,5 +533,91 @@ class MediaController extends ActionController
             'status'    => $affectedRows ? self::AJAX_RESULT_TRUE : self::AJAX_RESULT_FALSE,
             'message'   => 'ok',
         );
+    }
+    
+    /**
+     * Downloading a media.
+     * 
+     * @return ViewModel
+     * @throws \Exception 
+     */
+    public function downloadAction()
+    {
+        $id     = $this->params('id', 0);
+        $ids    = array_filter(explode(',', $id));
+
+        if (empty($ids)) {
+            throw new \Exception(__('Invalid media ID!'));
+        }
+        
+        // Export files
+        $rowset     = $this->getModel('media')->select(array('id' => $ids));
+        $affectRows = array();
+        $files      = array();
+        foreach ($rowset as $row) {
+            if (!empty($row->url) and file_exists(Pi::path($row->url))) {
+                $files[]      = Pi::path($row->url);
+                $affectRows[] = $row->id;
+            }
+        }
+        
+        if (empty($affectRows)) {
+            return $this->jumpTo404(__('Can not find file!'));
+        }
+        
+        // Statistics
+        $model  = $this->getModel('media_statistics');
+        $rowset = $model->select(array('media' => $affectRows));
+        $exists = array();
+        foreach ($rowset as $row) {
+            $exists[] = $row->media;
+        }
+        
+        if (!empty($exists)) {
+            foreach ($exists as $item) {
+                $row = $model->find($item, 'media');
+                $row->download = $row->download + 1;
+                $row->save();
+            }
+        }
+        
+        $newRows = array_diff($affectRows, $exists);
+        foreach ($newRows as $item) {
+            $data = array(
+                'media'    => $item,
+                'download' => 1,
+            );
+            $row = $model->createRow($data);
+            $row->save();
+        }
+        
+        $filePath = 'upload/temp';
+        Upload::mkdir($filePath);
+        $filename = sprintf('%s/media-%s.zip', $filePath, time());
+        $filename = Pi::path($filename);
+        $zip      = new ZipArchive();
+        if ($zip->open($filename, ZIPARCHIVE::CREATE)!== TRUE) {
+            exit ;
+        }
+        $compress = count($files) > 1 ? true : false;
+        if ($compress) {
+            foreach( $files as $file) {
+                if (file_exists($file)) {  
+                    $zip->addFile( $file , basename($file));
+                }
+            }  
+            $zip->close();
+        } else {
+            $filename = Pi::path(array_shift($files));
+        }
+        
+        $options = array(
+            'file'       => $filename,
+            'fileName'   => basename($filename),
+        );
+        if ($compress) {
+            $options['deleteFile'] = true;
+        }
+        Upload::httpOutputFile($options, $this);
     }
 }

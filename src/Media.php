@@ -81,7 +81,10 @@ class Media
         $rowset = $model->select(array('media' => $mediaIds));
         foreach ($rowset as $row) {
             $id = $row['media'];
-            $mediaSet[$id] = array_merge($mediaSet[$id], $row->toArray());
+            $statistics = $row->toArray();
+            unset($statistics['id']);
+            unset($statistics['media']);
+            $mediaSet[$id] = array_merge($mediaSet[$id], $statistics);
         }
         
         // Fetching submitter
