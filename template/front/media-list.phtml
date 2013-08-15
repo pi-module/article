@@ -88,91 +88,103 @@ $this->Backbone();
 </div>
 <script>
 (function($){
-   var page={
-       url: "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
-       el: $("#jsList"),
-       $: function(selector){
-           return this.el.find(selector);
-       },
-       init:function(){
-           _.bindAll(this);
-           this.$(".check-all").click(this.checkAll);
-           this.$(".search-status").change(this.search);
-           this.$(".search-type").change(this.search);
-           this.$(".bulk-operation").change(this.bulk);
-           this.$(".check-one").click(this.clickOne);
-           this.$(".one-action").click(this.oneAction);
-       },
-       checkAll: function(){
-           var flag = this.$(".check-all").prop("checked");
-           this.$(".check-one").prop("checked",flag).each(function(){
-               var tr=$(this).parents("tr:first");
-                if(flag){
-                    tr.addClass("info");
-                }else{
-                    tr.removeClass("info");
-                }
-           });
-           this.toggleBulk();
-       },
-       search:function(){
-          var url = "<?php echo $this->url('', array('action' => 'list')) ?>";
-          location.href = url+"?type=" + this.$(".search-type").val();
-       },
-       bulk:function(){
-          var id  = [],
-              val = this.$(".bulk-operation").val(),
-              fn  = function(){
-                    this.$(".check-one:checked").each(function(){
+    var page={
+        url: "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
+        el: $("#jsList"),
+        $: function(selector){
+            return this.el.find(selector);
+        },
+        init:function(){
+            _.bindAll(this);
+            this.$(".check-all").click(this.checkAll);
+            this.$(".search-status").change(this.search);
+            this.$(".search-type").change(this.search);
+            this.$(".bulk-operation").change(this.bulk);
+            this.$(".check-one").click(this.clickOne);
+            this.$(".one-action").click(this.oneAction);
+        },
+        checkAll: function() {
+            var flag = this.$(".check-all").prop("checked");
+            this.$(".check-one").prop("checked",flag).each(function(){
+                var tr=$(this).parents("tr:first");
+                    if(flag){
+                        tr.addClass("info");
+                    }else{
+                        tr.removeClass("info");
+                    }
+            });
+            this.toggleBulk();
+        },
+        search:function(){
+            var url = "<?php echo $this->url('', array('action' => 'list')) ?>";
+            location.href = url+"?type=" + this.$(".search-type").val();
+        },
+        bulk:function(){
+            var id  = [],
+                val = this.$(".bulk-operation").val(),
+                fn  = function(){
+                        this.$(".check-one:checked").each(function(){
+                            id.push($(this).val()); 
+                        });
+                        location.href = this.url + val + "?id=" + id.join(",") + "&from=" + this.encodeUrl();
+                };
+            if (val) {
+                if (val == "delete") {
+                    if (confirm("<?php _e('Are you sure delete selected article'); ?>")) {
+                        fn.call(this);
+                    } else {
+                        this.$(".bulk-operation").val("");
+                    }
+                } else if (val == 'download') {
+                    this.$(".check-one:checked").each(function() {
                         id.push($(this).val()); 
                     });
+                    this.removeAttr();
                     location.href = this.url + val + "?id=" + id.join(",") + "&from=" + this.encodeUrl();
-              };
-          if (val) {
-              if (val == "delete") {
-                  if (confirm("<?php _e('Are you sure delete selected article'); ?>")) {
-                      fn.call(this);
-                  } else {
-                      this.$(".bulk-operation").val("");
-                  }
-              } else {
-                  fn.call(this);
-              }
-          }    
-       },
-       clickOne: function(e) {
-           var el = $(e.target),
-               tr = el.parents("tr:first");
-           if (el.prop("checked")) {
-               tr.addClass("info");
-           } else {
-               tr.removeClass("info");
-           }
-           this.toggleBulk();
-       },
-       toggleBulk:function(){
-           if (this.$(".check-one:checked").length) {
-               this.$(".bulk-operation").show();
-           } else {
-               this.$(".bulk-operation").hide();
-           }
-       },
-       oneAction:function(e){
-           var el = $(e.target),
-               id = el.parents("tr:first").attr("data-id"),
-               val = el.attr("data-value");
-          if (val == "delete") {
-              if (confirm("<?php _e('Are you sure delete this article'); ?>")) {
-                  location.href = this.url + "delete?id=" + id + "&from=" + this.encodeUrl(); 
-              }
-          } else {
-               location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
-          }
-       },
-       encodeUrl: function(){
-           return encodeURIComponent(location.href);
-       }
-   }
-   page.init();
+                } else {
+                    fn.call(this);
+                }
+            }    
+        },
+        clickOne: function(e) {
+            var el = $(e.target),
+                tr = el.parents("tr:first");
+            if (el.prop("checked")) {
+                tr.addClass("info");
+            } else {
+                tr.removeClass("info");
+            }
+            this.toggleBulk();
+        },
+        toggleBulk: function(){
+            if (this.$(".check-one:checked").length) {
+                this.$(".bulk-operation").show();
+            } else {
+                this.$(".bulk-operation").hide();
+            }
+        },
+        oneAction: function(e){
+            var el = $(e.target),
+                id = el.parents("tr:first").attr("data-id"),
+                val = el.attr("data-value");
+            if (val == "delete") {
+                if (confirm("<?php _e('Are you sure delete this article'); ?>")) {
+                    location.href = this.url + "delete?id=" + id + "&from=" + this.encodeUrl(); 
+                }
+            } else {
+                location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
+            }
+        },
+        encodeUrl: function(){
+            return encodeURIComponent(location.href);
+        },
+        removeAttr: function() {
+            $('.check-one').removeAttr('checked');
+            this.$(".bulk-operation").val("");
+            this.$(".bulk-operation").hide();
+            $('tr').removeClass('info');
+        }
+    }
+    page.init();
 })(jQuery)
 </script>
