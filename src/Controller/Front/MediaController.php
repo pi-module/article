@@ -371,33 +371,37 @@ class MediaController extends ActionController
         $module = $this->getModule();
 
         $result = false; 
-        $data   = $return = array();
+        $return = array('status' => false);
         $id     = Service::getParam($this, 'id', 0);
         if (empty($id)) {
             $id = Service::getParam($this, 'fake_id', 0);
         }
-        $source = Service::getParam($this, 'source', 'media');
+        $type   = Service::getParam($this, 'type', 'attachment');
 
         // Checking whether ID is empty
-        if ($id) {
+        if (empty($id)) {
             $return['message'] = __('Invalid id');
+            return json_encode($return);
+            exit ;
         }
+        
+        $width   = Service::getParam($this, 'width', $this->config('image_width'));
+        $height  = Service::getParam($this, 'height', $this->config('image_height'));
         
         $rawInfo = $this->request->getFiles('upload');
         $rename  = $id;
 
-        $autoSplit   = ('media' == $source or 'feature' == $source) ? true : false;
-        $destination = Upload::getTargetDir($source, $module, true, $autoSplit);
+        $destination = Upload::getTargetDir('media', $module, true, true);
         $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
         if ($ext) {
             $rename .= '.' . $ext;
         }
 
-        $allowedExtension = ($source == 'media') ? 
-                            $this->config('media_extension')
-                            : $this->config('image_extension');
-        $mediaSize = ($source == 'media') ? $this->config('max_media_size')
-                        : $this->config('max_image_size');
+        $allowedExtension = ($type == 'image') ? 
+                            $this->config('image_extension')
+                            : $this->config('media_extension');
+        $mediaSize = ($type == 'image') ? $this->config('max_image_size')
+                        : $this->config('max_media_size');
         $upload = new UploadHandler;
         $upload->setDestination(Pi::path($destination))
                 ->setRename($rename)
@@ -405,19 +409,21 @@ class MediaController extends ActionController
                 ->setSize($mediaSize);
 
         // Checking whether uploaded file is valid
-        if ($upload->isValid()) {
+        if (!$upload->isValid()) {
             $return['message'] = $upload->getMessages();
+            return json_encode($return);
+            exit ;
         }
 
         $upload->receive();
         
         $basename = $rename;
-        if ('feature' == $source) {
+        /*if ('feature' == $source) {
             $baseName = $upload->getUploaded('featureImage', false);
             if (is_array($baseName)) {
                 $baseName = current($baseName);
             }
-        }
+        }*/
         $fileName = $destination . '/' . $basename;
 
         $imageExt = explode(',', $this->config('image_extension'));
@@ -427,44 +433,13 @@ class MediaController extends ActionController
         // Scale image if file is image file
         $uploadInfo['tmp_name'] = $fileName;
         if (in_array($ext, $imageExt)) {
-            $widthKey  = (('media' == $source) ? 'image' : $source) . '_width';
-            $heightKey = (('media' == $source) ? 'image' : $source) . '_height';
-            $uploadInfo['w']        = $this->config($widthKey);
-            $uploadInfo['h']        = $this->config($heightKey);
-            if ('feature' == $source) {
-                $uploadInfo['thumb_w']  = $this->config('feature_thumb_width');
-                $uploadInfo['thumb_h']  = $this->config('feature_thumb_height');
-            }
+            $uploadInfo['w']        = $width;
+            $uploadInfo['h']        = $height;
             Upload::saveImage($uploadInfo);
         }
 
-        // Save media
-        switch ($source) {
-            case 'category':
-                $model = $this->getModel('category');
-                $field = 'image';
-                break;
-            case 'feature':
-                $model = $this->getModel('draft');
-                $field = 'image';
-                break;
-            case 'author':
-                $model = $this->getModel('author');
-                $field = 'photo';
-                break;
-            case 'topic':
-                $model = $this->getModel('topic');
-                $field = 'image';
-                break;
-            case 'media':
-            default:
-                $model = $this->getModel('media');
-                $field = 'url';
-                break;
-        }
- 
         // Save info to session
-        $session = Upload::getUploadSession($module, $source);
+        $session = Upload::getUploadSession($module, 'media');
         $session->$id = $uploadInfo;
 
         $result = true;
@@ -476,12 +451,11 @@ class MediaController extends ActionController
             $imageSize['h'] = $imageSizeRaw['1'];
         }
         
-
         // Prepare return data
         $return['data'] = array_merge(array(
             'originalName' => $rawInfo['name'],
             'size'         => $rawInfo['size'],
-            'preview_url'  => Pi::url($fileName) . '?' . time(),
+            'preview_url'  => Pi::url($fileName),
             'basename'     => basename($fileName),
             'type'         => $ext,
         ), $imageSize);
@@ -619,5 +593,104 @@ class MediaController extends ActionController
             $options['deleteFile'] = true;
         }
         Upload::httpOutputFile($options, $this);
+    }
+    
+    /**
+     * Searching image details by AJAX according to posted parameters. 
+     */
+    public function searchAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $type = Service::getParam($this, 'type', '');
+        
+        $where = array();
+        // Resolving type
+        if ($type == 'image') {
+            $extensionDesc = $this->config('image_extension');
+        } else {
+            $extensionDesc = $type;
+        }
+        $extensions = explode(',', $extensionDesc);
+        foreach ($extensions as &$ext) {
+            $ext = trim($ext);
+        }
+        $type = array_filter($extensions);
+        if (!empty($type)) {
+            $where['type'] = $type;
+        }
+        
+        // Resolving ID
+        $id  = Service::getParam($this, 'id', 0);
+        $ids = array_filter(explode(',', $id));
+        if (!empty($ids)) {
+            $where['id'] = $ids;
+        }
+        
+        // Getting title condition
+        $title = Service::getParam($this, 'title', '');
+        if (!empty($title)) {
+            $where['title like ?'] = '%' . $title . '%';
+        }
+        
+        $page   = (int) Service::getParam($this, 'page', 1);
+        $limit  = (int) Service::getParam($this, 'limit', 10);
+        
+        $rowset = Media::getList($where, $page, $limit);
+        
+        echo json_encode($rowset);
+        exit();
+    }
+    
+    /**
+     * Saving image into media table by AJAX. 
+     */
+    public function saveAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $id     = $this->params('id', 0);
+        $fakeId = $this->params('fake_id', 0);
+        $result = array();
+        if (empty($fakeId) and empty($id)) {
+            $result = array(
+                'status'     => self::AJAX_RESULT_FALSE,
+                'data'       => array(
+                    'message'   => __('Invalid ID!'),
+                ),
+            );
+        } else {
+            $data = array();
+            if ($id) {
+                $data['id'] = $id;
+            } else {
+                $data = array(
+                    'id'    => 0,
+                    'name'  => $fakeId,
+                    'title' => 'Image: ' . $fakeId . ' from outside',
+                );
+            }
+            $mediaId = $this->saveMedia($data);
+            if (empty($mediaId)) {
+                $result = array(
+                    'status'     => self::AJAX_RESULT_FALSE,
+                    'data'       => array(
+                        'message'   => __('Can not save data!'),
+                    ),
+                );
+            } else {
+                $result = array(
+                    'status'     => self::AJAX_RESULT_TRUE,
+                    'data'       => array(
+                        'id'        => $mediaId,
+                        'newid'     => uniqid(),
+                        'message'   => __('Media data saved successful!'),
+                    ),
+                );
+            }
+        }
+        
+        echo json_encode($result);
+        exit;
     }
 }
