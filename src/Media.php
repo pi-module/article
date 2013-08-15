@@ -97,6 +97,7 @@ class Media
         
         foreach ($mediaSet as &$set) {
             $set['submitter'] = $submitter[$set['uid']];
+            $set['url']       = Pi::url($set['url']);
         }
         
         return $mediaSet;
