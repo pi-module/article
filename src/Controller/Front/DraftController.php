@@ -34,6 +34,7 @@ use Module\Article\Compiled;
 use Module\Article\Entity;
 use Module\Article\Controller\Admin\ConfigController as Config;
 use Pi\File\Transfer\Upload as UploadHandler;
+use Module\Article\Media;
 
 /**
  * Public action for operating draft 
@@ -75,11 +76,11 @@ class DraftController extends ActionController
             'height'                => $this->config('feature_height'),
             'thumbWidth'            => $this->config('feature_thumb_width'),
             'thumbHeight'           => $this->config('feature_thumb_height'),
-            'image_extension'       => $this->config('image_extension'),
-            'max_image_size'        => Upload::fromByteString($this->config('max_image_size')),
-            'attachment_extension'  => $this->config('attachment_extension'),
-            'max_attachment_size'   => Upload::fromByteString($this->config('max_attachment_size')),
-            'autosave_interval'     => $this->config('autosave_interval'),
+            'imageExtension'        => $this->config('image_extension'),
+            'maxImageSize'          => Media::transferSize($this->config('max_image_size'), false),
+            'mediaExtension'        => $this->config('media_extension'),
+            'maxMediaSize'          => Media::transferSize($this->config('max_media_size'), false),
+            'autoSave'              => $this->config('autosave_interval'),
             'max_summary_length'    => $this->config('max_summary_length'),
             'max_subject_length'    => $this->config('max_subject_length'),
             'max_subtitle_length'   => $this->config('max_subtitle_length'),

@@ -178,18 +178,20 @@
         <div id="jsAttachment" class="ml98">
             <div style="margin-bottom:20px;" >
                 <!--<strong><?php _e('Attachment:') ?></strong>-->
-                <span class="btn btn-primary fileinput-button">
+                <span class="btn btn-primary fileinput-button" data-toggle="modal" href="#multi-attachements-box">
                     <?php _e('Choose files') ?>
                     <input type="file" name="attachment" multiple>
                 </span>
                 <span class="muted">
-                    <?php echo $attachment_extension ?>
+                    <?php echo $this->escape($mediaExtension) ?>
                     <span style="margin-left:5px;">
-                      <?php _e('Max Size:'); ?><?php echo $max_attachment_size / (1024 * 1024) . 'M'; ?>
+                      <?php _e('Max Size:'); ?><?php echo $maxMediaSize / (1024 * 1024) . 'M'; ?>
                     </span>
                 </span>
             </div>    
-            <div class="clearfix attachment-list" ></div>
+            <div class="clearfix attachment-list"></div>
+            <!-- Starting attachment modal box -->
+            <?php include 'media-attachments-box.phtml' ?>
         </div>
     </div>
     <div class="span4">
@@ -643,14 +645,14 @@ var page = {
         });
         
     },
-    editor: CKEDITOR.instances.content,
-    autosaveInterval: '<?php echo $autosave_interval; ?>',
-    featureImg:"<?php echo $featureThumb; ?>",
-    attachFormate:"<?php echo $attachment_extension; ?>".split(","),
-    attachMax:"<?php echo $max_attachment_size; ?>",
-    imageExtension:"<?php echo $image_extension; ?>".split(","),
-    imageMax:"<?php echo $max_image_size; ?>",
-    autoSaveTime:function(){
+    editor:             CKEDITOR.instances.content,
+    autosaveInterval:   '<?php echo $this->escape($autoSave) ?>',
+    featureImg:         "<?php echo $this->escape($featureThumb) ?>",
+    attachFormate:      "<?php echo $this->escape($mediaExtension) ?>".split(","),
+    attachMax:          "<?php echo $this->escape($maxMediaSize) ?>",
+    imageExtension:     "<?php echo $this->escape($imageExtension) ?>".split(","),
+    imageMax:           "<?php echo $this->escape($maxImageSize) ?>",
+    autoSaveTime:       function() {
         var i=0;
         $(".auto-save-time").html("Draft saved just now");
         clearInterval(this.saveInterval);
@@ -1076,7 +1078,12 @@ var AttachmentItemView = Backbone.View.extend({
     }
 });
 var AttachmentListView = Backbone.View.extend({
-    el: $("#jsAttachment"),
+    el          : $("#jsAttachment"),
+    events      : {
+        "click .media-search" : "searchMedia",
+        "click .media-insert" : "insertMedia",
+        "click .attachment-remove" : "removeMedia"
+    },
     initialize: function () {
         this.attachmentList = this.$(".attachment-list");
         attachmentCollection.on("add", this.addOne, this);
@@ -1093,36 +1100,66 @@ var AttachmentListView = Backbone.View.extend({
         this.attachmentList.append(new AttachmentItemView({
             model: model
         }).render().el);
+    },
+    searchMedia     : function() {
+        var title = $('input[name="attachment-title"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'search',
+        )); ?>' + 'title-' + title, function(result) {
+            var lists = $.parseJSON(result);
+            var content = '<table class="table table-bordered">'
+                            + '<tbody><tr>'
+                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+            for (i in lists) {
+                content += '<tr>'
+                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
+                            + '<td>' + lists[i].title + '</td>'
+                            + '<td>' + lists[i].size + '</td>'
+                            + '<td><a class="media-insert" href="#"'
+                                + ' data-id="' + lists[i].id + '"'
+                                + ' data-url="' + lists[i].url + '"'
+                                + ' data-title="' + lists[i].title + '"'
+                                + '>' 
+                                + '<?php _e('Insert') ?>' + '</a></td>'
+                            + '</tr>';
+            }
+            content += '</tbody></table>';
+            $('#attachment-search-result').html(content);
+        });
+    },
+    insertMedia : function(e) {
+        var id    = $(e.target).attr('data-id');
+        var url   = $(e.target).attr('data-url');
+        var title = $(e.target).attr('data-title');
+        var content = '<tr>'
+                      + '<td>' + title + '</td>'
+                      + '<td><a class="attachment-remove" href="#"'
+                          + ' data-id="' + id + '"'
+                          + ' data-source="media"'
+                          + ' data-title="' + title + '">'
+                          + '<?php _e('Remove') ?>' + '</a></td>'
+                      + '</tr>';
+        // Setting data
+        $('#attachment-select-lists tbody').append(content);
+        $(e.target).css('display', 'none');
+        //this.setMediaData('media_id-' + id, 'media');
+    },
+    removeMedia : function(e) {
+        var id     = $(e.target).attr('data-id');
+        var source = $(e.target).attr('data-source');
+        if ('media' == source) {
+            $(e.target).parents('tr').remove();
+            $('.media-insert[data-id="' + id + '"]').css('display', 'block');
+        } else {
+            
+        }
     }
 });
-/*var FeatureView = Backbone.View.extend({
-    el: $("#jsFeature"),
-    events:{
-      "click .icon-remove":"clickRemove"  
-    },
-    initialize: function () {
-        if (page.featureImg) {
-            this.render({
-                preview_url: page.featureImg
-            });
-        }
-        fileupload.call(this,"featureImage",page.featureUrl,page.imageExtension,page.imageMax);
-    },
-    render: function (obj) {
-        return $(_.template($("#temp-feature").html(), obj || {}, {
-            variable: 'data'
-        })).appendTo(this.$(".upload-image-wrap").html(""));
-    },
-    clickRemove:function(){
-        var self=this;
-        console.log(this);
-        $.getJSON("<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'removeFeatureImage')); ?>"+page.ajaxId()).done(function(resp){
-            self.render({
-                preview_url:""
-            });
-        });
-    }
-});*/
+// STARTING PROCESSING FEATURE IMAGE
 var FeatureView = Backbone.View.extend({
     mediaTemplate   : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
                       + '<img src="<%=preview_url %>">'),
