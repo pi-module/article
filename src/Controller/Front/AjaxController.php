@@ -198,44 +198,6 @@ class AjaxController extends ActionController
         );
     }
 
-    public function removeCategoryImageAction()
-    {
-        Pi::service('log')->active(false);
-        $id           = Service::getParam($this, 'id', 0);
-        $fakeId       = Service::getParam($this, 'fake_id', 0);
-        $affectedRows = 0;
-        $module       = $this->getModule();
-
-        if ($id) {
-            $rowCategory = $this->getModel('category')->find($id);
-
-            if ($rowCategory && $rowCategory->image) {
-                // Delete image
-                unlink(Pi::path($rowCategory->image));
-
-                // Update db
-                $rowCategory->image = '';
-                $affectedRows       = $rowCategory->save();
-            }
-        } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'category');
-
-            if (isset($session->$fakeId)) {
-                $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
-
-                unlink(Pi::path($uploadInfo['tmp_name']));
-
-                unset($session->$id);
-                unset($session->$fakeId);
-            }
-        }
-
-        return array(
-            'status'    => $affectedRows ? self::AJAX_RESULT_TRUE : self::AJAX_RESULT_FALSE,
-            'message'   => 'ok',
-        );
-    }
-
     public function removeFeatureImageAction()
     {
         Pi::service('log')->active(false);

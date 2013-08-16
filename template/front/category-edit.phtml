@@ -2,85 +2,337 @@
 $this->css($this->assetModule('script/article-ui.css'));
 $this->jQuery('extension/fileupload-min.js');
 $this->Backbone();
+$this->bootstrap('js/bootstrap.min.js');
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
-<?php if (isset($error)) { ?>
-<div class="alert alert-error">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($error) ?>
-</div>
-<?php } elseif (isset($message)) { ?>
-<div class="alert alert-success">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($message) ?>
-</div>
-<?php } ?>
-
-<?php include $this->templateComponent('form') ?>
-<script id="temp-upload" type="text/template">
-    <div id="jsUpload">
-        <div class="upload-image-bg">
-            <?php $src = $form->get('image')->getValue() ?>
-            <?php if ($src) { ?>
-                <div class="black-bg"><i class="icon-remove"></i></div>    
-                <img src="<?php echo Pi::url($src) ?>">
-                <?php } else { ?>    
-                <i class="icon-columns"></i>
-            <?php } ?>
-        </div>
-        <span class="btn upload fileinput-button">
-            <?php _e('Upload') ?> <input type="file" name="upload">
-        </span>
+<div id="message-box">
+    <?php if (isset($error)) { ?>
+    <div class="alert alert-error">
+        <button class="close" data-dismiss="alert" type="button">×</button>
+        <?php echo $this->escape($error) ?>
     </div>
-</script>
+    <?php } elseif (isset($message)) { ?>
+    <div class="alert alert-success">
+        <button class="close" data-dismiss="alert" type="button">×</button>
+        <?php echo $this->escape($message) ?>
+    </div>
+    <?php } ?>
+</div>
+
+<div id="jsUpload">
+    <?php include $this->templateComponent('form') ?>
+    
+    <script id="temp-upload" type="text/template">
+        <div>
+            <div id="category-image" class="upload-image-bg">
+                <?php $src = $form->get('image')->getValue() ?>
+                <?php if ($src) { ?>
+                    <div class="black-bg"><i class="category icon-remove"></i></div>    
+                    <img src="<?php echo Pi::url($src) ?>">
+                    <?php } else { ?>    
+                    <i class="icon-columns"></i>
+                <?php } ?>
+            </div>
+            <button class="btn upload fileinput-button" data-toggle="modal" href="#upload-box">
+                <?php _e('Upload') ?>
+            </button>
+        </div>
+    </script>
+    
+    <div id="upload-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-header" aria-hidden="true">
+        <div class="modal-header">
+            <button id="media-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3 id="modal-header"><?php echo __('Choose Image') ?></h3>
+        </div>
+        <div class="modal-body">
+            <div class="tabbable">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#image-upload" data-toggle="tab"><?php _e('Upload Image') ?></a>
+                    </li>
+                    <li>
+                        <a href="#image-choose" data-toggle="tab">
+                            <?php _e('Choose From Media') ?>
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="image-upload">
+                        <div id="media-image" class="upload-image-bg" style="width: 320px; height: 240px">
+                            <img style="width: 320px; height: 240px" src="<?php echo $defaultMediaImage ?>" />
+                        </div>
+                        <span class="btn upload fileinput-button">
+                            <?php _e('Upload') ?>
+                            <input type="file" name="upload">
+                        </span>
+                    </div>
+                    <div class="tab-pane" id="image-choose">
+                        <div class="clearfix form-inline" style="margin-bottom: 20px">
+                            <div class="pull-right form-search">
+                                <div class="input-append">
+                                    <input type="text" value="" placeholder="<?php _e('Title') ?>" class="input-medium search-query" name="media-title">
+                                    <button id="media-search" class="btn"><?php _e('Search') ?></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="media-select-result" style="margin-bottom: 20px"></div>
+                        <div id="media-lists"></div>
+                    </div>
+                </div>
+            </div>
+            <input name="image-id" type="hidden" />
+            <input name="image-source" type="hidden" />
+        </div>
+        <div class="modal-footer">
+            <button id="media-cancel" class="btn" data-dismiss="modal" aria-hidden="true"><?php echo __('Cancel') ?></button>
+            <button id="media-process" class="btn btn-primary" data-dismiss="modal" ><?php echo __('Yes') ?></button>
+        </div>
+    </div>
+</div>
+
 <script>
-//(function($){
+(function($) {
 var page = {
-    id : function() {
-        return "<?php echo $form->get('id')->getValue() ? 'id-' . $form->get('id')->getValue() : 'fake_id-' . $form->get('fake_id')->getValue() ?>";
+    id      : function() {
+        return "<?php echo $form->get('id')->getValue() ? 'id-' 
+               . $form->get('id')->getValue() : 'fake_id-' 
+               . $form->get('fake_id')->getValue(); ?>";
     },
-    form:$("form.form-horizontal"),
-    $:function(selector){
+    form    : $("form.form-horizontal"),
+    $       : function(selector) {
        return this.form.find(selector);
-    }
+    },
+    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' + '<?php echo $defaultMediaImage ?>' + '" />',
+    mediaFakeId : '<?php echo uniqid() ?>'
 };
-var UploadView=Backbone.View.extend({
-   template:_.template('<div class="black-bg"><i class="icon-remove"></i></div><img src="<%=preview_url %>">'),
-   events:{
-       "click .icon-remove":"remove"
-   },
-   initialize:function(){
-       page.$("[name=image]").parents(".control-group:first").find(".controls").html($("#temp-upload").html());
-       this.$el=$("#jsUpload");
-       this.input=this.$("[name=upload]");
-       this.fileupload();
-   },
-   fileupload:function(){
-       var self=this;
-       this.input.fileupload({
-           forceIframeTransport:true,
-           url: '<?php echo $this->url('',array('controller' => 'upload', 'action' => 'category.image')); ?>'+page.id(),
-           done:function(e,data){
-               var d=$.parseJSON($.trim($(data.result).text()));
-               if(d.status==1){
-                   self.render(d.data);
-               }else{
-                   alert(_.values(d.message).join(","));
-               }
-           }
-       });  
-   },
-   remove:function(){
-       var self=this;
-       $.getJSON('<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'removeCategoryImage')); ?>'+page.id()).done(function(){
-           self.$(".upload-image-bg").html('<i class="icon-columns"></i>');
-       });  
-   },
-   render:function(obj){
-       this.$(".upload-image-bg").html(this.template(obj));
-   }
+
+var UploadView = Backbone.View.extend({
+    mediaTemplate   : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
+                      + '<img src="<%=preview_url %>">'),
+    template        : _.template('<div class="black-bg"><i class="category icon-remove"></i></div>'
+                      + '<img src="<%=preview_url %>">'),
+    events          : {
+        "click .category.icon-remove":"remove",
+        "click .media.icon-remove": "removeUpload",
+        "click #media-search": "searchMedia",
+        "click .media-insert": "insertMedia",
+        "click .media-remove.close" : "removeMedia",
+        "click #media-close" : "cancel",
+        "click #media-cancel" : "cancel",
+        "click #media-process" : "processImage"
+    },
+    initialize      : function() {
+        page.$("[name=image]")
+            .parents(".control-group:first")
+            .find(".controls")
+            .html($("#temp-upload").html());
+        this.$el   = $("#jsUpload");
+        this.input = $('input[name="upload"]');
+        this.fileupload();
+    },
+    // Fetching image by upload
+    fileupload      : function() {
+        var self = this;
+        var url  = '<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'upload',
+            'type'       => 'image',
+            'width'      => $categoryWidth,
+            'height'     => $categoryHeight,
+        )); ?>/fake_id-' + page.mediaFakeId;
+        this.input.fileupload({
+            formData    : function() {
+                return [];
+            },
+            url         : url,
+            done        : function(e, data) {
+                var d = $.parseJSON(data.result);
+                if (d.status == 1) {
+                    self.renderUpload(d.data);
+                    // Clear hidden input value and select image of media section
+                    self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
+                    $('#media-select-result').html('');
+                } else {
+                    alert(_.values(d.message).join(","));
+                }
+            }
+        }).bind('fileuploadsend', function(e, data) {
+            data.url = '<?php echo $this->url('', array(
+                'controller' => 'media',
+                'action'     => 'upload',
+                'type'       => 'image',
+                'width'      => $categoryWidth,
+                'height'     => $categoryHeight,
+            )); ?>/fake_id-' + page.mediaFakeId;
+        });  
+    },
+    removeUpload    : function(clearData) {
+        // Setting initial value of parameter
+        if (clearData != false) {
+            clearData = true;
+        }
+        
+        var self = this;
+        $.getJSON('<?php echo $this->url('', array('controller' => 'media', 'action' => 'remove')); ?>fake_id-'+ page.mediaFakeId).done(function() {
+            $("#media-image").html(page.mediaDefaultTemplate);
+            if (clearData == true) {
+                self.clearMediaData();
+            }
+        });
+    },
+    renderUpload    : function(obj) {
+        obj.preview_url = obj.preview_url + '?' + new Date().getTime();
+        $('#media-image').html(this.mediaTemplate(obj));
+    },
+    saveUploadToMedia : function(id) {
+        var url = '<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'save',
+        )) ?>' + id;
+        var self = this;
+        $.ajax({
+            cache:    false,
+            async:    false,
+            dataType: 'json',
+            type:     'get',
+            url:      url,
+            success:  function(result) {
+                if (result.status) {
+                    $("#media-image").html(page.mediaDefaultTemplate);
+                    self.renderMessage('success', result.data.message);
+                    self.setMediaData('media_id-' + result.data.id, 'media');
+                    page.mediaFakeId = result.data.newid;
+                } else {
+                    self.renderMessage('error', result.data.message);
+                }
+            },
+            error:    function() {
+                self.renderMessage('error', '<?php _e('Error ocurred when request saving image!') ?>');
+            }
+        })
+    },
+    // Processing category image
+    saveCategory    : function() {
+        var self    = this;
+        var mediaId = $('input[name="image-id"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'category',
+            'action'     => 'save-image',
+        )); ?>' + page.id() + '/' + mediaId, function(result) {
+            result = $.parseJSON(result);
+            if (result.status) {
+                self.render(result.data);
+                // Remove all generated data
+                self.removeMedia();
+                $("#media-image").html(page.mediaDefaultTemplate);
+            } else {
+                alert(result.message);
+            }
+        });
+    },
+    remove          : function() {
+        var self = this;
+        $.getJSON('<?php echo $this->url('', array('controller' => 'category', 'action' => 'remove-image')); ?>' + page.id()).done(function() {
+            self.$("#category-image").html('<i class="icon-columns"></i>');
+        });  
+    },
+    render          : function(obj) {
+        obj.preview_url = obj.preview_url + '?' + new Date().getTime();
+        this.$("#category-image").html(this.template(obj));
+    },
+    // Fetching image from media
+    searchMedia     : function() {
+        var title = $('input[name="media-title"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'search',
+            'type'       => 'image',
+        )); ?>/' + 'title-' + title, function(result) {
+            var lists = $.parseJSON(result);
+            var content = '<table class="table table-striped">'
+                            + '<tbody><tr>'
+                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+            for (i in lists) {
+                content += '<tr>'
+                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
+                            + '<td>' + lists[i].title + '</td>'
+                            + '<td>' + lists[i].size + '</td>'
+                            + '<td class="media-insert"><a href="#"'
+                                + ' data-id="' + lists[i].id + '"'
+                                + ' data-url="' + lists[i].url + '"'
+                                + ' data-title="' + lists[i].title + '"'
+                                + '>' 
+                                + '<?php _e('Insert') ?>' + '</a></td>'
+                            + '</tr>';
+            }
+            content += '</tbody></table>';
+            $('#media-lists').html(content);
+        });
+    },
+    insertMedia : function(e) {
+        var id    = $(e.target).attr('data-id');
+        var url   = $(e.target).attr('data-url');
+        var title = $(e.target).attr('data-title');
+        var content = '<div class="alert alert-success">'
+                      + '<button class="media-remove close" style="line-height: 40px" data-dismiss="alert" type="button">×</button>'
+                      + '<span style="font-weight: bold; width: 100%">' + '<?php _e('Image choosed: ') ?>'
+                      + '</span><img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
+                      + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
+                      + '</div>';
+        // Clearing data from upload
+        this.removeUpload(false);
+        
+        // Setting data
+        $('#media-select-result').html(content);
+        this.setMediaData('media_id-' + id, 'media');
+    },
+    removeMedia : function() {
+        $('#media-select-result').html('');
+        this.clearMediaData();
+    },
+    clearMediaData : function() {
+        $('input[name="image-id"]').val('');
+        $('input[name="image-source"]').val('');
+    },
+    setMediaData : function(value, source) {
+        $('input[name="image-id"]').val(value);
+        $('input[name="image-source"]').val(source);
+    },
+    // Processing data from uploading and media
+    cancel : function() {
+        var source = $('input[name="image-source"]').val();
+        
+        if ('upload' == source) {
+            this.removeUpload();
+        } else if ('media' == source) {
+            this.removeMedia();
+        }
+    },
+    processImage : function() {
+        var self   = this;
+        var source = $('input[name="image-source"]').val();
+        var id     = $('input[name="image-id"]').val();
+        
+        // Saving uploaded image into media section
+        if ('upload' == source) {
+            self.saveUploadToMedia(id);
+        }
+
+        // Creating temporary image for category
+        self.saveCategory();
+    },
+    renderMessage : function(status, message) {
+        var content = '<div class="alert alert-' + status + '">'
+                      + '<button class="close" data-dismiss="alert" type="button">×</button>'
+                      + message
+                      + '</div>';
+        $('#message-box').html(content);
+    }
 });
 new UploadView;
-//})(jQuery)
+})(jQuery)
 </script>

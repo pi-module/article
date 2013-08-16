@@ -34,6 +34,7 @@ use Module\Article\Service;
 use Module\Article\Cache;
 use Module\Article\Model\Article;
 use Module\Article\Entity;
+use Pi\File\Transfer\Upload as UploadHandler;
 
 /**
  * Public action controller for operating category
@@ -541,5 +542,168 @@ class CategoryController extends ActionController
         if ($to) {
             $form->get('to')->setAttribute('value', $to);
         }
+    }
+    
+    /**
+     * Saving image by AJAX, but do not save data into database.
+     * If the image is fetched by upload, try to receive image by Upload class,
+     * if the image is from media, try to copy the image from media to category path.
+     * Finally the image data will be saved into session.
+     * 
+     */
+    public function saveImageAction()
+    {
+        Pi::service('log')->active(false);
+        $module  = $this->getModule();
+
+        $return  = array('status' => false);
+        $mediaId = Service::getParam($this, 'media_id', 0);
+        $id      = Service::getParam($this, 'id', 0);
+        if (empty($id)) {
+            $id = Service::getParam($this, 'fake_id', 0);
+        }
+        
+        $extensions = array_filter(explode(',', $this->config('image_extension')));
+        foreach ($extensions as &$ext) {
+            $ext = strtolower(trim($ext));
+        }
+
+        if ($mediaId) {
+            $rowMedia = $this->getModel('media')->find($mediaId);
+            // Checking is media exists
+            if (!$rowMedia->id or !$rowMedia->url) {
+                $return['message'] = __('Media is not exists!');
+                echo json_encode($return);
+                exit;
+            }
+            // Checking is media an image
+            if (!in_array(strtolower($rowMedia->type), $extensions)) {
+                $return['message'] = __('Invalid file extension!');
+                echo json_encode($return);
+                exit;
+            }
+            // Checking is id valid
+            if (empty($id)) {
+                $return['message'] = __('Invalid ID!');
+                echo json_encode($return);
+                exit;
+            }
+            
+            $destination = Upload::getTargetDir('category', $module, true, false);
+            if (!Upload::mkdir($destination)) {
+                $return['message'] = __('Can not create destination directory!');
+                echo json_encode($return);
+                exit;
+            }
+            $ext         = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
+            $rename      = $id . '.' . $ext;
+            $fileName    = rtrim($destination, '/') . '/' . $rename;
+            if (!copy(Pi::path($rowMedia->url), Pi::path($fileName))) {
+                $return['message'] = __('Can not create image file!');
+                echo json_encode($return);
+                exit;
+            }
+        } else {
+            // Checking is ID exists
+            if (empty($id)) {
+                $return['message'] = __('Invalid ID!');
+                echo json_encode($return);
+                exit;
+            }
+
+            $rawInfo = $this->request->getFiles('upload');
+            $rename  = $id;
+
+            $destination = Upload::getTargetDir('category', $module, true, false);
+            $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
+            if ($ext) {
+                $rename .= '.' . $ext;
+            }
+
+            $upload = new UploadHandler;
+            $upload->setDestination(Pi::path($destination))
+                   ->setRename($rename)
+                   ->setExtension($this->config('image_extension'))
+                   ->setSize($this->config('max_image_size'));
+
+            // Checking is uploaded file valid
+            if (!$upload->isValid()) {
+                $return['message'] = $upload->getMessages();
+                echo json_encode($return);
+                exit;
+            }
+            
+            $upload->receive();
+            $fileName = $destination . '/' . $rename;
+        }
+
+        // Scale image
+        $uploadInfo['tmp_name'] = $fileName;
+        $uploadInfo['w']        = $this->config('category_width');
+        $uploadInfo['h']        = $this->config('category_height');
+
+        Upload::saveImage($uploadInfo);
+
+        // Or save info to session
+        $session = Upload::getUploadSession($module, 'category');
+        $session->$id = $uploadInfo;
+
+        $imageSize = getimagesize(Pi::path($fileName));
+
+        // Prepare return data
+        $return['data'] = array(
+            'originalName' => isset($rawInfo['name']) ? $rawInfo['name'] : $rename,
+            'size'         => isset($rawInfo['size']) ? $rawInfo['size'] : filesize(Pi::path($fileName)),
+            'w'            => $imageSize['0'],
+            'h'            => $imageSize['1'],
+            'preview_url'  => Pi::url($fileName),
+        );
+
+        $return['status'] = true;
+        echo json_encode($return);
+        exit();
+    }
+    
+    /**
+     * Removing image by AJAX. This operation will also remove image data in database.
+     * 
+     * @return ViewModel 
+     */
+    public function removeImageAction()
+    {
+        Pi::service('log')->active(false);
+        $id           = Service::getParam($this, 'id', 0);
+        $fakeId       = Service::getParam($this, 'fake_id', 0);
+        $affectedRows = 0;
+        $module       = $this->getModule();
+
+        if ($id) {
+            $rowCategory = $this->getModel('category')->find($id);
+
+            if ($rowCategory && $rowCategory->image) {
+                // Delete image
+                unlink(Pi::path($rowCategory->image));
+
+                // Update db
+                $rowCategory->image = '';
+                $affectedRows       = $rowCategory->save();
+            }
+        } else if ($fakeId) {
+            $session = Upload::getUploadSession($module, 'category');
+
+            if (isset($session->$fakeId)) {
+                $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
+
+                unlink(Pi::path($uploadInfo['tmp_name']));
+
+                unset($session->$id);
+                unset($session->$fakeId);
+            }
+        }
+
+        return array(
+            'status'    => $affectedRows ? true : false,
+            'message'   => 'ok',
+        );
     }
 }
