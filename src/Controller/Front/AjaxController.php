@@ -287,27 +287,4 @@ class AjaxController extends ActionController
             'message'   => $result ? __('Subject is used by another article.') : __('ok'),
         );
     }
-    
-    /**#@+
-    * Added by Zongshu Lin
-    */
-    public function permAction()
-    {
-        $channel = $this->params('channel');
-        $role    = $this->params('role', PermController::PERM_EDITOR);
-        
-        $channels = Pi::service('api')->channel(array('role', 'getListByRole'), $role);
-        $result   = array(
-            'status'   => true,
-        );
-        if (!in_array($channel, array_keys($channels))) {
-            $result = array(
-                'status'   => false,
-                'message'  => 'Current user has no right to operate the given channel!',
-            );
-        }
-        
-        return json_encode($result);
-    }
-    /**#@-*/
 }
