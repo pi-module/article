@@ -644,7 +644,7 @@ class CategoryController extends ActionController
 
         Upload::saveImage($uploadInfo);
 
-        // Or save info to session
+        // Save info to session
         $session = Upload::getUploadSession($module, 'category');
         $session->$id = $uploadInfo;
 
