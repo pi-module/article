@@ -69,8 +69,8 @@ class Service
     {
         
         $handler->view()->assign(array(
-            'width'            => $handler->config('author_width'),
-            'height'           => $handler->config('author_height'),
+            'authorWidth'      => $handler->config('author_width'),
+            'authorHeight'     => $handler->config('author_height'),
             'image_extension'  => array_map('trim', explode(',', $handler->config('image_extension'))),
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
