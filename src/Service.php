@@ -67,14 +67,26 @@ class Service
      */
     public static function setModuleConfig(ActionController $handler)
     {
-        
+        $module = Pi::service('module')->current();
         $handler->view()->assign(array(
             'authorWidth'      => $handler->config('author_width'),
             'authorHeight'     => $handler->config('author_height'),
+            'categoryWidth'    => $handler->config('category_width'),
+            'categoryHeight'   => $handler->config('category_height'),
+            'topicWidth'       => $handler->config('topic_width'),
+            'topicHeight'      => $handler->config('topic_height'),
+            'featureWidth'     => $handler->config('feature_width'),
+            'featureHeight'    => $handler->config('feature_height'),
             'image_extension'  => array_map('trim', explode(',', $handler->config('image_extension'))),
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
             'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),
+            'defaultMediaImage' => Pi::service('asset')->getModuleAsset(
+                                   $handler->config('default_media_image'),
+                                   $module),
+            'defaultMediaThumb' => Pi::service('asset')->getModuleAsset(
+                                   $handler->config('default_media_thumb'),
+                                   $module),
         ));
     }
     

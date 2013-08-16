@@ -184,6 +184,18 @@ return array(
             'description' => _t('Max media size'),
             'value'       => '2MB',
         ),
+        'default_media_image' => array(
+            'category'    => 'media',
+            'title'       => _t('Default Media Image'),
+            'description' => _t('Path to default media image of article.'),
+            'value'       => 'image/default-media.png',
+        ),
+        'default_media_thumb' => array(
+            'category'    => 'media',
+            'title'       => _t('Default media thumb'),
+            'description' => _t('Path to default media thumb of article.'),
+            'value'       => 'image/default-media-thumb.png',
+        ),
         'image_width'     => array(
             'category'    => 'media',
             'title'       => _t('Image Width'),

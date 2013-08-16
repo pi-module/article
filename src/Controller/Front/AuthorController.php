@@ -426,11 +426,15 @@ class AuthorController extends ActionController
         );
 
         $return['status'] = true;
-
         echo json_encode($return);
         exit();
     }
     
+    /**
+     * Removing image by AJAX. This operation will also remove image data in database.
+     * 
+     * @return ViewModel 
+     */
     public function removeImageAction()
     {
         Pi::service('log')->active(false);
