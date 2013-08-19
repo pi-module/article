@@ -177,10 +177,8 @@
         <?php } ?>
         <div id="jsAttachment" class="ml98">
             <div style="margin-bottom:20px;" >
-                <!--<strong><?php _e('Attachment:') ?></strong>-->
                 <span class="btn btn-primary fileinput-button" data-toggle="modal" href="#multi-attachments-box">
                     <?php _e('Choose files') ?>
-                    <input type="file" name="attachment" multiple>
                 </span>
                 <span class="muted">
                     <?php echo $this->escape($mediaExtension) ?>
@@ -333,19 +331,20 @@
             </div>
         </div>
         <div class="widget" id="jsGallery">
-            <div class="widget-header" style="cursor:pointer;" title="<?php _e('Click toggle show'); ?>">
+            <div class="widget-header" style="cursor: pointer;" title="<?php _e('Click toggle show'); ?>">
                 <i class="icon-caret-up"></i>
                 <i class="icon-caret-down"></i>
                 <strong><?php _e('Image gallery'); ?></strong>
             </div>
             <div class="widget-body" style="padding-right:0;">
-                <span class="btn fileinput-button">
-                    <?php _e('Upload'); ?>
-                    <input type="file" name="image" multiple>
+                <span class="btn fileinput-button" data-toggle="modal" href="#multi-gallery-box">
+                    <?php _e('Upload') ?>
                 </span>
                 <div class="clearfix gallery-list">
                 </div>
             </div>
+            <!-- Starting gallery modal box -->
+            <?php include 'media-gallery-box.phtml' ?>
         </div>
         <?php } ?>
         <?php if (!empty($config['enable_tag']) and in_array('tag', $elements)) { ?>
@@ -552,18 +551,15 @@
     <% } %>
 </script>
 <script id="temp-gallery" type="text/template">
-    <div class="black-bg ">
-        <span class="ellipsis"><%= data.originalName %></span>
-        <i class="icon-remove"></i>
-    </div>
-    <% if(data.preview_url) { %>
-    <img src="<%= data.thumb_url %>" style="height:90px;width:100%;">
-    <% } %>
-    <% if(data.progress) { %>
-        <div class="progress progress-striped">
-            <div class="bar" style="width:<%= data.progress %>%;"></div>
+    <div class="upload-image-wrap" data-id="<%= data.id %>" data-preview="<%= data.preview_url %>" data-download="<%= data.downloadUrl %>">
+        <div class="black-bg ">
+            <span class="ellipsis"><%= data.title %></span>
+            <i class="icon-remove"></i>
         </div>
-    <% } %>
+        <% if (data.preview_url) { %>
+        <img src="<%= data.preview_url %>" style="width: 120px; height: 90px;">
+        <% } %>
+    </div>
 </script>
 <script id="temp-related-search" type="text/template">
     <%_.each(search,function(item) { %>
@@ -608,9 +604,18 @@ var page = {
             }, this.autosaveInterval * 1000 * 60);
         }
         <?php } ?>
-        this.attachmentUrl="<?php echo $this->url('', array('controller' => 'media', 'action' => 'upload', 'name' => 'attachment')); ?>";
+        this.attachmentUrl = "<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'upload',
+            'name'       => 'attachment')); ?>";
         this.featureUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'feature.image')); ?>"+this.ajaxId();
-        this.galleryUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'image')); ?>"+this.ajaxId();
+        this.galleryUrl = "<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'upload',
+            'name'       => 'gallery',
+            'width'      => $contentImageWidth,
+            'height'     => $contentImageHeight,
+        )); ?>";
         this.timer=setInterval(_.bind(this.loadSaveTime,this),100);
         $("#jsUploadModel").on("click",".close-all",function(){
              $("#jsUploadModel").hide();
@@ -992,7 +997,7 @@ function fileupload(name,url,formate,size,collection) {
                     });
                     return false;
                };
-            if(formate && _.indexOf(formate,fm)==-1 ){
+            if(formate && _.indexOf(formate,fm.toLowerCase())==-1 ){
                  return fn("has a false extension");
             }
             if(f.size && f.size > size ) {
@@ -1017,49 +1022,51 @@ function fileupload(name,url,formate,size,collection) {
             el.find(".bar").css("width", progress + "%");
         },
         done: function (e, data) {
-                var el = data.files[0].el,
-                    resp;
-                if(data.jqXHR.responseText){
-                    resp = $.parseJSON(data.jqXHR.responseText);
-                }else{
-                    resp = $.parseJSON($.trim(data.result.contents().find('body').html()));
-                }
-                if (resp.status == 1) {
-                    el.find(".bar").css("width", "100%");
-                    resp.data['progress'] = 0;
-                    if (collection) {
-                        var content = '<tr>'
-                                    + '<td>' + resp.data.originalName + '</td>'
-                                    + '<td><a class="attachment-remove" href="#"'
-                                        + ' data-id="' + resp.data.id + '"'
-                                        + ' data-source="upload"'
-                                        + ' data-title="' + resp.data.originalName + '">'
-                                        + '<?php _e('Remove') ?>' + '</a></td>'
-                                        + '<input class="select-media-id" type="hidden" value="' + resp.data.id + '" />'
-                                        + '<input class="select-media-source" type="hidden" value="upload" />'
-                                    + '</tr>';
-                        // Removing uploaded info
-                        collection.get(el.attr("data-cid")).set(resp.data);
-                        $('.progress-text[data-id="' + resp.data.id + '"]').parent().remove();
-                        // Moving uploaded rows into table storing selected media
-                        $('#attachment-select-lists tbody').append(content);
-                        //
-                    } else {
-                        self.render(resp.data);
-                    }
-                } else {
-                   if(collection){
-                      collection.remove(el.attr("data-cid"));
-                      el.remove();
-                   }else{
-                      self.render();
-                   }
-                   page.showUploadModel({
-                        message: _.values(resp.message),
-                        fileName:data.files[0].name
-                    });
-                }
+            var el = data.files[0].el,
+                resp;
+            if(data.jqXHR.responseText){
+                resp = $.parseJSON(data.jqXHR.responseText);
+            }else{
+                resp = $.parseJSON($.trim(data.result.contents().find('body').html()));
             }
+            if (resp.status == 1) {
+                el.find(".bar").css("width", "100%");
+                resp.data['progress'] = 0;
+                if (collection) {
+                    var content = '<tr>';
+                    if ('gallery' == name) {
+                        content += '<td><img style="width: 40px; height: 40px" src="' + resp.data.preview_url + '" /></td>'
+                    }
+                    content += '<td>' + resp.data.originalName + '</td>'
+                               + '<td><a class="' + name + '-remove" href="#"'
+                                   + ' data-id="' + resp.data.id + '"'
+                                   + ' data-source="upload"'
+                                   + ' data-title="' + resp.data.originalName + '">'
+                                   + '<?php _e('Remove') ?>' + '</a></td>'
+                                   + '<input class="select-media-id" type="hidden" value="' + resp.data.id + '" />'
+                                   + '<input class="select-media-source" type="hidden" value="upload" />'
+                               + '</tr>';
+                    // Removing uploaded info
+                    collection.get(el.attr("data-cid")).set(resp.data);
+                    $('.progress-text[data-id="' + resp.data.id + '"]').parent().remove();
+                    // Moving uploaded rows into table storing selected media
+                    $('#' + name + '-select-lists tbody').append(content);
+                } else {
+                    self.render(resp.data);
+                }
+            } else {
+                if(collection){
+                    collection.remove(el.attr("data-cid"));
+                    el.remove();
+                }else{
+                    self.render();
+                }
+                page.showUploadModel({
+                    message: _.values(resp.message),
+                    fileName:data.files[0].name
+                });
+            }
+        }
     };
     if (!$.support.xhrFileUpload) {  //ie upload
        _.extend(obj, {
@@ -1067,7 +1074,9 @@ function fileupload(name,url,formate,size,collection) {
         });
     }
     this.$("input[name="+name+"]").fileupload(obj);
-}    
+}
+
+// STARTING PROCESSING ATTACHMENT
 var attachmentCollection = new Backbone.Collection(<?php echo json_encode($attachments); ?>);
 var mediaCollection = new Backbone.Collection();
 var MediaItemView = Backbone.View.extend({
@@ -1107,7 +1116,7 @@ var AttachmentListView = Backbone.View.extend({
         this.attachmentList = this.$("#attachment-upload-list");
         mediaCollection.on("add", this.addOne, this);
         this.initAttachment();
-        fileupload.call(this,"attachment",page.attachmentUrl,page.attachFormate,page.attachMax,mediaCollection);
+        fileupload.call(this, "attachment", page.attachmentUrl, page.attachFormate, page.attachMax, mediaCollection);
     },
     render: function () {
         var m = attachmentCollection.models;
@@ -1171,13 +1180,11 @@ var AttachmentListView = Backbone.View.extend({
             var lists = $.parseJSON(result);
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
-                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
             for (i in lists) {
                 content += '<tr>'
-                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
                             + '<td>' + lists[i].title + '</td>'
                             + '<td>' + lists[i].size + '</td>'
                             + '<td><a class="media-insert" href="#"'
@@ -1297,6 +1304,7 @@ var AttachmentListView = Backbone.View.extend({
         }
     }
 });
+
 // STARTING PROCESSING FEATURE IMAGE
 var FeatureView = Backbone.View.extend({
     mediaTemplate   : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
@@ -1304,14 +1312,14 @@ var FeatureView = Backbone.View.extend({
     template        : _.template('<div class="black-bg"><i class="feature icon-remove"></i></div>'
                       + '<img src="<%=preview_url %>">'),
     events          : {
-        "click .feature.icon-remove":"remove",
-        "click .media.icon-remove": "removeUpload",
-        "click #media-search": "searchMedia",
-        "click .media-insert": "insertMedia",
-        "click .media-remove.close" : "removeMedia",
-        "click #media-close" : "cancel",
-        "click #media-cancel" : "cancel",
-        "click #media-process" : "processImage"
+        "click .feature.icon-remove"    : "remove",
+        "click .media.icon-remove"      : "removeUpload",
+        "click #media-search"           : "searchMedia",
+        "click .media-insert"           : "insertMedia",
+        "click .media-remove.close"     : "removeMedia",
+        "click #media-close"            : "cancel",
+        "click #media-cancel"           : "cancel",
+        "click #media-process"          : "processImage"
     },
     initialize      : function() {
         if (page.featureImg) {
@@ -1533,12 +1541,13 @@ var FeatureView = Backbone.View.extend({
         $('#message-box').html(content);
     }
 });
+
+// STARTING PROCESS IMAGE ABLUM
 var galleryCollection = new Backbone.Collection(<?php echo json_encode($images); ?>);
+var mediaImageCollection = new Backbone.Collection(<?php echo json_encode($images); ?>);
 var GalleryItemView = Backbone.View.extend({
     className: "upload-image-wrap",
     events: {
-        "click .icon-remove": "removeFile",
-        "click img": "insertEditor"
     },
     initialize: function () {
         this.model.on("destroy", this.remove, this);
@@ -1546,49 +1555,223 @@ var GalleryItemView = Backbone.View.extend({
         this.$el.attr("data-cid", this.model.cid);
     },
     render: function () {
-        this.$el.html(_.template($("#temp-gallery").html(), this.model.toJSON(), {
+        this.$el.html(_.template($("#temp-media").html(), this.model.toJSON(), {
             variable: 'data'
         }));
         return this;
-    },
-    removeFile: function () {
-        $(page.editor.document.getBody().$).find("img[src='" + this.model.get("thumb_url") + "']").remove();
-        this.model.destroy({
-            url: this.model.get("delete_url")
-        });
-    },
-    insertEditor: function () {
-        page.editor.insertHtml('<a href="'+this.model.get("preview_url")+'" target="_blank"><img src="' + this.model.get("thumb_url") + '"></a>');
-        page.editor.focus();
     }
 });
 var GalleryListView = Backbone.View.extend({
-    el: $("#jsGallery"),
-    events:{
-      "click .widget-header":"toggleShow"  
+    el      : $("#jsGallery"),
+    events  :{
+        "click .widget-header"      :"toggleShow",
+        "click .media-search"       : "searchMedia",
+        "click .media-insert"       : "insertMedia",
+        "click .gallery-remove"     : "removeMedia",
+        "click #gallery-process"    : "processMedia",
+        "click #gallery-cancel"     : "cancelMedia",
+        "click .icon-remove"        : "removeFile",
+        "click img"                 : "insertEditor"
     },
     initialize: function () {
         this.galleryList = this.$(".gallery-list");
-        galleryCollection.on("add", this.addOne, this);
-        this.render();
+        this.uploadedMediaList = this.$("#gallery-upload-list");
+        mediaImageCollection.on("add", this.addOne, this);
+        this.initGallery();
+        fileupload.call(this, "gallery", page.galleryUrl, page.imageExtension, page.imageMax, mediaImageCollection);
     },
     render: function () {
         var m = galleryCollection.models;
         for (var i = 0, l = m.length; i < l; i++) {
             this.addOne(m[i]);
         }
-        fileupload.call(this,"image",page.galleryUrl,page.imageExtension,page.imageMax,galleryCollection);
+    },
+    initGallery  : function() {
+        var m = galleryCollection.models;
+        var content;
+        for (var i = 0; i < m.length; i++) {
+            content = _.template(
+                $("#temp-gallery").html(),
+                m[i].toJSON(),
+                {
+                    variable: 'data'
+                }
+            );
+            this.galleryList.append(content);
+        }
     },
     addOne: function (model) {
-        this.galleryList.append(new GalleryItemView({
+        this.uploadedMediaList.append(new GalleryItemView({
             model: model
         }).render().el);
     },
     toggleShow:function(){
         this.$(".widget-header").toggleClass("active");
         this.$(".widget-body").slideToggle(300);
+    },
+    removeFile: function (e) {
+        if (confirm("<?php _e('This operation will also remove image in editor, do you still want to continue?')?>")) {
+            var el = $(e.target).parents('.upload-image-wrap');
+            var id = el.data('id');
+            var previewUrl = el.data('preview');
+            $(page.editor.document.getBody().$).find("img[src='" + previewUrl + "']")
+                                               .remove();
+            var url = '<?php echo $this->url('', array(
+                'controller' => 'draft',
+                'action'     => 'remove-asset',
+            )) ?>' + 'id-' + id;
+            $.get(url, function(result) {
+                result = $.parseJSON(result);
+                if (result.status) {
+                    el.remove();
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
+    },
+    insertEditor: function (e) {
+        var el = $(e.target).parents('.upload-image-wrap');
+        var previewUrl = el.data('preview');
+        var downloadUrl = el.data('download');
+        var html = '<a href="' + downloadUrl + '" target="_blank"><img src="' + previewUrl + '"></a>';
+        page.editor.insertHtml(html);
+        page.editor.focus();
+    },
+    searchMedia     : function() {
+        var title = $('input[name="gallery-title"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'search',
+        )); ?>' + 'title-' + title, function(result) {
+            var lists = $.parseJSON(result);
+            var content = '<table class="table table-bordered">'
+                            + '<tbody><tr>'
+                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+            for (i in lists) {
+                content += '<tr>'
+                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
+                            + '<td>' + lists[i].title + '</td>'
+                            + '<td>' + lists[i].size + '</td>'
+                            + '<td><a class="media-insert" href="#"'
+                                + ' data-id="' + lists[i].id + '"'
+                                + ' data-url="' + lists[i].url + '"'
+                                + ' data-title="' + lists[i].title + '"'
+                                + '>' 
+                                + '<?php _e('Insert') ?>' + '</a></td>'
+                            + '</tr>';
+            }
+            content += '</tbody></table>';
+            $('#gallery-search-result').html(content);
+        });
+    },
+    insertMedia : function(e) {
+        var id    = $(e.target).attr('data-id');
+        var title = $(e.target).attr('data-title');
+        var url   = $(e.target).attr('data-url');
+        var content = '<tr>'
+                      + '<td><img style="width: 40px; height: 40px" src="' + url + '" /></td>'
+                      + '<td>' + title + '</td>'
+                      + '<td><a class="gallery-remove" href="#"'
+                          + ' data-id="' + id + '"'
+                          + ' data-source="media"'
+                          + ' data-title="' + title + '">'
+                          + '<?php _e('Remove') ?>' + '</a></td>'
+                      + '<input class="select-media-id" type="hidden" value="' + id + '" />'
+                      + '<input class="select-media-source" type="hidden" value="media" />'
+                      + '</tr>';
+        // Setting data
+        $('#gallery-select-lists tbody').append(content);
+        $(e.target).css('display', 'none');
+    },
+    removeMedia : function(e) {
+        var id     = $(e.target).attr('data-id');
+        var source = $(e.target).attr('data-source');
+        if ('media' == source) {
+            $(e.target).parents('tr').remove();
+            $('.media-insert[data-id="' + id + '"]').css('display', 'block');
+        } else if ('upload' == source) {
+            if (confirm("<?php _e('Do you really want to remove this media?')?>")) {
+                var url = '<?php echo $this->url('', array(
+                    'controller' => 'media',
+                    'action'     => 'remove',
+                    )) ?>' + 'fake_id-' + id;
+                $.get(url, function(result) {
+                    result = $.parseJSON(result);
+                    if (result.status) {
+                        // Remove item in selected area
+                        $(e.target).parents('tr').remove();
+                    }
+                });
+            }
+        }
+    },
+    processMedia    : function() {
+        var self   = this;
+        
+        $('#gallery-select-lists tr').each(function() {
+            var el = $(this);
+            if (el.find('td').length) {
+                var id      = el.find('input.select-media-id').val();
+                var source  = el.find('input.select-media-source').val();
+                // Saving uploaded medias
+                if ('upload' == source) {
+                    var url = '<?php echo $this->url('', array(
+                        'controller' => 'media',
+                        'action'     => 'save',
+                    )) ?>' + 'fake_id-' + id;
+                    $.get(url, function(result) {
+                        result = $.parseJSON(result);
+                        if (result.status) {
+                            el.find('input.select-media-id').val(result.data.id);
+                            el.find('input.select-media-source').val('media');
+                        } else {
+                            alert(result.data.message);
+                        }
+                    }).done(function() {
+                        self.insertMediaIntoDraft(el);
+                    });
+                } else {
+                    self.insertMediaIntoDraft(el);
+                }
+            }
+        });
+    },
+    insertMediaIntoDraft    : function(obj) {
+        // Saving media into article asset
+        var el = obj;
+        var id      = el.find('input.select-media-id').val();
+        var source  = el.find('input.select-media-source').val();
+        if ('media' == source) {
+            var url = '<?php echo $this->url('', array(
+                'controller' => 'draft',
+                'action'     => 'save-asset',
+                'type'       => 'image',
+            )) ?>' + '/media-' + id + '/' + page.ajaxId();
+            $.get(url, function(result) {
+                result = $.parseJSON(result);
+                if (result.status) {
+                    el.parents('tr').remove();
+                    var content = _.template(
+                        $("#temp-gallery").html(),
+                        result.data,
+                        {
+                            variable: 'data'
+                        }
+                    );
+                    $('.gallery-list').append(content);
+                    el.remove();
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
     }
 });
+
 var TipView = {
     template: '<% _.each(search,function(item) { %><li class="typeahead-item" data-id="<%= item.id %>"><a href="javascript:void(0)" <% if(_.indexOf(exist,item.id)!=-1) { %>style="color:#B94A48;"<% } %> ><%= item.name %></a></li><% }); %>',
     template2:'<%_.each(data,function(item) { %><span class="label label-info" data-id="<%= item.id %>"><%= item.name %><i class="icon-remove"></i></span><% }); %>',

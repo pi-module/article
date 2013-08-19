@@ -91,6 +91,8 @@ class DraftController extends ActionController
             'defaultFeatureThumb'   => Pi::service('asset')->getModuleAsset(
                                            $this->config('default_feature_thumb'),
                                            $module),
+            'contentImageWidth'     => $this->config('content_thumb_width'),
+            'contentImageHeight'    => $this->config('content_thumb_height'),
         ));
     }
 
@@ -1023,12 +1025,12 @@ class DraftController extends ActionController
                     'size'         => $media['size'],
                     'w'            => $imageSize['0'],
                     'h'            => $imageSize['1'],
-                    'deleteUrl'    => $this->url(
+                    'downloadUrl'  => $this->url(
                         '',
                         array(
-                            'controller' => 'draft',
-                            'action'     => 'remove-asset',
-                            'id'         => $asset['id'],
+                            'controller' => 'media',
+                            'action'     => 'download',
+                            'id'         => $media['id'],
                         )
                     ),
                     'preview_url' => Pi::url($media['url']),
@@ -1642,6 +1644,9 @@ class DraftController extends ActionController
                 'id'         => $media,
             )),
         );
+        if ('image' == $type) {
+            $return['data']['preview_url'] = Pi::url($rowMedia->url);
+        }
         $return['status']  = true;
         $return['message'] = __('Save asset successful!');
         echo json_encode($return);
