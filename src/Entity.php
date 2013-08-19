@@ -146,7 +146,9 @@ class Entity
         }
         
         $articles    = Statistics::getTopVisits($limit, $module);
-        $where['id'] = array_keys($articles);
+        if (!empty($articles)) {
+            $where['id'] = array_keys($articles);
+        }
         
         $columns = array(
             'id',

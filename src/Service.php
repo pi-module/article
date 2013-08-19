@@ -417,6 +417,7 @@ class Service
         if ('my' == $from) {
             $where['uid'] = Pi::registry('user')->id;
         }
+        $where = array_filter($where);
         $modelDraft = Pi::model('draft', $module);
         $select     = $modelDraft->select()
             ->columns(array('status', 'total' => new Expression('count(status)'), 'category'))
@@ -445,6 +446,7 @@ class Service
         if ('my' == $from) {
             $where['uid'] = Pi::registry('user')->id;
         }
+        $where = array_filter($where);
         $select = $modelArticle->select()
                                ->columns(array('total' => new Expression('count(id)')))
                                ->where($where);
@@ -510,7 +512,7 @@ class Service
             if ($author) {
                 $result['author'] = $author->toArray();
                 if (empty($result['author']['photo'])) {
-                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $this->module);
+                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $module);
                 }
             }
         }
@@ -698,6 +700,7 @@ class Service
                     $rules[$key][$resource] = true;
                 }
             }
+            $rules = empty($rules) ? true : $rules;
             return $rules;
         }
         

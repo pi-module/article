@@ -178,7 +178,7 @@
         <div id="jsAttachment" class="ml98">
             <div style="margin-bottom:20px;" >
                 <!--<strong><?php _e('Attachment:') ?></strong>-->
-                <span class="btn btn-primary fileinput-button" data-toggle="modal" href="#multi-attachements-box">
+                <span class="btn btn-primary fileinput-button" data-toggle="modal" href="#multi-attachments-box">
                     <?php _e('Choose files') ?>
                     <input type="file" name="attachment" multiple>
                 </span>
@@ -189,7 +189,7 @@
                     </span>
                 </span>
             </div>    
-            <div class="clearfix attachment-list"></div>
+            <table class="attachment-list table table-condensed"></table>
             <!-- Starting attachment modal box -->
             <?php include 'media-attachments-box.phtml' ?>
         </div>
@@ -507,24 +507,35 @@
         <% }} %>
     </div>
 </script>
-<script id="temp-attachment" type="text/template">
-    <div class="progress-text">
-        <a href="<%= data.download_url %>" class="attachment-name"><%= data.originalName %></a>
+<script id="temp-media" type="text/template">
+    <div class="progress-text" data-id="<%= data.id %>">
+        <a href="<%= data.download_url %>" class="uploaded-media-name"><%= data.originalName %></a>
         <div class="attachment-action">
-            <% if(data.progress){ %>
-            <a href="javascript:void(0)" style="margin-right:120px;" class="pull-right cancel"><?php _e('Cancel'); ?></a>
+            <% if (data.progress) { %>
+            <a href="javascript:void(0)" style="margin-right:120px;" class="pull-right cancel"><?php _e('Cancel') ?></a>
             <% } else { %>
-            <a href="javascript:void(0)" class="delete visible-hide" style="margin-right:20px;"><?php _e('Delete'); ?></a>
-            <a href="javascript:void(0)" class="insert"><?php _e('Insert'); ?></a>
+            <a href="javascript:void(0)" class="delete visible-hide" style="margin-right: 20px;"><?php _e('Delete') ?></a>
+            <a href="javascript:void(0)" class="insert"><?php _e('Insert') ?></a>
             <% } %>
         </div>
     </div>
-    <% if(data.progress){ %>
+    <% if (data.progress) { %>
     <div class="progress progress-info">
         <div class="bar" style="width:<%= data.progress %>%;">
         </div>
     </div>
     <% } %>    
+</script>
+<script id="temp-attachment" type="text/template">
+    <tr class="attchment-item" data-id="<%=data.id %>" data-download="<%= data.downloadUrl %>" data-title="<%= data.title %>">
+        <td>
+            <a href="<%= data.downloadUrl %>" class="attachment-name"><%= data.title %></a>
+        </td>
+        <td>
+            <a href="javascript:void(0)" class="delete"><?php _e('Delete') ?></a><span class="muted"> | </span>
+            <a href="javascript:void(0)" class="insert"><?php _e('Insert') ?></a>
+        </td>
+    </tr>
 </script>
 <script id="temp-feature" type="text/template">
     <% if(data.preview_url) { %>
@@ -597,7 +608,7 @@ var page = {
             }, this.autosaveInterval * 1000 * 60);
         }
         <?php } ?>
-        this.attachmentUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'attachment')); ?>"+this.ajaxId();
+        this.attachmentUrl="<?php echo $this->url('', array('controller' => 'media', 'action' => 'upload', 'name' => 'attachment')); ?>";
         this.featureUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'feature.image')); ?>"+this.ajaxId();
         this.galleryUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'image')); ?>"+this.ajaxId();
         this.timer=setInterval(_.bind(this.loadSaveTime,this),100);
@@ -967,6 +978,7 @@ function fileupload(name,url,formate,size,collection) {
     var self=this;
     var obj = {
         url: url,
+        sequentialUploads: true,
         formData: function () {
             return [];
         },
@@ -1014,9 +1026,24 @@ function fileupload(name,url,formate,size,collection) {
                 }
                 if (resp.status == 1) {
                     el.find(".bar").css("width", "100%");
-                    resp.data['progress']=0;
+                    resp.data['progress'] = 0;
                     if (collection) {
-                        collection.getByCid(el.attr("data-cid")).set(resp.data);
+                        var content = '<tr>'
+                                    + '<td>' + resp.data.originalName + '</td>'
+                                    + '<td><a class="attachment-remove" href="#"'
+                                        + ' data-id="' + resp.data.id + '"'
+                                        + ' data-source="upload"'
+                                        + ' data-title="' + resp.data.originalName + '">'
+                                        + '<?php _e('Remove') ?>' + '</a></td>'
+                                        + '<input class="select-media-id" type="hidden" value="' + resp.data.id + '" />'
+                                        + '<input class="select-media-source" type="hidden" value="upload" />'
+                                    + '</tr>';
+                        // Removing uploaded info
+                        collection.get(el.attr("data-cid")).set(resp.data);
+                        $('.progress-text[data-id="' + resp.data.id + '"]').parent().remove();
+                        // Moving uploaded rows into table storing selected media
+                        $('#attachment-select-lists tbody').append(content);
+                        //
                     } else {
                         self.render(resp.data);
                     }
@@ -1039,14 +1066,15 @@ function fileupload(name,url,formate,size,collection) {
             forceIframeTransport: true
         });
     }
-   this.$("input[name="+name+"]").fileupload(obj);
+    this.$("input[name="+name+"]").fileupload(obj);
 }    
 var attachmentCollection = new Backbone.Collection(<?php echo json_encode($attachments); ?>);
-var AttachmentItemView = Backbone.View.extend({
-    className: "attachment-item",
+var mediaCollection = new Backbone.Collection();
+var MediaItemView = Backbone.View.extend({
+    className: "media-item",
     events: {
-        "click .delete": "removeFile",
-        "click .insert": "insertEditor",
+        "click .delete": "removeUploadedMedia",
+        "click .insert": "insertUploadedMedia",
         "click .cancel": "cancel"
     },
     initialize: function () {
@@ -1055,23 +1083,10 @@ var AttachmentItemView = Backbone.View.extend({
         this.$el.attr("data-cid", this.model.cid);
     },
     render: function () {
-        this.$el.html(_.template($("#temp-attachment").html(), this.model.toJSON(), {
+        this.$el.html(_.template($("#temp-media").html(), this.model.toJSON(), {
             variable: 'data'
         }));
         return this;
-    },
-    removeFile: function () {
-        if (confirm("<?php _e('Delete this attachment will also remove it in editor ')?>")) {
-            $(page.editor.document.getBody().$).find("a[href='" + this.model.get("download_url") + "']").remove();
-            this.model.destroy({
-                url: this.model.get("delete_url")
-            });
-        }
-    },
-    insertEditor: function () {
-        var html = '<a href="<%= download_url %>"><%= originalName %></a>';
-        page.editor.insertHtml(_.template(html, this.model.toJSON()));
-        
     },
     cancel: function () {
         this.model.destroy();
@@ -1080,15 +1095,19 @@ var AttachmentItemView = Backbone.View.extend({
 var AttachmentListView = Backbone.View.extend({
     el          : $("#jsAttachment"),
     events      : {
-        "click .media-search" : "searchMedia",
-        "click .media-insert" : "insertMedia",
-        "click .attachment-remove" : "removeMedia"
+        "click .media-search"       : "searchMedia",
+        "click .media-insert"       : "insertMedia",
+        "click .attachment-remove"  : "removeMedia",
+        "click #attachment-process" : "processMedia",
+        "click #attachment-cancel"  : "cancelMedia",
+        "click .delete"             : "removeFile",
+        "click .insert"             : "insertEditor"
     },
     initialize: function () {
-        this.attachmentList = this.$(".attachment-list");
-        attachmentCollection.on("add", this.addOne, this);
-        this.render();
-        fileupload.call(this,"attachment",page.attachmentUrl,page.attachFormate,page.attachMax,attachmentCollection);
+        this.attachmentList = this.$("#attachment-upload-list");
+        mediaCollection.on("add", this.addOne, this);
+        this.initAttachment();
+        fileupload.call(this,"attachment",page.attachmentUrl,page.attachFormate,page.attachMax,mediaCollection);
     },
     render: function () {
         var m = attachmentCollection.models;
@@ -1096,10 +1115,52 @@ var AttachmentListView = Backbone.View.extend({
             this.addOne(m[i]);
         }
     },
+    initAttachment : function() {
+        var m = attachmentCollection.models;
+        var content;
+        for (var i = 0; i < m.length; i++) {
+            content = _.template(
+                $("#temp-attachment").html(),
+                m[i].toJSON(),
+                {
+                    variable: 'data'
+                }
+            );
+            $('.attachment-list').append(content);
+        }
+    },
     addOne: function (model) {
-        this.attachmentList.append(new AttachmentItemView({
+        this.attachmentList.append(new MediaItemView({
             model: model
         }).render().el);
+    },
+    removeFile: function (e) {
+        if (confirm("<?php _e('This operation will also remove attachment in editor, do you still want to continue?')?>")) {
+            var el = $(e.target).parents('tr');
+            var id = el.data('id');
+            var downloadUrl = el.data('download');
+            $(page.editor.document.getBody().$).find("a[href='" + downloadUrl + "']")
+                                               .remove();
+            var url = '<?php echo $this->url('', array(
+                'controller' => 'draft',
+                'action'     => 'remove-asset',
+            )) ?>' + 'id-' + id;
+            $.get(url, function(result) {
+                result = $.parseJSON(result);
+                if (result.status) {
+                    el.remove();
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
+    },
+    insertEditor: function (e) {
+        var el = $(e.target).parents('tr');
+        var downloadUrl = el.data('download');
+        var title       = el.data('title');
+        var html = '<a href="' + downloadUrl + '">' + title + '</a>';
+        page.editor.insertHtml(html);
     },
     searchMedia     : function() {
         var title = $('input[name="attachment-title"]').val();
@@ -1133,7 +1194,6 @@ var AttachmentListView = Backbone.View.extend({
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');
-        var url   = $(e.target).attr('data-url');
         var title = $(e.target).attr('data-title');
         var content = '<tr>'
                       + '<td>' + title + '</td>'
@@ -1142,11 +1202,12 @@ var AttachmentListView = Backbone.View.extend({
                           + ' data-source="media"'
                           + ' data-title="' + title + '">'
                           + '<?php _e('Remove') ?>' + '</a></td>'
+                      + '<input class="select-media-id" type="hidden" value="' + id + '" />'
+                      + '<input class="select-media-source" type="hidden" value="media" />'
                       + '</tr>';
         // Setting data
         $('#attachment-select-lists tbody').append(content);
         $(e.target).css('display', 'none');
-        //this.setMediaData('media_id-' + id, 'media');
     },
     removeMedia : function(e) {
         var id     = $(e.target).attr('data-id');
@@ -1154,8 +1215,85 @@ var AttachmentListView = Backbone.View.extend({
         if ('media' == source) {
             $(e.target).parents('tr').remove();
             $('.media-insert[data-id="' + id + '"]').css('display', 'block');
-        } else {
-            
+        } else if ('upload' == source) {
+            if (confirm("<?php _e('Do you really want to remove this media?')?>")) {
+                var url = '<?php echo $this->url('', array(
+                    'controller' => 'media',
+                    'action'     => 'remove',
+                    )) ?>' + 'fake_id-' + id;
+                $.get(url, function(result) {
+                    result = $.parseJSON(result);
+                    if (result.status) {
+                        // Remove item in selected area
+                        $(e.target).parents('tr').remove();
+                    }
+                });
+            }
+        }
+    },
+    processMedia    : function() {
+        var self   = this;
+        // This status only use to checking whether a AJAX request is finish
+        var status = new Array();
+        var i      = 0;
+        
+        $('#attachment-select-lists tr').each(function() {
+            var el = $(this);
+            if (el.find('td').length) {
+                var id      = el.find('input.select-media-id').val();
+                var source  = el.find('input.select-media-source').val();
+                // Saving uploaded medias
+                if ('upload' == source) {
+                    status[++i] = false;
+                    var url = '<?php echo $this->url('', array(
+                        'controller' => 'media',
+                        'action'     => 'save',
+                    )) ?>' + 'fake_id-' + id;
+                    $.get(url, function(result) {
+                        result = $.parseJSON(result);
+                        if (result.status) {
+                            el.find('input.select-media-id').val(result.data.id);
+                            el.find('input.select-media-source').val('media');
+                        } else {
+                            alert(result.data.message);
+                        }
+                    }).done(function() {
+                        self.insertMediaIntoDraft(el);
+                    });
+                } else {
+                    self.insertMediaIntoDraft(el);
+                }
+            }
+        });
+    },
+    insertMediaIntoDraft    : function(obj) {
+        // Saving media into article asset
+        var el = obj;
+        var id      = el.find('input.select-media-id').val();
+        var source  = el.find('input.select-media-source').val();
+        if ('media' == source) {
+            var url = '<?php echo $this->url('', array(
+                'controller' => 'draft',
+                'action'     => 'save-asset',
+                'type'       => 'attachment',
+            )) ?>' + '/media-' + id + '/' + page.ajaxId();
+            $.get(url, function(result) {
+                result = $.parseJSON(result);
+                if (result.status) {
+                    el.parents('tr').remove();
+                    var content = _.template(
+                        $("#temp-attachment").html(),
+                        result.data,
+                        {
+                            variable: 'data'
+                        }
+                    );
+                    $('.attachment-list').append(content);
+                    el.remove();
+                } else {
+                    alert(result.message);
+                }
+            });
         }
     }
 });
@@ -1774,7 +1912,7 @@ var RelatedView = Backbone.View.extend({
 });
 page.init();
 new BasicInputView;
-new ReleaseProcess; 
+new ReleaseProcess;
 new AttachmentListView;
 new FeatureView;
 new GalleryListView;

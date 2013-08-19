@@ -352,6 +352,9 @@ class TopicController extends ActionController
         
         // Getting article topic
         $articleIds  = array_keys($data);
+        if (empty($articleIds)) {
+            $articleIds = array(0);
+        }
         $rowRelation = $this->getModel('article_topic')->select(array('article' => $articleIds));
         $relation    = array();
         foreach ($rowRelation as $row) {

@@ -44,7 +44,7 @@ class Account extends Select
             
             // Getting account ID
             $rowset = Pi::model('user_role')->select(array('role' => $roles));
-            $ids    = array();
+            $ids    = array(0);
             foreach ($rowset as $row) {
                 $ids[$row->user] = $row->user;
             }
@@ -57,7 +57,7 @@ class Account extends Select
             $model  = Pi::model('user');
             $select = $model->select()->where($where)
                                       ->columns(array('id', 'name'))
-                                      ->order(array('name ASC'));
+                                      ->order('name ASC');
             $rowset = $model->selectWith($select);
             $account = array(0 => __('Null'));
             foreach ($rowset as $row) {
