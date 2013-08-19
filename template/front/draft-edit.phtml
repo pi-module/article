@@ -68,7 +68,9 @@
     #jsAlert >div {
         margin-left: 105px;
     }
-
+    .modal-body ul {
+        margin-bottom: 20px;
+    }
 </style>
 
 <?php if (isset($error)) { ?>
@@ -176,18 +178,20 @@
         <div id="jsAttachment" class="ml98">
             <div style="margin-bottom:20px;" >
                 <!--<strong><?php _e('Attachment:') ?></strong>-->
-                <span class="btn btn-primary fileinput-button">
+                <span class="btn btn-primary fileinput-button" data-toggle="modal" href="#multi-attachements-box">
                     <?php _e('Choose files') ?>
                     <input type="file" name="attachment" multiple>
                 </span>
                 <span class="muted">
-                    <?php echo $attachment_extension ?>
+                    <?php echo $this->escape($mediaExtension) ?>
                     <span style="margin-left:5px;">
-                      <?php _e('Max Size:'); ?><?php echo $max_attachment_size / (1024 * 1024) . 'M'; ?>
+                      <?php _e('Max Size:'); ?><?php echo $maxMediaSize / (1024 * 1024) . 'M'; ?>
                     </span>
                 </span>
             </div>    
-            <div class="clearfix attachment-list" ></div>
+            <div class="clearfix attachment-list"></div>
+            <!-- Starting attachment modal box -->
+            <?php include 'media-attachments-box.phtml' ?>
         </div>
     </div>
     <div class="span4">
@@ -311,7 +315,7 @@
             </div>
         </div>
         <?php if (in_array('image', $elements)) { ?>
-        <div class="widget" id="jsFeature">
+        <div class="widget" id="jsUpload">
             <div class="widget-header">
                 <strong><?php _e('Feature image') ?></strong>
             </div>
@@ -319,12 +323,13 @@
                 <div class="upload-image-wrap" style="cursor: default; width: <?php echo $thumbWidth . 'px' ?>; height: <?php echo $thumbHeight . 'px' ?>;">
                 </div>
                 <div class="pull-left" style="margin-top: 20px;">
-                    <span class="btn fileinput-button">
-                    <?php _e('Upload') ?>
-                    <input type="file" name="featureImage">
-                    </span>
-                    <span class="muted"><?php echo _e('image size '). $width . '*' . $height ; ?></span>
+                    <button class="btn upload fileinput-button" data-toggle="modal" href="#upload-box">
+                        <?php _e('Upload') ?>
+                    </button>
+                    <span class="muted"><?php echo _e('image size '). $width . '*' . $height; ?></span>
                 </div>
+                <!-- Start modal box -->
+                <?php include 'media-image-box.phtml' ?>
             </div>
         </div>
         <div class="widget" id="jsGallery">
@@ -578,6 +583,9 @@ var page = {
     status: "<?php echo $draft['status']; ?>",
     form: $("form.row-fluid"),
     from:"<?php echo $from; ?>",
+    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' + '<?php echo $defaultMediaImage ?>' + '" />',
+    mediaFakeId : '<?php echo uniqid() ?>',
+    featureFakeId : '<?php echo uniqid() ?>',
     init: function () {
         this.jump = this.$("[name=jump]");
         <?php if (!$draft['article']) { ?>
@@ -637,14 +645,14 @@ var page = {
         });
         
     },
-    editor: CKEDITOR.instances.content,
-    autosaveInterval: '<?php echo $autosave_interval; ?>',
-    featureImg:"<?php echo $featureThumb; ?>",
-    attachFormate:"<?php echo $attachment_extension; ?>".split(","),
-    attachMax:"<?php echo $max_attachment_size; ?>",
-    imageExtension:"<?php echo $image_extension; ?>".split(","),
-    imageMax:"<?php echo $max_image_size; ?>",
-    autoSaveTime:function(){
+    editor:             CKEDITOR.instances.content,
+    autosaveInterval:   '<?php echo $this->escape($autoSave) ?>',
+    featureImg:         "<?php echo $this->escape($featureThumb) ?>",
+    attachFormate:      "<?php echo $this->escape($mediaExtension) ?>".split(","),
+    attachMax:          "<?php echo $this->escape($maxMediaSize) ?>",
+    imageExtension:     "<?php echo $this->escape($imageExtension) ?>".split(","),
+    imageMax:           "<?php echo $this->escape($maxImageSize) ?>",
+    autoSaveTime:       function() {
         var i=0;
         $(".auto-save-time").html("Draft saved just now");
         clearInterval(this.saveInterval);
@@ -1070,7 +1078,12 @@ var AttachmentItemView = Backbone.View.extend({
     }
 });
 var AttachmentListView = Backbone.View.extend({
-    el: $("#jsAttachment"),
+    el          : $("#jsAttachment"),
+    events      : {
+        "click .media-search" : "searchMedia",
+        "click .media-insert" : "insertMedia",
+        "click .attachment-remove" : "removeMedia"
+    },
     initialize: function () {
         this.attachmentList = this.$(".attachment-list");
         attachmentCollection.on("add", this.addOne, this);
@@ -1087,34 +1100,299 @@ var AttachmentListView = Backbone.View.extend({
         this.attachmentList.append(new AttachmentItemView({
             model: model
         }).render().el);
+    },
+    searchMedia     : function() {
+        var title = $('input[name="attachment-title"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'search',
+        )); ?>' + 'title-' + title, function(result) {
+            var lists = $.parseJSON(result);
+            var content = '<table class="table table-bordered">'
+                            + '<tbody><tr>'
+                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+            for (i in lists) {
+                content += '<tr>'
+                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
+                            + '<td>' + lists[i].title + '</td>'
+                            + '<td>' + lists[i].size + '</td>'
+                            + '<td><a class="media-insert" href="#"'
+                                + ' data-id="' + lists[i].id + '"'
+                                + ' data-url="' + lists[i].url + '"'
+                                + ' data-title="' + lists[i].title + '"'
+                                + '>' 
+                                + '<?php _e('Insert') ?>' + '</a></td>'
+                            + '</tr>';
+            }
+            content += '</tbody></table>';
+            $('#attachment-search-result').html(content);
+        });
+    },
+    insertMedia : function(e) {
+        var id    = $(e.target).attr('data-id');
+        var url   = $(e.target).attr('data-url');
+        var title = $(e.target).attr('data-title');
+        var content = '<tr>'
+                      + '<td>' + title + '</td>'
+                      + '<td><a class="attachment-remove" href="#"'
+                          + ' data-id="' + id + '"'
+                          + ' data-source="media"'
+                          + ' data-title="' + title + '">'
+                          + '<?php _e('Remove') ?>' + '</a></td>'
+                      + '</tr>';
+        // Setting data
+        $('#attachment-select-lists tbody').append(content);
+        $(e.target).css('display', 'none');
+        //this.setMediaData('media_id-' + id, 'media');
+    },
+    removeMedia : function(e) {
+        var id     = $(e.target).attr('data-id');
+        var source = $(e.target).attr('data-source');
+        if ('media' == source) {
+            $(e.target).parents('tr').remove();
+            $('.media-insert[data-id="' + id + '"]').css('display', 'block');
+        } else {
+            
+        }
     }
 });
+// STARTING PROCESSING FEATURE IMAGE
 var FeatureView = Backbone.View.extend({
-    el: $("#jsFeature"),
-    events:{
-      "click .icon-remove":"clickRemove"  
+    mediaTemplate   : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
+                      + '<img src="<%=preview_url %>">'),
+    template        : _.template('<div class="black-bg"><i class="feature icon-remove"></i></div>'
+                      + '<img src="<%=preview_url %>">'),
+    events          : {
+        "click .feature.icon-remove":"remove",
+        "click .media.icon-remove": "removeUpload",
+        "click #media-search": "searchMedia",
+        "click .media-insert": "insertMedia",
+        "click .media-remove.close" : "removeMedia",
+        "click #media-close" : "cancel",
+        "click #media-cancel" : "cancel",
+        "click #media-process" : "processImage"
     },
-    initialize: function () {
+    initialize      : function() {
         if (page.featureImg) {
             this.render({
                 preview_url: page.featureImg
             });
         }
-        fileupload.call(this,"featureImage",page.featureUrl,page.imageExtension,page.imageMax);
+        this.$el   = $("#jsUpload");
+        this.input = $('input[name="upload"]');
+        this.fileupload();
     },
-    render: function (obj) {
-        return $(_.template($("#temp-feature").html(), obj || {}, {
-            variable: 'data'
-        })).appendTo(this.$(".upload-image-wrap").html(""));
+    // Fetching image by upload
+    fileupload      : function() {
+        var self = this;
+        var url  = '<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'upload',
+            'type'       => 'image',
+            'width'      => $width,
+            'height'     => $height,
+        )); ?>/fake_id-' + page.mediaFakeId;
+        this.input.fileupload({
+            formData    : function() {
+                return [];
+            },
+            url         : url,
+            done        : function(e, data) {
+                var d = $.parseJSON(data.result);
+                if (d.status == 1) {
+                    self.renderUpload(d.data);
+                    // Clear hidden input value and select image of media section
+                    self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
+                    $('#media-select-result').html('');
+                } else {
+                    alert(_.values(d.message).join(","));
+                }
+            }
+        }).bind('fileuploadsend', function(e, data) {
+            data.url = '<?php echo $this->url('', array(
+                'controller' => 'media',
+                'action'     => 'upload',
+                'type'       => 'image',
+                'width'      => $width,
+                'height'     => $height,
+            )); ?>/fake_id-' + page.mediaFakeId;
+        });  
     },
-    clickRemove:function(){
-        var self=this;
-        console.log(this);
-        $.getJSON("<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'removeFeatureImage')); ?>"+page.ajaxId()).done(function(resp){
-            self.render({
-                preview_url:""
-            });
+    removeUpload    : function(clearData) {
+        // Setting initial value of parameter
+        if (clearData != false) {
+            clearData = true;
+        }
+        
+        var self = this;
+        $.getJSON('<?php echo $this->url('', array('controller' => 'media', 'action' => 'remove')); ?>fake_id-'+ page.mediaFakeId).done(function() {
+            $("#media-image").html(page.mediaDefaultTemplate);
+            if (clearData == true) {
+                self.clearMediaData();
+            }
         });
+    },
+    renderUpload    : function(obj) {
+        obj.preview_url = obj.preview_url + '?' + new Date().getTime();
+        $('#media-image').html(this.mediaTemplate(obj));
+    },
+    saveUploadToMedia : function(id) {
+        var url = '<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'save',
+        )) ?>' + id;
+        var self = this;
+        $.ajax({
+            cache:    false,
+            async:    false,
+            dataType: 'json',
+            type:     'get',
+            url:      url,
+            success:  function(result) {
+                if (result.status) {
+                    $("#media-image").html(page.mediaDefaultTemplate);
+                    self.renderMessage('success', result.data.message);
+                    self.setMediaData('media_id-' + result.data.id, 'media');
+                    page.mediaFakeId = result.data.newid;
+                } else {
+                    self.renderMessage('error', result.data.message);
+                }
+            },
+            error:    function() {
+                self.renderMessage('error', '<?php _e('Error ocurred when request saving image!') ?>');
+            }
+        })
+    },
+    // Processing feature image
+    saveFeature    : function() {
+        var self    = this;
+        var mediaId = $('input[name="image-id"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'draft',
+            'action'     => 'save-image',
+        )); ?>' + 'id-' + page.id + '/fake_id-' + page.featureFakeId + '/' + mediaId, function(result) {
+            result = $.parseJSON(result);
+            if (result.status) {
+                self.render({preview_url: result.data.preview_url});
+                // Remove all generated data
+                self.removeMedia();
+                $("#media-image").html(page.mediaDefaultTemplate);
+            } else {
+                alert(result.message);
+            }
+        });
+    },
+    remove          : function() {
+        var self = this;
+        var parameter = '<?php echo $form->get('id')->getValue()  
+                         ? 'id-' . $form->get('id')->getValue()
+                         : null ?>';
+        if (!parameter) {
+            parameter = 'fake_id-' + page.featureFakeId;
+        }
+        $.getJSON('<?php echo $this->url('', array(
+            'controller' => 'draft', 'action' => 'remove-image')); ?>' + parameter).done(function() {
+            var content = '<img src="<?php echo $this->escape($defaultFeatureThumb) ?>" />';
+            $(".upload-image-wrap").html(content);
+        });  
+    },
+    render          : function(obj) {
+        obj.preview_url = obj.preview_url + '?' + new Date().getTime();
+        $(".upload-image-wrap").html(this.template(obj));
+    },
+    // Fetching image from media
+    searchMedia     : function() {
+        var title = $('input[name="media-title"]').val();
+        $.get('<?php echo $this->url('', array(
+            'controller' => 'media',
+            'action'     => 'search',
+            'type'       => 'image',
+        )); ?>/' + 'title-' + title, function(result) {
+            var lists = $.parseJSON(result);
+            var content = '<table class="table table-striped">'
+                            + '<tbody><tr>'
+                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+            for (i in lists) {
+                content += '<tr>'
+                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
+                            + '<td>' + lists[i].title + '</td>'
+                            + '<td>' + lists[i].size + '</td>'
+                            + '<td class="media-insert"><a href="#"'
+                                + ' data-id="' + lists[i].id + '"'
+                                + ' data-url="' + lists[i].url + '"'
+                                + ' data-title="' + lists[i].title + '"'
+                                + '>' 
+                                + '<?php _e('Insert') ?>' + '</a></td>'
+                            + '</tr>';
+            }
+            content += '</tbody></table>';
+            $('#media-lists').html(content);
+        });
+    },
+    insertMedia : function(e) {
+        var id    = $(e.target).attr('data-id');
+        var url   = $(e.target).attr('data-url');
+        var title = $(e.target).attr('data-title');
+        var content = '<div class="alert alert-success">'
+                      + '<button class="media-remove close" style="line-height: 40px" data-dismiss="alert" type="button">×</button>'
+                      + '<span style="font-weight: bold; width: 100%">' + '<?php _e('Image choosed: ') ?>'
+                      + '</span><img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
+                      + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
+                      + '</div>';
+        // Clearing data from upload
+        this.removeUpload(false);
+        
+        // Setting data
+        $('#media-select-result').html(content);
+        this.setMediaData('media_id-' + id, 'media');
+    },
+    removeMedia : function() {
+        $('#media-select-result').html('');
+        this.clearMediaData();
+    },
+    clearMediaData : function() {
+        $('input[name="image-id"]').val('');
+        $('input[name="image-source"]').val('');
+    },
+    setMediaData : function(value, source) {
+        $('input[name="image-id"]').val(value);
+        $('input[name="image-source"]').val(source);
+    },
+    // Processing data from uploading and media
+    cancel : function() {
+        var source = $('input[name="image-source"]').val();
+        
+        if ('upload' == source) {
+            this.removeUpload();
+        } else if ('media' == source) {
+            this.removeMedia();
+        }
+    },
+    processImage : function() {
+        var self   = this;
+        var source = $('input[name="image-source"]').val();
+        var id     = $('input[name="image-id"]').val();
+        
+        // Saving uploaded image into media section
+        if ('upload' == source) {
+            self.saveUploadToMedia(id);
+        }
+
+        // Creating temporary image for feature
+        self.saveFeature();
+    },
+    renderMessage : function(status, message) {
+        var content = '<div class="alert alert-' + status + '">'
+                      + '<button class="close" data-dismiss="alert" type="button">×</button>'
+                      + message
+                      + '</div>';
+        $('#message-box').html(content);
     }
 });
 var galleryCollection = new Backbone.Collection(<?php echo json_encode($images); ?>);

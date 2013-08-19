@@ -201,8 +201,11 @@ class MediaController extends ActionController
                 'router'    => $this->getEvent()->getRouter(),
                 'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
                 'params'    => array(
-                    'type'      => $type,
-                    'keyword'   => $keyword,
+                    'module'     => $this->getModule(),
+                    'controller' => 'media',
+                    'action'     => 'list',
+                    'type'       => $type,
+                    'keyword'    => $keyword,
                 ),
             ));
         

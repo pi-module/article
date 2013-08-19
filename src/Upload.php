@@ -352,54 +352,6 @@ class Upload
         return $result ? $fileName : false;
     }
 
-    public static function saveAuthorPhoto($uploadInfo)
-    {
-        $result = false;
-        $size   = array();
-
-        $fileName       = $uploadInfo['tmp_name'];
-        $absoluteName   = Pi::path($fileName);
-
-        $size = array(
-//            'x' => $uploadInfo['x'],
-//            'y' => $uploadInfo['y'],
-            'w' => $uploadInfo['w'],
-            'h' => $uploadInfo['h'],
-        );
-
-        $image = new Image($absoluteName);
-
-        if ($image->isValid()) {
-            $result = $image->save($absoluteName, $size, Image::OP_TYPE_SCALE, $image->getType());
-        }
-
-        return $result ? $fileName : false;
-    }
-
-    public static function saveCategoryImage($uploadInfo)
-    {
-        $result = false;
-        $size   = array();
-
-        $fileName       = $uploadInfo['tmp_name'];
-        $absoluteName   = Pi::path($fileName);
-
-        $size = array(
-//            'x' => $uploadInfo['x'],
-//            'y' => $uploadInfo['y'],
-            'w' => $uploadInfo['w'],
-            'h' => $uploadInfo['h'],
-        );
-
-        $image = new Image($absoluteName);
-
-        if ($image->isValid()) {
-            $result = $image->save($absoluteName, $size, Image::OP_TYPE_SCALE, $image->getType());
-        }
-
-        return $result ? $fileName : false;
-    }
-
     public static function saveFeatureImage($uploadInfo)
     {
         $result = false;

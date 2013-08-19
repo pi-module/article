@@ -67,6 +67,7 @@ CREATE TABLE `{draft}` (
   `uid`             int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `author`          int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `category`        int(10) UNSIGNED                NOT NULL DEFAULT 0,
+  `image`           varchar(255)                    NOT NULL DEFAULT '',
   `time_submit`     int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_publish`    int(10) UNSIGNED                NOT NULL DEFAULT 0,
   `time_update`     int(10) UNSIGNED                NOT NULL DEFAULT 0,

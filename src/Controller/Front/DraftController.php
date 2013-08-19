@@ -33,6 +33,8 @@ use Module\Article\Service;
 use Module\Article\Compiled;
 use Module\Article\Entity;
 use Module\Article\Controller\Admin\ConfigController as Config;
+use Pi\File\Transfer\Upload as UploadHandler;
+use Module\Article\Media;
 
 /**
  * Public action for operating draft 
@@ -68,20 +70,27 @@ class DraftController extends ActionController
      */
     protected function setModuleConfig()
     {
+        $module = Pi::service('module')->current();
         $this->view()->assign(array(
             'width'                 => $this->config('feature_width'),
             'height'                => $this->config('feature_height'),
-            'thumb_width'           => $this->config('feature_thumb_width'),
-            'thumb_height'          => $this->config('feature_thumb_height'),
-            'image_extension'       => $this->config('image_extension'),
-            'max_image_size'        => Upload::fromByteString($this->config('max_image_size')),
-            'attachment_extension'  => $this->config('attachment_extension'),
-            'max_attachment_size'   => Upload::fromByteString($this->config('max_attachment_size')),
-            'autosave_interval'     => $this->config('autosave_interval'),
+            'thumbWidth'            => $this->config('feature_thumb_width'),
+            'thumbHeight'           => $this->config('feature_thumb_height'),
+            'imageExtension'        => $this->config('image_extension'),
+            'maxImageSize'          => Media::transferSize($this->config('max_image_size'), false),
+            'mediaExtension'        => $this->config('media_extension'),
+            'maxMediaSize'          => Media::transferSize($this->config('max_media_size'), false),
+            'autoSave'              => $this->config('autosave_interval'),
             'max_summary_length'    => $this->config('max_summary_length'),
             'max_subject_length'    => $this->config('max_subject_length'),
             'max_subtitle_length'   => $this->config('max_subtitle_length'),
             'default_source'        => $this->config('default_source'),
+            'defaultMediaImage'     => Pi::service('asset')->getModuleAsset(
+                                           $this->config('default_media_image'),
+                                           $module),
+            'defaultFeatureThumb'   => Pi::service('asset')->getModuleAsset(
+                                           $this->config('default_feature_thumb'),
+                                           $module),
         ));
     }
 
@@ -591,7 +600,7 @@ class DraftController extends ActionController
         }
 
         // Save image
-        $session    = Upload::getUploadSession($module);
+        $session    = Upload::getUploadSession($module, 'feature');
         if (isset($session->$id) || ($fakeId && isset($session->$fakeId))) {
             $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
 
@@ -1384,5 +1393,175 @@ class DraftController extends ActionController
         $result = $this->update($id);
 
         return $result;
+    }
+    
+    /**
+     * Saving image by AJAX, but do not save data into database.
+     * If the image is fetched by upload, try to receive image by Upload class,
+     * if the image is from media, try to copy the image from media to feature path.
+     * Finally the image data will be saved into session.
+     * 
+     */
+    public function saveImageAction()
+    {
+        Pi::service('log')->active(false);
+        $module  = $this->getModule();
+
+        $return  = array('status' => false);
+        $mediaId = Service::getParam($this, 'media_id', 0);
+        $id      = Service::getParam($this, 'id', 0);
+        $fakeId  = Service::getParam($this, 'fake_id', 0);
+        // Checking is id valid
+        if (empty($fakeId)) {
+            $return['message'] = __('Invalid ID!');
+            echo json_encode($return);
+            exit;
+        }
+        $rename  = $fakeId;
+        
+        $extensions = array_filter(explode(',', $this->config('image_extension')));
+        foreach ($extensions as &$ext) {
+            $ext = strtolower(trim($ext));
+        }
+        
+        if ($mediaId) {
+            $rowMedia = $this->getModel('media')->find($mediaId);
+            // Checking is media exists
+            if (!$rowMedia->id or !$rowMedia->url) {
+                $return['message'] = __('Media is not exists!');
+                echo json_encode($return);
+                exit;
+            }
+            // Checking is media an image
+            if (!in_array(strtolower($rowMedia->type), $extensions)) {
+                $return['message'] = __('Invalid file extension!');
+                echo json_encode($return);
+                exit;
+            }
+            
+            $destination = Upload::getTargetDir('feature', $module, true);
+            if (!Upload::mkdir($destination)) {
+                $return['message'] = __('Can not create destination directory!');
+                echo json_encode($return);
+                exit;
+            }
+            $ext         = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
+            $rename     .= '.' . $ext;
+            $fileName    = rtrim($destination, '/') . '/' . $rename;
+            if (!copy(Pi::path($rowMedia->url), Pi::path($fileName))) {
+                $return['message'] = __('Can not create image file!');
+                echo json_encode($return);
+                exit;
+            }
+        } else {
+
+            $rawInfo = $this->request->getFiles('upload');
+            
+            $destination = Upload::getTargetDir('feature', $module, true);
+            $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
+            if ($ext) {
+                $rename .= '.' . $ext;
+            }
+            
+            $upload      = new UploadHandler;
+            $upload->setDestination(Pi::path($destination))
+                   ->setRename($rename)
+                   ->setExtension($this->config('image_extension'))
+                   ->setSize($this->config('max_image_size'));
+
+            // Checking is uploaded file valid
+            if (!$upload->isValid()) {
+                $return['message'] = $upload->getMessages();
+                echo json_encode($return);
+                exit;
+            }
+            
+            $upload->receive();
+            $fileName = $destination . '/' . $rename;
+        }
+
+        // Scale image
+        $uploadInfo['tmp_name'] = $fileName;
+        $uploadInfo['w']        = $this->config('feature_width');
+        $uploadInfo['h']        = $this->config('feature_height');
+        $uploadInfo['thumb_w']  = $this->config('feature_thumb_width');
+        $uploadInfo['thumb_h']  = $this->config('feature_thumb_height');
+
+        Upload::saveImage($uploadInfo);
+
+        // Save image to draft
+        $rowDraft = $this->getModel('draft')->find($id);
+        if ($rowDraft) {
+            $rowDraft->image = $fileName;
+            $rowDraft->save();
+        } else {
+            // Or save info to session
+            $session = Upload::getUploadSession($module);
+            $session->$id = $uploadInfo;
+        }
+
+        $imageSize = getimagesize(Pi::path($fileName));
+
+        // Prepare return data
+        $return['data'] = array(
+            'originalName' => isset($rawInfo['name']) ? $rawInfo['name'] : $rename,
+            'size'         => isset($rawInfo['size']) ? $rawInfo['size'] : filesize(Pi::path($fileName)),
+            'w'            => $imageSize['0'],
+            'h'            => $imageSize['1'],
+            'preview_url'  => Pi::url(Upload::getThumbFromOriginal($fileName)),
+        );
+
+        $return['status'] = true;
+        echo json_encode($return);
+        exit();
+    }
+    
+    public function removeImageAction()
+    {
+        Pi::service('log')->active(false);
+        $id           = Service::getParam($this, 'id', 0);
+        $fakeId       = Service::getParam($this, 'fake_id', 0);
+        $affectedRows = 0;
+        $module       = $this->getModule();
+
+        if ($id) {
+            $rowDraft = $this->getModel('draft')->find($id);
+
+            if ($rowDraft && $rowDraft->image) {
+
+                if ($rowDraft->article) {
+                    $rowArticle    = $this->getModel('article')->find($rowDraft->article);
+                    if ($rowArticle && $rowArticle->image != $rowDraft->image) {
+                        // Delete file
+                        unlink(Pi::path($rowDraft->image));
+                        unlink(Pi::path(Upload::getThumbFromOriginal($rowDraft->image)));
+                    }
+                } else {
+                    unlink(Pi::path($rowDraft->image));
+                    unlink(Pi::path(Upload::getThumbFromOriginal($rowDraft->image)));
+                }
+
+                // Update db
+                $rowDraft->image = '';
+                $affectedRows    = $rowDraft->save();
+            }
+        } else if ($fakeId) {
+            $session = Upload::getUploadSession($module, 'feature');
+
+            if (isset($session->$fakeId)) {
+                $uploadInfo = $session->$fakeId;
+
+                $affectedRows = unlink(Pi::path($uploadInfo['tmp_name']));
+                unlink(Pi::path(Upload::getThumbFromOriginal($uploadInfo['tmp_name'])));
+
+                unset($session->$id);
+                unset($session->$fakeId);
+            }
+        }
+
+        return array(
+            'status'    => $affectedRows ? true : false,
+            'message'   => 'ok',
+        );
     }
 }
