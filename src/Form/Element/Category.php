@@ -36,7 +36,7 @@ class Category extends Select
     {
         if (empty($this->valueOptions)) {
             $module = $this->getOption('module') ?: Pi::service('module')->current();
-            $this->valueOptions = Pi::model('category', $module)->getSelectOptions();
+            $this->valueOptions = Pi::model('category', $module)->getSelectOptions(true);
         }
 
         return $this->valueOptions;
