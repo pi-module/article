@@ -295,6 +295,7 @@ td {
     height: 20px;
     padding: 0 10px;
     line-height: 20px;
+    list-style: none;
 }
 .article-related-list li:hover {
     background: #D8EEF6;
