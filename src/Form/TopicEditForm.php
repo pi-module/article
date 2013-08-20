@@ -109,14 +109,14 @@ class TopicEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'theme',
+            'name'       => 'template',
             'options'    => array(
-                'label'       => __('Theme'),
+                'label'       => __('Template'),
             ),
             'attributes' => array(
-                'description' => __('Topic theme'),
+                'description' => __('Topic template'),
             ),
-            'type'       => 'Module\Article\Form\Element\Theme',
+            'type'       => 'Module\Article\Form\Element\Template',
         ));
         
         $this->add(array(
@@ -126,7 +126,7 @@ class TopicEditForm extends BaseForm
             ),
             'attributes' => array(
                 'type'        => 'textarea',
-                'description' => __('Display in the website depends on theme.'),
+                'description' => __('Display in the website depends on template.'),
             ),
             
         ));

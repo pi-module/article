@@ -20,6 +20,7 @@ namespace Module\Article\Model;
 
 use Pi;
 use Pi\Application\Model\Model;
+use Zend\Db\Sql\Expression;
 
 /**
  * Public class for operating topic table. 
@@ -33,7 +34,7 @@ class Topic extends Model
      */
     public static function getAvailableFields()
     {
-        return array('id', 'name', 'slug', 'title', 'theme', 'description', 'image', 'content');
+        return array('id', 'name', 'slug', 'title', 'template', 'description', 'image', 'content');
     }
 
     /**
@@ -43,7 +44,7 @@ class Topic extends Model
      */
     public static function getDefaultColumns()
     {
-        return array('id', 'slug', 'title', 'image', 'theme');
+        return array('id', 'slug', 'title', 'image', 'template');
     }
 
     /**
@@ -119,5 +120,21 @@ class Topic extends Model
         }
         
         return $list;
+    }
+    
+    /**
+     * Getting search row count.
+     * 
+     * @param array  $where
+     * @return int 
+     */
+    public function getSearchRowsCount($where = array())
+    {
+        $select = $this->select()
+                       ->where($where)
+                       ->columns(array('count' => new Expression('count(id)')));
+        $count  = (int) $this->selectWith($select)->current()->count;
+        
+        return $count;
     }
 }

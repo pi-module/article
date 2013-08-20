@@ -62,7 +62,7 @@ class TopicEditFilter extends InputFilter
         ));
         
         $this->add(array(
-            'name'     => 'theme',
+            'name'     => 'template',
             'required' => true,
             'filters'  => array(
                 array(

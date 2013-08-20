@@ -304,14 +304,14 @@ return array(
             'category'    => 'media',
             'title'       => _t('Topic Image Width'),
             'description' => _t('Topic image width'),
-            'value'       => 40,
+            'value'       => 320,
             'filter'      => 'number_int',
         ),
         'topic_height'    => array(
             'category'    => 'media',
             'title'       => _t('Topic Image Height'),
             'description' => _t('Topic image height'),
-            'value'       => 40,
+            'value'       => 240,
             'filter'      => 'number_int',
         ),
         'default_topic_image' => array(
