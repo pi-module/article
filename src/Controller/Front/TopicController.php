@@ -31,6 +31,7 @@ use Module\Article\Service;
 use Module\Article\Cache;
 use Module\Article\Model\Article;
 use Module\Article\Entity;
+use Module\Article\Topic as TopicService;
 use Pi\File\Transfer\Upload as UploadHandler;
 
 /**
@@ -142,7 +143,82 @@ class TopicController extends ActionController
             return $this->jumpToException(__('The topic requested is not active'), 503);
         }
         
-        Pi::service('theme')->setTheme($row->theme);
+        // Getting topic articles
+        $rowRelations = $this->getModel('article_topic')
+                             ->select(array('topic' => $row->id));
+        $articleIds   = array();
+        foreach ($rowRelations as $relation) {
+            $articleIds[] = $relation->article;
+        }
+        $articleIds   = array_filter($articleIds);
+        if (!empty($articleIds)) {
+            $where    = array(
+                'id'  => $articleIds,
+            );
+            $articles = Entity::getAvailableArticlePage($where, null, null);
+        }
+        
+        $this->view()->assign(array(
+            'content'   => $row->content,
+            'title'     => $row->title,
+            'image'     => Pi::url($row->image),
+            'articles'  => $articles,
+        ));
+        
+        $template = ('default' == $row->template) ? 'topic-index' : $row->template;
+        $this->view()->setTemplate($template);
+    }
+    
+    public function allTopicAction()
+    {
+        $page       = Service::getParam($this, 'p', 1);
+        $page       = $page > 0 ? $page : 1;
+
+        $config = Pi::service('module')->config('', $module);
+        $limit  = (int) $config['page_topic_front'] ?: 20;
+        
+        $where = array(
+            'active' => 1,
+        );
+        
+        // Get topics
+        $resultsetTopic = TopicService::getTopics($where, $page, $limit);
+        
+        // Get topic article counts
+        $model  = $this->getModel('article_topic');
+        $select = $model->select()
+                        ->columns(array(
+                            'count' => new Expression('count(id)'), 'topic'))
+                        ->group(array('topic'));
+        $rowRelation   = $model->selectWith($select);
+        $articleCount  = array();
+        foreach ($rowRelation as $row) {
+            $articleCount[$row->topic] = $row->count;
+        }
+
+        // Total count
+        $modelTopic = $this->getModel('topic');
+        $totalCount = $modelTopic->getSearchRowsCount($where);
+
+        // Pagination
+        $route     = '.' . Service::getRouteName();
+        $paginator = Paginator::factory($totalCount);
+        $paginator->setItemCountPerPage($limit)
+                  ->setCurrentPageNumber($page)
+                  ->setUrlOptions(array(
+                'router'    => $this->getEvent()->getRouter(),
+                'route'     => $route,
+                'params'    => array(
+                    'topic'      => 'all',
+                ),
+            ));
+
+        $this->view()->assign(array(
+            'title'         => __('All Topics'),
+            'topics'        => $resultsetTopic,
+            'paginator'     => $paginator,
+            'count'         => $articleCount,
+        ));
     }
     
     /**
@@ -405,6 +481,11 @@ class TopicController extends ActionController
         ));
     }
     
+    /**
+     * Pulling articles into topic.
+     * 
+     * @return ViewModel 
+     */
     public function pullArticleAction()
     {
         // Checking permission

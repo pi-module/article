@@ -363,29 +363,20 @@ class ArticleController extends ActionController
 
         $draftId = $draftRow->id;
 
-        // Copy assets
-        /*$resultsetAsset = $this->getModel('asset')->select(array(
+        // Copy assets to draft
+        $resultsetAsset = $this->getModel('asset')->select(array(
             'article' => $id,
         ));
-        $modelDraftAsset = $this->getModel('draft_asset');
+        $modelDraftAsset = $this->getModel('asset_draft');
         foreach ($resultsetAsset as $asset) {
             $data = array(
-                'original_name' => $asset->original_name,
-                'name'          => $asset->name,
-                'extension'     => $asset->extension,
-                'size'          => $asset->size,
-                'mime_type'     => $asset->mime_type,
-                'type'          => $asset->type,
-                'path'          => $asset->path,
-                'time_create'   => $asset->time_create,
-                'user'          => $asset->user,
-                'draft'         => $draftId,
-                'published'     => 1,
+                'media'    => $asset->media,
+                'type'     => $asset->type,
+                'draft'    => $draftId,
             );
-//                        $data['path'] = Upload::copyAttachmentToTmp($attachment->path, $module);
             $rowDraftAsset = $modelDraftAsset->createRow($data);
             $rowDraftAsset->save();
-        }*/
+        }
 
         // Redirect to edit draft
         if ($draftId) {
@@ -510,5 +501,87 @@ class ArticleController extends ActionController
         if ('my' == $from) {
             $this->view()->setTemplate('draft-list');
         }
+    }
+    
+    /**
+     * Getting article by title via AJAX.
+     * 
+     * @return ViewModel 
+     */
+    public function getFuzzyArticleAction()
+    {
+        Pi::service('log')->active(false);
+        $articles   = array();
+        $pageCount  = $total = 0;
+        $module     = $this->getModule();
+        $where      = array('status' => Article::FIELD_STATUS_PUBLISHED);
+
+        $keyword = Service::getParam($this, 'keyword', '');
+        $type    = Service::getParam($this, 'type', 'title');
+        $limit   = Service::getParam($this, 'limit', 10);
+        $limit   = $limit > 100 ? 100 : $limit;
+        $page    = Service::getParam($this, 'page', 1);
+        $exclude = Service::getParam($this, 'exclude', 0);
+        $offset  = $limit * ($page - 1);
+
+        $articleModel   = $this->getModel('article');
+
+        if (strcasecmp('tag', $type) == 0) {
+            if ($keyword) {
+                $total     = Pi::service('tag')->getCount($module, $keyword);
+                $pageCount = ceil($total / $limit);
+
+                // Get article ids
+                $articleIds = Pi::service('tag')->getList($module, $keyword, null, $limit, $offset);
+                if ($articleIds) {
+                    $where['id'] = $articleIds;
+                    $articles    = array_flip($articleIds);
+
+                    // Get articles
+                    $resultsetArticle = Service::getArticlePage($where, 1, $limit, null, null, $module);
+
+                    foreach ($resultsetArticle as $key => $val) {
+                        $articles[$key] = $val;
+                    }
+
+                    $articles = array_filter($articles, function($var) {
+                        return is_array($var);
+                    });
+                }
+            }
+        } else {
+            // Get resultset
+            if ($keyword) {
+                $where['subject like ?'] = sprintf('%%%s%%', $keyword);
+            }
+
+            $articles = Entity::getArticlePage($where, $page, $limit, null, null, $module);
+
+            // Get total
+            $total      = $articleModel->getSearchRowsCount($where);
+            $pageCount  = ceil($total / $limit);
+        }
+
+        foreach ($articles as $key => &$article) {
+            if ($exclude && $exclude == $key) {
+                unset($articles[$key]);
+            }
+            $article['time_publish_text'] = date('Y-m-d', $article['time_publish']);
+        }
+
+        echo json_encode(array(
+            'status'    => true,
+            'message'   => __('OK'),
+            'data'      => array_values($articles),
+            'paginator' => array(
+                'currentPage' => $page,
+                'pageCount'   => $pageCount,
+                'keyword'     => $keyword,
+                'type'        => $type,
+                'limit'       => $limit,
+                'totalCount'  => $total,
+            ),
+        ));
+        exit ;
     }
 }

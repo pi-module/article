@@ -1,0 +1,36 @@
+<?php $this->headTitle($title) ?>
+
+<div class="row-fluid pi-block">
+    <div class="span6 pull-left" style="margin: 0 0 0 10px">
+        <img src="<?php echo $this->escape($image) ?>" />
+    </div>
+    <div class="span5 pull-right" style="margin: 0 10px 0 0">
+        <div>
+            <?php echo $content ?>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="pi-block">
+        <div class="clearfix pi-block-header">
+            <h4 class="pi-block-title"><?php _e('Newest Articles') ?></h4>
+        </div>
+        <div class="article-list-content">
+            <ul class="list list14">
+                <?php $index = 0 ?>
+                <?php foreach ($articles as $row) { ?>
+                    <li class="muted">
+                        <div class="list-hover">
+                            <span class="pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
+                            <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
+                        </div>
+                    </li>
+                    <?php if (!(++$index % 5)) { ?>
+                        <li class="dashed"></li>    
+                    <?php } ?>    
+                <?php } ?>   
+            </ul>
+        </div>
+    </div>
+</div>

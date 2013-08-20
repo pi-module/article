@@ -431,7 +431,7 @@
                         <div class="form-inline">
                             <select name="type" class="span2">
                                 <option value="title"><?php echo _e('Title'); ?></option>
-                                <option value="tag"><?php echo _e('Tag'); ?></option>
+                                <option value="tag" disabled="disabled"><?php echo _e('Tag'); ?></option>
                             </select>
                             <input placeholder="Keywords" type="text" name="keyword" value="">
                             <span class="btn btn-search"><?php _e('Search')?></span>
@@ -563,7 +563,7 @@
 </script>
 <script id="temp-related-search" type="text/template">
     <%_.each(search,function(item) { %>
-    <li data-id="<%= item.id %>">
+    <li data-id="<%= item.id %>" style="list-style: none">
         <span class="pull-right muted"><%= item.time_publish_text %></span>
         <input class="search-check" type="checkbox" <% if(_.where(exist,{id:item.id}).length) { %>checked<% } %> ><%= item.channel_title %>
         <a href="<%= item.url %>" target="_blank" class="ellipsis"  title="<%= item.subject %>"><strong><%= item.subject %></strong></a>
@@ -571,7 +571,7 @@
 </script>
 <script id="temp-related-selected" type="text/template">
     <%_.each(exist,function(item) { %>
-    <li data-id="<%= item.id %>">
+    <li data-id="<%= item.id %>" style="list-style: none">
         <i class="icon-remove-sign"></i>
         <a href="<%= item.url %>" target="_blank" class="ellipsis"><%= item.subject %></a>
     <% }); %>
@@ -723,7 +723,15 @@ var BasicInputView = Backbone.View.extend({
         this.leftWord(this.$("[name=subject]"));
         this.leftWord(this.$("[name=subtitle]"));
         this.leftWord(this.$("[name=summary]"));
-        this.typeahead(this.$(".author"),"<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'get.fuzzy.author','name'=>'')); ?>","author");
+        this.typeahead(
+            this.$(".author"),
+            "<?php echo $this->url('', array(
+                'controller' => 'author',
+                'action'     => 'get.fuzzy.author',
+                'name'       => ''
+            )); ?>",
+            "author"
+        );
         this.typeahead(this.$(".submitter"),"<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'get.fuzzy.user','name'=>'')); ?>","uid");
     },
     typeahead: function (el, url, name) {
@@ -1441,8 +1449,7 @@ var FeatureView = Backbone.View.extend({
         }
         $.getJSON('<?php echo $this->url('', array(
             'controller' => 'draft', 'action' => 'remove-image')); ?>' + parameter).done(function() {
-            var content = '<img src="<?php echo $this->escape($defaultFeatureThumb) ?>" />';
-            $(".upload-image-wrap").html(content);
+            $(".upload-image-wrap").html('');
         });  
     },
     render          : function(obj) {
@@ -2040,7 +2047,10 @@ var RelatedView = Backbone.View.extend({
             this.page++;
             this.locked=true;   
             if(ky){
-                $.getJSON("<?php echo $this->url('',array('controller' => 'ajax', 'action' => 'get.fuzzy.article')); ?>", {
+                $.getJSON("<?php echo $this->url('', array(
+                    'controller' => 'article',
+                    'action'     => 'get.fuzzy.article'
+                )); ?>", {
                     type: this.$("[name=type]").val(),
                     keyword: ky,
                     limit: 15,
