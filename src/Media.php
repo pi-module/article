@@ -96,7 +96,7 @@ class Media
         }
         
         foreach ($mediaSet as &$set) {
-            $set['submitter'] = $submitter[$set['uid']];
+            $set['submitter'] = isset($submitter[$set['uid']]) ? $submitter[$set['uid']] : '';
             $set['url']       = Pi::url($set['url']);
         }
         

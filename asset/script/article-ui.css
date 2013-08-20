@@ -118,8 +118,8 @@ td {
 /*draft-form*/
 .attachment-list {
     border: 1px solid #ccc;
-    border-bottom: none;
     border-radius: 3px;
+    background: none repeat scroll 0 0 #F5F5F5;
 }
 .attachment-item:after {
     content: "";
@@ -144,6 +144,36 @@ td {
     margin: 0;
     z-index: 2;
     border-radius: 0;
+}
+.media-item:after {
+    content: "";
+    display: block;
+    height: 0;
+    clear: both;
+}
+.media-item {
+    height: 28px;
+    line-height: 28px;
+    margin-bottom: 0;
+    border-bottom: 1px solid #ccc;
+    position: relative;
+    background: #F5F5F5;
+}
+.media-item .progress {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: 0;
+    height: 28px;
+    margin: 0;
+    z-index: 2;
+    border-radius: 0;
+}
+.uploaded-media-name {
+    float: left;
+    margin: 0 10px 0 10px;
+    z-index: 10;
+    color: #808080;
 }
 .progress-text {
     position: absolute;

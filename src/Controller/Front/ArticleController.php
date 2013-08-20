@@ -451,6 +451,7 @@ class ArticleController extends ActionController
         if (!empty($keyword)) {
             $where['subject like ?'] = sprintf('%%%s%%', $keyword);
         }
+        $where = array_filter($where);
 
         // Retrieve data
         $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);

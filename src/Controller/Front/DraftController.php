@@ -91,6 +91,8 @@ class DraftController extends ActionController
             'defaultFeatureThumb'   => Pi::service('asset')->getModuleAsset(
                                            $this->config('default_feature_thumb'),
                                            $module),
+            'contentImageWidth'     => $this->config('content_thumb_width'),
+            'contentImageHeight'    => $this->config('content_thumb_height'),
         ));
     }
 
@@ -255,13 +257,13 @@ class DraftController extends ActionController
         $timestamp = time();
         $article = array(
             'subject'         => $row->subject,
-            'subtitle'        => $row->subtitle,
+            'subtitle'        => empty($row->subtitle) ? '' : $row->subtitle,
             'summary'         => $row->summary,
             'content'         => $row->content,
             'markup'          => $row->markup,
             'uid'             => $row->uid,
             'author'          => $row->author,
-            'source'          => $row->source,
+            'source'          => empty($row->source) ? '' : $row->source,
             'pages'           => $row->pages,
             'category'        => $row->category,
             'status'          => Article::FIELD_STATUS_PUBLISHED,
@@ -270,7 +272,7 @@ class DraftController extends ActionController
             'time_publish'    => $row->time_publish ? $row->time_publish : $timestamp,
             'time_update'     => $row->time_update ? $row->time_update : 0,
             'image'           => $row->image ?: '',
-        );
+        );var_dump($article);
         $rowArticle = $modelArticle->createRow($article);
         $rowArticle->save();
         $articleId = $rowArticle->id;
@@ -281,7 +283,7 @@ class DraftController extends ActionController
         $columns        = $modelExtended->getValidColumns();
         $extended       = array();
         foreach ($columns as $column) {
-            $extended[$column] = $row->$column;
+            $extended[$column] = $row->$column ?: '';
         }
         $extended['article'] = $articleId;
         $rowExtended = $modelExtended->createRow($extended);
@@ -614,12 +616,12 @@ class DraftController extends ActionController
         }
 
         // Update assets linked to fake id
-        /*if ($fakeId) {
-            $this->getModel('draft_asset')->update(
+        if ($fakeId) {
+            $this->getModel('asset_draft')->update(
                 array('draft' => $id),
                 array('draft' => $fakeId)
             );
-        }*/
+        }
 
         return $id;
     }
@@ -760,6 +762,7 @@ class DraftController extends ActionController
             }
         }
         $where['category'] = array_filter($categories);
+        $where = array_filter($where);
         
         $this->showDraftPage($status, $from, $where);
         
@@ -973,55 +976,68 @@ class DraftController extends ActionController
         }
 
         // Get assets
-        /*$attachments = $images = array();
-        $resultsetDraftAsset = $this->getModel('draft_asset')->select(array(
+        $attachments = $images = array();
+        $resultsetDraftAsset = $this->getModel('asset_draft')->select(array(
             'draft' => $id,
-        ));
+        ))->toArray();
+        // Getting media ID
+        $mediaIds = array(0);
         foreach ($resultsetDraftAsset as $asset) {
-            if (Asset::FIELD_TYPE_ATTACHMENT == $asset->type) {
+            $mediaIds[] = $asset['media'];
+        }
+        // Getting media details
+        $resultsetMedia = $this->getModel('media')->select(array('id' => $mediaIds));
+        $medias = array();
+        foreach ($resultsetMedia as $media) {
+            $medias[$media->id] = $media->toArray();
+        }
+        // Getting assets
+        foreach ($resultsetDraftAsset as $asset) {
+            $media = $medias[$asset['media']];
+            if ('attachment' == $asset['type']) {
                 $attachments[] = array(
-                    'id'           => $asset->id,
-                    'originalName' => $asset->original_name,
-                    'size'         => $asset->size,
-                    'delete_url'   => $this->url(
-                        '',
-                        array(
-                            'controller' => 'ajax',
-                            'action'     => 'remove.asset',
-                            'id'         => $asset->id,
-                        )
-                    ),
-                    'download_url' => $this->url(
+                    'id'           => $asset['id'],
+                    'title'        => $media['title'],
+                    'size'         => $media['size'],
+                    'deleteUrl'    => $this->url(
                         '',
                         array(
                             'controller' => 'draft',
-                            'action'     => 'download.asset',
-                            'id'         => $asset->id,
+                            'action'     => 'remove-asset',
+                            'id'         => $asset['id'],
+                        )
+                    ),
+                    'downloadUrl' => $this->url(
+                        '',
+                        array(
+                            'controller' => 'media',
+                            'action'     => 'download',
+                            'id'         => $media['id'],
                         )
                     ),
                 );
             } else {
-                $imageSize = getimagesize(Pi::path($asset->path));
+                $imageSize = getimagesize(Pi::path($media['url']));
 
                 $images[] = array(
-                    'id'           => $asset->id,
-                    'originalName' => $asset->name,
-                    'size'         => $asset->size,
+                    'id'           => $asset['id'],
+                    'title'        => $media['title'],
+                    'size'         => $media['size'],
                     'w'            => $imageSize['0'],
                     'h'            => $imageSize['1'],
-                    'delete_url'   => $this->url(
+                    'downloadUrl'  => $this->url(
                         '',
                         array(
-                            'controller' => 'ajax',
-                            'action'     => 'remove.asset',
-                            'id'         => $asset->id,
+                            'controller' => 'media',
+                            'action'     => 'download',
+                            'id'         => $media['id'],
                         )
                     ),
-                    'preview_url' => Pi::url($asset->path),
-                    'thumb_url'   => Pi::url(Upload::getThumbFromOriginal($asset->path)),
+                    'preview_url' => Pi::url($media['url']),
+                    'thumb_url'   => Pi::url(Upload::getThumbFromOriginal($media['url'])),
                 );
             }
-        }*/
+        }
 
         $this->setModuleConfig();
         $this->view()->assign(array(
@@ -1563,5 +1579,104 @@ class DraftController extends ActionController
             'status'    => $affectedRows ? true : false,
             'message'   => 'ok',
         );
+    }
+    
+    /**
+     * Saving asset. 
+     */
+    public function saveAssetAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $type  = Service::getParam($this, 'type', 'attachment');
+        $media = Service::getParam($this, 'media', 0);
+        $id    = Service::getParam($this, 'id', 0);
+        if (empty($id)) {
+            $id = Service::getParam($this, 'fake_id', 0);
+        }
+        
+        $return = array('status' => false);
+        $modelMedia = $this->getModel('media');
+        $rowMedia   = $modelMedia->find($media);
+        if (empty($rowMedia->id)) {
+            $return['message'] = __('Invalid media!');
+            echo json_encode($return);
+            exit();
+        }
+        
+        if (empty($id)) {
+            $return['message'] = __('Invalid draft ID!');
+            echo json_encode($return);
+            exit();
+        }
+        
+        $data     = array(
+            'media'   => $media,
+            'type'    => $type,
+        );
+        $model    = $this->getModel('asset_draft');
+        $rowAsset = $model->find($id);
+        if ($rowAsset) {
+            $rowAsset->assign($data);
+            $rowAsset->save();
+            $rowId = $rowAsset->id;
+        } else {
+            $data['draft'] = $id;
+            $row = $model->createRow($data);
+            $row->save();
+            
+            if (!$row->id) {
+                $return['message'] = __('Can not save data!');
+                echo json_encode($return);
+                exit();
+            }
+            $rowId = $row->id;
+        }
+        
+        $return['data']    = array(
+            'media'       => $media,
+            'id'          => $rowId,
+            'title'       => $rowMedia->title,
+            'size'        => $rowMedia->size,
+            'downloadUrl' => $this->url('', array(
+                'controller' => 'media',
+                'action'     => 'download',
+                'id'         => $media,
+            )),
+        );
+        if ('image' == $type) {
+            $return['data']['preview_url'] = Pi::url($rowMedia->url);
+        }
+        $return['status']  = true;
+        $return['message'] = __('Save asset successful!');
+        echo json_encode($return);
+        exit();
+    }
+    
+    /**
+     * Deleting asset. 
+     */
+    public function removeAssetAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $return = array('status' => false);
+        $id = Service::getParam($this, 'id', 0);
+        if (empty($id)) {
+            $return['message'] = __('Invalid ID!');
+            echo json_encode($return);
+            exit();
+        }
+        
+        $result = $this->getModel('asset_draft')->delete(array('id' => $id));
+        if ($result) {
+            $return['message'] = __('Delete item sucessful!');
+            $return['status']  = true;
+        } else {
+            $return['message'] = __('Can not delete item!');
+        }
+        
+        echo json_encode($return);
+        exit();
     }
 }

@@ -1,4 +1,4 @@
-<div id="multi-attachments-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-header" aria-hidden="true" style="width: 900px; margin-left: -450px">
+<div id="multi-gallery-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-header" aria-hidden="true" style="width: 900px; margin-left: -450px">
     <!-- Header -->
     <div class="modal-header">
         <button type="button" class="close media-close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -12,13 +12,13 @@
                 <div class="pull-left">
                     <span class="btn upload fileinput-button">
                         <?php _e('Upload') ?>
-                        <input type="file" multiple="" name="attachment">
+                        <input type="file" multiple="" name="gallery">
                     </span>
                 </div>
                 <div class="clearfix form-inline pull-right" style="margin-bottom: 20px">
                     <div class="pull-right form-search">
                         <div class="input-append">
-                            <input type="text" value="" placeholder="<?php _e('Title') ?>" class="input-medium search-query" name="attachment-title">
+                            <input type="text" value="" placeholder="<?php _e('Title') ?>" class="input-medium search-query" name="gallery-title">
                             <button class="btn media-search"><?php _e('Search') ?></button>
                         </div>
                     </div>
@@ -26,15 +26,16 @@
             </div>
             <!-- Displaying search results -->
             <div class="span6 pull-left" style="margin-left: 0px">
-                <div id="attachment-search-result"></div>
-                <div id="attachment-upload-list"></div>
+                <div id="gallery-search-result"></div>
+                <div id="gallery-upload-list"></div>
             </div>
             <!-- Displaying results want to add -->
             <div class="span6 pull-right">
-                <div id="attachment-select-lists">
+                <div id="gallery-select-lists">
                     <table class="table table-bordered">
                         <tbody>
                             <tr>
+                                <th><?php _e('Image') ?></th>
                                 <th><?php _e('Title') ?></th>
                                 <th><?php _e('Remove') ?></th>
                             </tr>
@@ -46,7 +47,7 @@
     </div>
     <!-- Footer -->
     <div class="modal-footer">
-        <button id="attachment-cancel" class="btn" data-dismiss="modal" aria-hidden="true"><?php echo __('Cancel') ?></button>
-        <button id="attachment-process" class="btn btn-primary" data-dismiss="modal" ><?php echo __('Yes') ?></button>
+        <button id="gallery-cancel" class="btn" data-dismiss="modal" aria-hidden="true"><?php echo __('Cancel') ?></button>
+        <button id="gallery-process" class="btn btn-primary" data-dismiss="modal" ><?php echo __('Yes') ?></button>
     </div>
 </div>

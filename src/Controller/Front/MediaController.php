@@ -377,9 +377,10 @@ class MediaController extends ActionController
         $return = array('status' => false);
         $id     = Service::getParam($this, 'id', 0);
         if (empty($id)) {
-            $id = Service::getParam($this, 'fake_id', 0);
+            $id = Service::getParam($this, 'fake_id', 0) ?: uniqid();
         }
         $type   = Service::getParam($this, 'type', 'attachment');
+        $formName = Service::getParam($this, 'name', 'upload');
 
         // Checking whether ID is empty
         if (empty($id)) {
@@ -391,7 +392,7 @@ class MediaController extends ActionController
         $width   = Service::getParam($this, 'width', $this->config('image_width'));
         $height  = Service::getParam($this, 'height', $this->config('image_height'));
         
-        $rawInfo = $this->request->getFiles('upload');
+        $rawInfo = $this->request->getFiles($formName);
         $rename  = $id;
 
         $destination = Upload::getTargetDir('media', $module, true, true);
@@ -461,6 +462,7 @@ class MediaController extends ActionController
             'preview_url'  => Pi::url($fileName),
             'basename'     => basename($fileName),
             'type'         => $ext,
+            'id'           => $id,
         ), $imageSize);
 
         $return['status'] = $result ? self::AJAX_RESULT_TRUE : self::AJAX_RESULT_FALSE;
@@ -504,6 +506,7 @@ class MediaController extends ActionController
                 unset($session->$id);
                 unset($session->$fakeId);
             }
+            $affectedRows = 1;
         }
 
         return array(

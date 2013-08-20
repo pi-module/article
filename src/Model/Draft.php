@@ -94,7 +94,7 @@ class Draft extends Model
     {
         $options         = Service::getFormConfig();
         $availableFields = self::getAvailableFields($module);
-        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit', 'image');
+        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit');
         $validFields     = array_merge($remainFields, array_intersect($availableFields, $options['elements']));
         
         return $validFields;
