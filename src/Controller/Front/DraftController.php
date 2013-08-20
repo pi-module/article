@@ -272,7 +272,7 @@ class DraftController extends ActionController
             'time_publish'    => $row->time_publish ? $row->time_publish : $timestamp,
             'time_update'     => $row->time_update ? $row->time_update : 0,
             'image'           => $row->image ?: '',
-        );var_dump($article);
+        );
         $rowArticle = $modelArticle->createRow($article);
         $rowArticle->save();
         $articleId = $rowArticle->id;
@@ -302,43 +302,24 @@ class DraftController extends ActionController
         $rowCompiled     = $modelCompiled->createRow($compiled);
         $rowCompiled->save();
 
-        // Transform foreign images
-        //$content = Service::transformArticleImages($row->content, $module);
-        if ($content) {
-            $rowArticle->content = $content;
-            $refreshArticle      = true;
-        }
-
         // Move asset
-        /*$modelDraftAsset     = $this->getModel('draft_asset');
+        $modelDraftAsset     = $this->getModel('asset_draft');
         $resultsetDraftAsset = $modelDraftAsset->select(array(
             'draft' => $id,
         ));
         $modelAsset = $this->getModel('asset');
         foreach ($resultsetDraftAsset as $asset) {
             $data = array(
-                'original_name' => $asset->original_name,
-                'name'          => $asset->name,
-                'extension'     => $asset->extension,
-                'size'          => $asset->size,
-                'mime_type'     => $asset->mime_type,
+                'media'         => $asset->media,
                 'type'          => $asset->type,
-                'path'          => $asset->path,
-                'time_create'   => $asset->time_create,
-                'user'          => $asset->user,
                 'article'       => $articleId,
             );
-//                    $data['path'] = Upload::moveTmpToAsset($attachment->path, $module, $attachment->type);
             $rowAsset = $modelAsset->createRow($data);
             $rowAsset->save();
-        }*/
+        }
 
         // Clear draft assets info
-        //$modelDraftAsset->delete(array('draft' => $id));
-
-        if ($refreshArticle) {
-            $rowArticle->save();
-        }
+        $modelDraftAsset->delete(array('draft' => $id));
 
         // Save tag
         if ($this->config('enable_tag') && !empty($row->tag)) {
@@ -458,61 +439,25 @@ class DraftController extends ActionController
             $rowArticle->save();
         }
 
-        // Merge assets
-        /*$draftAssetFiles     = $articleAssetFiles = $diffDraft = $diffArticle = array();
+        // Updating assets
         $modelAsset          = $this->getModel('asset');
-        $modelDraftAsset     = $this->getModel('draft_asset');
+        $modelAsset->delete(array('article' => $articleId));
+        $modelDraftAsset     = $this->getModel('asset_draft');
         $resultsetDraftAsset = $modelDraftAsset->select(array(
             'draft' => $id,
         ));
         foreach ($resultsetDraftAsset as $asset) {
-            $draftAssetFiles[$asset->name] = $asset;
-
-            // Add new assets
-            if (!$asset->published) {
-                $data = array(
-                    'original_name' => $asset->original_name,
-                    'name'          => $asset->name,
-                    'extension'     => $asset->extension,
-                    'size'          => $asset->size,
-                    'type'          => $asset->type,
-                    'path'          => $asset->path,
-                    'time_create'   => $asset->time_create,
-                    'user'          => $asset->user,
-                    'article'       => $articleId,
-                );
-//                        $data['path'] = Upload::moveTmpToAsset($attachment['path'], $module, $attachment['type']);
-                $rowAsset = $modelAsset->createRow($data);
-                $rowAsset->save();
-            }
+            $data = array(
+                'media'     => $asset->media,
+                'type'      => $asset->type,
+                'article'   => $articleId,
+            );
+            $rowAsset = $modelAsset->createRow($data);
+            $rowAsset->save();
         }
-
-        $resultsetAsset = $modelAsset->select(array(
-            'article' => $articleId,
-        ));
-        foreach ($resultsetAsset as $asset) {
-            $articleAssetFiles[$asset->name] = $asset;
-        }
-
-        // Assets need to remove
-        $needToDelete = array();
-        $diffArticle  = array_diff(array_keys($articleAssetFiles), array_keys($draftAssetFiles));
-        foreach ($diffArticle as $key) {
-            $asset = $articleAssetFiles[$key];
-
-            unlink(Pi::path($asset->path));
-            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-            }
-
-            $needToDelete[] = $asset->id;
-        }
-        if ($needToDelete) {
-            $modelAsset->delete(array('id' => $needToDelete));
-        }
-
+        
         // Clear draft assets
-        $modelDraftAsset->delete(array('draft' => $id));*/
+        $modelDraftAsset->delete(array('draft' => $id));
 
         // Save tag
         if ($this->config('enable_tag')) {
@@ -956,9 +901,9 @@ class DraftController extends ActionController
         }
 
         // Get related articles
-        if (isset($elements['related'])) {
+        if (in_array('related', $elements)) {
             $related = $relatedIds = array();
-            if (Article::FIELD_RELATED_TYPE_CUSTOM == $data['related_type'] && !empty($row->related)) {
+            if (!empty($row->related)) {
                 $relatedIds = array_flip($row->related);
 
                 $related = Entity::getArticlePage(array('id' => $row->related), 1, null, null, null, $module);

@@ -36,15 +36,17 @@ use Pi;
  * // Article category list page, p is extra parameter
  * $this->url($routeName, array('category' => 'sport', 'p' => 3));
  * // Tag related article list page
- * $this->url($routeName, array('tag' => '标签'));
+ * $this->url($routeName, array('tag' => 'trip'));
  * // Article detail page, the value of time field is the article published time
  * $this->url($routeName, array('id' => 3, 'time' => '20130725');
  * // Article detail page with slug
- * $this->url($routeName, array('slug' => '文章', 'time' => '20010101')));
+ * $this->url($routeName, array('slug' => 'wonderfularticle', 'time' => '20010101')));
  * // Topic homepage
  * $this->url($routeName, array('topic' => 'music'));
  * // Topic article list page
  * $this->url($routeName, array('topic' => 'sodkf', 'list' => 'all', 'from' => 'my'));
+ * // Topic title list page
+ * $this->url($routeName, array('topic' => 'all'));
  * </CODE>
  */
 class Article extends Standard
@@ -114,7 +116,9 @@ class Article extends Standard
                 }
             } elseif ('topic' == $urlParams[0]) {
                 $controller = 'topic';
-                if (preg_match('/^list-/', $urlParams[1])) {
+                if (!isset($urlParams[1])) {
+                    $action = 'all-topic';
+                } elseif (preg_match('/^list-/', $urlParams[1])) {
                     list($ignored, $topic) = explode($this->keyValueDelimiter, $urlParams[1]);
                     $action = 'list';
                 } else {
@@ -201,7 +205,11 @@ class Article extends Standard
             unset($mergedParams['tag']);
         } elseif (isset($mergedParams['topic'])) {
             $url .= 'topic';
-            $url .= $this->structureDelimiter . $mergedParams['topic'];
+            if ('all' == $mergedParams['topic']) {
+                $url .= '';
+            } else {
+                $url .= $this->structureDelimiter . $mergedParams['topic'];
+            }
             unset($mergedParams['topic']);
         }
         

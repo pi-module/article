@@ -15,13 +15,13 @@ $this->Backbone();
             <tr>
                 <th><?php _e('Image') ?></th>
                 <th><?php _e('Title') ?></th>
-                <th><?php _e('Theme') ?></th>
+                <th><?php _e('Template') ?></th>
                 <th><?php _e('Description') ?></th>
             </tr>
             <?php foreach ($topics as $topic) { ?>
             <tr>
                 <td><?php if ($topic['image']) { ?>
-                    <img src="<?php echo Pi::url($topic['image']) ?>" alt="<?php echo $this->escape($topic['title']); ?>"/>
+                    <img src="<?php echo Pi::url($topic['image']) ?>" alt="<?php echo $this->escape($topic['title']); ?>" style="width: 40px; height: 30px" />
                 <?php } ?>
                 </td>
                 <td><?php echo $this->escape($topic['title']) ?>
@@ -36,7 +36,7 @@ $this->Backbone();
                         <?php } ?>
                     </div>
                 </td>
-                <td><?php echo $this->escape($topic['theme']) ?></td>
+                <td><?php echo $this->escape($topic['template']) ?></td>
                 <td><?php echo $this->escape($topic['description']) ?></td>
             </tr>
             <?php } ?>
