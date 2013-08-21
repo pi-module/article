@@ -98,7 +98,7 @@ class TopicEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'image',
+            'name'       => 'placeholder',
             'options'    => array(
                 'label'       => __('Image'),
             ),
@@ -132,34 +132,6 @@ class TopicEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'x',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'y',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'w',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'h',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
             'name'       => 'security',
             'type'       => 'csrf',
         ));
@@ -173,6 +145,13 @@ class TopicEditForm extends BaseForm
         
         $this->add(array(
             'name'       => 'fake_id',
+            'attributes' => array(
+                'type'        => 'hidden',
+            ),
+        ));
+        
+        $this->add(array(
+            'name'       => 'image',
             'attributes' => array(
                 'type'        => 'hidden',
             ),

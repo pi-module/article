@@ -410,9 +410,19 @@ class AuthorController extends ActionController
         
         Upload::saveImage($uploadInfo);
 
-        // Or save info to session
-        $session = Upload::getUploadSession($module, 'author');
-        $session->$id = $uploadInfo;
+        $rowAuthor = $this->getModel('author')->find($id);
+        if ($rowAuthor) {
+            if ($rowAuthor->photo && $rowAuthor->photo != $fileName) {
+                unlink(Pi::path($rowAuthor->photo));
+            }
+
+            $rowAuthor->photo = $fileName;
+            $rowAuthor->save();
+        } else {
+            // Or save info to session
+            $session = Upload::getUploadSession($module, 'author');
+            $session->$id = $uploadInfo;
+        }
 
         $imageSize = getimagesize(Pi::path($fileName));
 
@@ -423,6 +433,7 @@ class AuthorController extends ActionController
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
             'preview_url'  => Pi::url($fileName),
+            'filename'     => $fileName,
         );
 
         $return['status'] = true;

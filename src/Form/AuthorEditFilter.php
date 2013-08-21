@@ -11,7 +11,6 @@
  *
  * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
@@ -49,26 +48,6 @@ class AuthorEditFilter extends InputFilter
 
         $this->add(array(
             'name'     => 'description',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'x',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'y',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'w',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'h',
             'required' => false,
         ));
 

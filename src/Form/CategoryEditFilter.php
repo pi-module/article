@@ -11,7 +11,6 @@
  *
  * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
@@ -30,13 +29,19 @@ class CategoryEditFilter extends InputFilter
     /**
      * Initializing validator and filter 
      */
-    public function __construct()
+    public function __construct($options = array())
     {
         $this->add(array(
             'name'     => 'parent',
             'required' => true,
         ));
 
+        $params = array(
+            'table'  => 'category',
+        );
+        if (isset($options['id']) and $options['id']) {
+            $params['id'] = $options['id'];
+        }
         $this->add(array(
             'name'     => 'name',
             'required' => true,
@@ -48,9 +53,7 @@ class CategoryEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatName',
-                    'options' => array(
-                        'table'  => 'category',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));
@@ -66,9 +69,7 @@ class CategoryEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatSlug',
-                    'options' => array(
-                        'table'  => 'category',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));
@@ -90,26 +91,6 @@ class CategoryEditFilter extends InputFilter
 
         $this->add(array(
             'name'     => 'image',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'x',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'y',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'w',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'h',
             'required' => false,
         ));
 

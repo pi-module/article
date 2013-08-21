@@ -123,7 +123,7 @@ var UploadView = Backbone.View.extend({
         "click #media-process" : "processImage"
     },
     initialize   : function() {
-        page.$("[name=photo]")
+        page.$("[name=placeholder]")
             .parents(".control-group:first")
             .find(".controls")
             .html($("#temp-upload").html());
@@ -222,6 +222,7 @@ var UploadView = Backbone.View.extend({
         )); ?>' + page.id() + '/' + mediaId, function(result) {
             result = $.parseJSON(result);
             if (result.status) {
+                page.$("[name=photo]").val(result.data.filename);
                 self.render(result.data);
                 // Remove all generated data
                 self.removeMedia();
@@ -234,6 +235,7 @@ var UploadView = Backbone.View.extend({
     remove       : function() {
         var self = this;
         $.getJSON('<?php echo $this->url('', array('controller' => 'author', 'action' => 'remove-image')); ?>'+page.id()).done(function() {
+            page.$("[name=photo]").val('');
             self.$("#author-image").html('<i class="icon-user"></i>');
         });  
     },

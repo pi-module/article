@@ -340,10 +340,14 @@ class PermissionController extends ActionController
         $form = $this->getLevelForm('edit-level');
         
         $resources = self::getResources(true);
+        $this->view()->assign('resources', $resources);
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
-            $form->setInputFilter(new LevelEditFilter);
+            $options = array(
+                'id'  => $post['id'],
+            );
+            $form->setInputFilter(new LevelEditFilter($options));
             $form->setValidationGroup($this->getValidColumns());
             if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('There are some error occured!'), true);
@@ -384,7 +388,6 @@ class PermissionController extends ActionController
         $form->setData(array_merge($row->toArray(), $rules));
 
         $this->view()->assign('form', $form);
-        $this->view()->assign('resources', $resources);
     }
     
     /**

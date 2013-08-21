@@ -11,7 +11,6 @@
  *
  * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
@@ -35,93 +34,68 @@ class AuthorEditForm extends BaseForm
         $this->add(array(
             'name'       => 'name',
             'options'    => array(
-                'label' => __('Name'),
+                'label'     => __('Name'),
             ),
             'attributes' => array(
-                'id'   => 'name',
-                'type' => 'text',
+                'id'        => 'name',
+                'type'      => 'text',
             ),
         ));
 
         $this->add(array(
-            'name' => 'photo',
-            'options' => array(
-                'label' => __('Photo'),
+            'name'       => 'placeholder',
+            'options'    => array(
+                'label'     => __('Photo'),
             ),
             'attributes' => array(
             ),
         ));
 
         $this->add(array(
-            'name' => 'description',
-            'options' => array(
-                'label' => 'Biography',
+            'name'       => 'description',
+            'options'    => array(
+                'label'     => __('Biography'),
             ),
             'attributes' => array(
-                'id'   => 'bio',
-                'type' => 'textarea',
+                'id'        => 'bio',
+                'type'      => 'textarea',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'x',
+            'name'       => 'photo',
             'attributes' => array(
-                'id'   => 'x',
-                'type' => 'hidden',
+                'type'      => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'y',
+            'name'       => 'security',
+            'type'       => 'csrf',
+        ));
+
+        $this->add(array(
+            'name'       => 'id',
             'attributes' => array(
-                'id'   => 'y',
-                'type' => 'hidden',
+                'id'        => 'id',
+                'type'      => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'w',
+            'name'       => 'fake_id',
             'attributes' => array(
-                'id'   => 'w',
-                'type' => 'hidden',
+                'id'        => 'fake_id',
+                'type'      => 'hidden',
             ),
         ));
 
         $this->add(array(
-            'name'  => 'h',
-            'attributes' => array(
-                'id'   => 'h',
-                'type' => 'hidden',
+            'name'       => 'submit',
+            'attributes' => array(               
+                'value'     => __('Submit'),
             ),
-        ));
-
-        $this->add(array(
-            'name'  => 'security',
-            'type'  => 'csrf',
-        ));
-
-        $this->add(array(
-            'name'  => 'id',
-            'attributes'    => array(
-                'id'   => 'id',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'  => 'fake_id',
-            'attributes'    => array(
-                'id'   => 'fake_id',
-                'type' => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'          => 'submit',
-            'attributes'    => array(               
-                'value' => __('Submit'),
-            ),
-            'type'  => 'submit',
+            'type'       => 'submit',
         ));
     }
 }

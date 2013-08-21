@@ -77,7 +77,7 @@ class Service
             'topicHeight'      => $handler->config('topic_height'),
             'featureWidth'     => $handler->config('feature_width'),
             'featureHeight'    => $handler->config('feature_height'),
-            'image_extension'  => array_map('trim', explode(',', $handler->config('image_extension'))),
+            'imageExtension'   => array_map('trim', explode(',', $handler->config('image_extension'))),
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
             'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),
@@ -386,6 +386,24 @@ class Service
         }
         
         return $config;
+    }
+    
+    /**
+     * Getting absolute module config path name.
+     * 
+     * @param string  $name
+     * @param string  $module
+     * @return array|string 
+     */
+    public static function getModuleConfigPath($name = null, $module = null)
+    {
+        $module = $module ?: Pi::service('module')->current();
+        $top    = Pi::path('var/' . $module);
+        $relativePath = array(
+            'draft-edit-form' => Pi::path(Config::ELEMENT_EDIT_PATH),
+        );
+        
+        return $name ? $relativePath[$name] : $relativePath;
     }
     
     /**

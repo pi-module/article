@@ -328,7 +328,10 @@ class CategoryController extends ActionController
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
-            $form->setInputFilter(new CategoryEditFilter);
+            $options = array(
+                'id' => $post['id'],
+            );
+            $form->setInputFilter(new CategoryEditFilter($options));
             $form->setValidationGroup(Category::getAvailableFields());
             if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('Can not update data!'), true);
@@ -655,9 +658,20 @@ class CategoryController extends ActionController
 
         Upload::saveImage($uploadInfo);
 
-        // Save info to session
-        $session = Upload::getUploadSession($module, 'category');
-        $session->$id = $uploadInfo;
+        // Save image to category
+        $rowCategory = $this->getModel('category')->find($id);
+        if ($rowCategory) {
+            if ($rowCategory->image && $rowCategory->image != $fileName) {
+                unlink(Pi::path($rowCategory->image));
+            }
+
+            $rowCategory->image = $fileName;
+            $rowCategory->save();
+        } else {
+            // Or save info to session
+            $session = Upload::getUploadSession($module, 'category');
+            $session->$id = $uploadInfo;
+        }
 
         $imageSize = getimagesize(Pi::path($fileName));
 
@@ -668,6 +682,7 @@ class CategoryController extends ActionController
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
             'preview_url'  => Pi::url($fileName),
+            'filename'     => $fileName,
         );
 
         $return['status'] = true;

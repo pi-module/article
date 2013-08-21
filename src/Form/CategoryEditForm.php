@@ -11,7 +11,6 @@
  *
  * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
  * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
  * @author          Zongshu Lin <zongshu@eefocus.com>
  * @since           1.0
  * @package         Module\Article
@@ -93,40 +92,12 @@ class CategoryEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'image',
+            'name'       => 'placeholder',
             'options'    => array(
                 'label'       => __('Image'),
             ),
             'attributes' => array(
                 'type'        => '',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'x',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'y',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'w',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'h',
-            'attributes' => array(
-                'type'        => 'hidden',
             ),
         ));
 
@@ -144,6 +115,13 @@ class CategoryEditForm extends BaseForm
         
         $this->add(array(
             'name'       => 'fake_id',
+            'attributes' => array(
+                'type'        => 'hidden',
+            ),
+        ));
+        
+        $this->add(array(
+            'name'       => 'image',
             'attributes' => array(
                 'type'        => 'hidden',
             ),

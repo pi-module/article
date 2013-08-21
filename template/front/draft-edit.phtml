@@ -607,12 +607,12 @@ var page = {
         this.attachmentUrl = "<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'upload',
-            'name'       => 'attachment')); ?>";
+            'form_name'  => 'attachment')); ?>";
         this.featureUrl="<?php echo $this->url('',array('controller' => 'upload', 'action' => 'feature.image')); ?>"+this.ajaxId();
         this.galleryUrl = "<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'upload',
-            'name'       => 'gallery',
+            'form_name'  => 'gallery',
             'width'      => $contentImageWidth,
             'height'     => $contentImageHeight,
         )); ?>";
