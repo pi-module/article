@@ -45,6 +45,14 @@ class CategoryEditFilter extends InputFilter
                     'name' => 'StringTrim',
                 ),
             ),
+            'validators' => array(
+                array(
+                    'name'    => 'Module\Article\Validator\RepeatName',
+                    'options' => array(
+                        'table'  => 'category',
+                    ),
+                ),
+            ),
         ));
 
         $this->add(array(
@@ -53,6 +61,14 @@ class CategoryEditFilter extends InputFilter
             'filters'  => array(
                 array(
                     'name' => 'StringTrim',
+                ),
+            ),
+            'validators' => array(
+                array(
+                    'name'    => 'Module\Article\Validator\RepeatSlug',
+                    'options' => array(
+                        'table'  => 'category',
+                    ),
                 ),
             ),
         ));

@@ -589,7 +589,7 @@ class TopicController extends ActionController
             $form->setData($post);
             $form->setInputFilter(new TopicEditFilter);
             $form->setValidationGroup(Topic::getAvailableFields());
-            if (!$form->isValid()) {d($form->getMessages());
+            if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('There are some error occured!'), true);
             }
             

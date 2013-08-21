@@ -39,6 +39,14 @@ class LevelEditFilter extends InputFilter
                     'name' => 'StringTrim',
                 ),
             ),
+            'validators' => array(
+                array(
+                    'name'    => 'Module\Article\Validator\RepeatName',
+                    'options' => array(
+                        'table'  => 'level',
+                    ),
+                ),
+            ),
         ));
         
         $this->add(array(

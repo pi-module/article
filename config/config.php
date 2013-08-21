@@ -170,7 +170,7 @@ return array(
             'category'    => 'media',
             'title'       => _t('Media Path'),
             'description' => _t('Path to save media file.'),
-            'value'       => 'var/data/article/media',
+            'value'       => 'upload/article/media',
         ),
         'media_extension' => array(
             'category'    => 'media',
