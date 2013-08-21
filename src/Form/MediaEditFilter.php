@@ -29,8 +29,14 @@ class MediaEditFilter extends InputFilter
     /**
      * Initializing validator and filter 
      */
-    public function __construct()
+    public function __construct($options = array())
     {
+        $params = array(
+            'table'  => 'media',
+        );
+        if (isset($options['id']) and $options['id']) {
+            $params['id'] = $options['id'];
+        }
         $this->add(array(
             'name'     => 'name',
             'required' => true,
@@ -42,9 +48,7 @@ class MediaEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatName',
-                    'options' => array(
-                        'table'  => 'media',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));
@@ -68,24 +72,9 @@ class MediaEditFilter extends InputFilter
             'name'     => 'url',
             'required' => true,
         ));
-
+        
         $this->add(array(
-            'name'     => 'x',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'y',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'w',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'h',
+            'name'     => 'type',
             'required' => false,
         ));
 
