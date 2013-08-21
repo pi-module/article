@@ -96,6 +96,10 @@ class CategoryController extends ActionController
             $rowCategory = $modelCategory->find($id);
 
             if (empty($rowCategory)) {
+                Service::jumpToErrorOperation(
+                    $this,
+                    __('Category is not exists.')
+                );
                 return false;
             }
 
@@ -108,7 +112,11 @@ class CategoryController extends ActionController
             if ($currentParent != $parent) {
                 $children = $modelCategory->getDescendantIds($id);
                 if (array_search($parent, $children) !== false) {
-                    throw new \Exception(__('Category cannot be moved to self or a child'));
+                    Service::jumpToErrorOperation(
+                        $this,
+                        __('Category cannot be moved to self or a child.')
+                    );
+                    return false;
                 } else {
                     $modelCategory->move($id, $parent);
                 }
@@ -327,6 +335,9 @@ class CategoryController extends ActionController
             }
             $data = $form->getData();
             $id   = $this->saveCategory($data);
+            if (empty($id)) {
+                return ;
+            }
 
             return $this->redirect()->toRoute('', array('action' => 'list-category'));
         }
@@ -367,24 +378,24 @@ class CategoryController extends ActionController
         $id     = $this->params('id');
 
         if ($id == 1) {
-            throw new \Exception(__('Root node cannot be deleted.'));
+            return Service::jumpToErrorOperation($this, __('Root node cannot be deleted.'));
         } else if ($id) {
             $categoryModel = $this->getModel('category');
 
             // Check default category
             if ($this->config('default_category') == $id) {
-                throw new \Exception(__('Cannot remove default category'));
+                return Service::jumpToErrorOperation($this, __('Cannot remove default category'));
             }
 
             // Check children
             if ($categoryModel->hasChildren($id)) {
-                throw new \Exception(__('Cannot remove category with children'));
+                return Service::jumpToErrorOperation($this, __('Cannot remove category with children'));
             }
 
             // Check related article
             $linkedArticles = $this->getModel('article')->select(array('category' => $id));
             if ($linkedArticles->count()) {
-                throw new \Exception(__('Cannot remove category in used'));
+                return Service::jumpToErrorOperation($this, __('Cannot remove category in used'));
             }
 
             // Delete image
@@ -400,7 +411,7 @@ class CategoryController extends ActionController
             $this->redirect()->toRoute('', array('action' => 'list-category'));
             $this->view()->setTemplate(false);
         } else {
-            throw new \Exception(__('Invalid category id'));
+            return $this->jumpTo404(__('Invalid category ID!'));
         }
     }
 

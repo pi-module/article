@@ -39,7 +39,7 @@ class CategoryMoveFilter extends InputFilter
 
         $this->add(array(
             'name'     => 'to',
-            'required' => true,
+            'required' => false,
         ));
     }
 }

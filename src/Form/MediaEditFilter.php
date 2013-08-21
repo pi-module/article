@@ -39,6 +39,14 @@ class MediaEditFilter extends InputFilter
                     'name' => 'StringTrim',
                 ),
             ),
+            'validators' => array(
+                array(
+                    'name'    => 'Module\Article\Validator\RepeatName',
+                    'options' => array(
+                        'table'  => 'media',
+                    ),
+                ),
+            ),
         ));
 
         $this->add(array(
