@@ -42,7 +42,7 @@ class Install extends BasicInstall
     }
     
     /**
-     * Adding a root category.
+     * Adding a root category, and its child as default category.
      * 
      * @param Event $e 
      */
@@ -58,6 +58,15 @@ class Install extends BasicInstall
             'description' => __('Module root category'),
         );
         $result = $model->add($data);
+        $defaultCategory = array(
+            'id'          => null,
+            'name'        => 'default',
+            'slug'        => 'slug',
+            'title'       => __('Default'),
+            'description' => __('The default category can not be delete, by can be modified!'),
+        );
+        $parent = $model->select(array('name' => 'root'))->current();
+        $itemId = $model->add($defaultCategory, $parent);
         
         $e->setParam('result', $result);
     }

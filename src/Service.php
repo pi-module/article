@@ -805,4 +805,20 @@ class Service
         
         return $result;
     }
+    
+    /**
+     * Call a error operation template to display error message.
+     * 
+     * @param ActionController  $handler
+     * @param string|null       $message 
+     */
+    public static function jumpToErrorOperation(
+            ActionController $handler,
+            $message = null
+    )
+    {
+        $message = $message ?: __('Operating error!');
+        $handler->view()->assign('message', $message);
+        $handler->view()->setTemplate('operation-error');
+    }
 }
