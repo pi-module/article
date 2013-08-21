@@ -22,7 +22,8 @@ namespace Module\Article\Installer\Action;
 use Pi;
 use Pi\Application\Installer\Action\Install as BasicInstall;
 use Zend\EventManager\Event;
-use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Service;
+use Module\Article\File;
 
 /**
  * Class for custom install 
