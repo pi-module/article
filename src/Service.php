@@ -389,6 +389,24 @@ class Service
     }
     
     /**
+     * Getting absolute module config path name.
+     * 
+     * @param string  $name
+     * @param string  $module
+     * @return array|string 
+     */
+    public static function getModuleConfigPath($name = null, $module = null)
+    {
+        $module = $module ?: Pi::service('module')->current();
+        $top    = Pi::path('var/' . $module);
+        $relativePath = array(
+            'draft-page-form' => Config::ELEMENT_EDIT_PATH,
+        );
+        
+        return $name ? $relativePath[$name] : $relativePath;
+    }
+    
+    /**
      * Getting count statistics of draft with different status and published article
      * @param type $from
      * @return type 

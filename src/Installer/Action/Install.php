@@ -22,6 +22,7 @@ namespace Module\Article\Installer\Action;
 use Pi;
 use Pi\Application\Installer\Action\Install as BasicInstall;
 use Zend\EventManager\Event;
+use Module\Article\Controller\Admin\ConfigController as Config;
 
 /**
  * Class for custom install 
@@ -37,6 +38,7 @@ class Install extends BasicInstall
     {
         $events = $this->events;
         $events->attach('install.post', array($this, 'initCategory'), 1);
+        $events->attach('install.post', array($this, 'initDraftEditPageForm'), -90);
         parent::attachDefaultListeners();
         return $this;
     }
@@ -67,6 +69,25 @@ class Install extends BasicInstall
         );
         $parent = $model->select(array('name' => 'root'))->current();
         $itemId = $model->add($defaultCategory, $parent);
+        
+        $e->setParam('result', $result);
+    }
+    
+    /**
+     * Add a config file to initilize draft edit page form type as extended.
+     * 
+     * @param Event $e 
+     */
+    public function initDraftEditPageForm(Event $e)
+    {
+        $module = $this->event->getParam('module');
+        $content  =<<<EOD
+return array(
+    'mode'     => 'extension',
+);
+EOD;
+        $filename = Service::getModuleConfigPath('draft-edit-form');
+        $result   = File::addContent($filename, $content);
         
         $e->setParam('result', $result);
     }
