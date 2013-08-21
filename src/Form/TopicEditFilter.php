@@ -29,8 +29,14 @@ class TopicEditFilter extends InputFilter
     /**
      * Initializing validator and filter 
      */
-    public function __construct()
+    public function __construct($options = array())
     {
+        $params = array(
+            'table'  => 'topic',
+        );
+        if (isset($options['id']) and $options['id']) {
+            $params['id'] = $options['id'];
+        }
         $this->add(array(
             'name'     => 'name',
             'required' => true,
@@ -42,9 +48,7 @@ class TopicEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatName',
-                    'options' => array(
-                        'table'  => 'topic',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));
@@ -60,9 +64,7 @@ class TopicEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatSlug',
-                    'options' => array(
-                        'table'  => 'topic',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));
@@ -99,26 +101,6 @@ class TopicEditFilter extends InputFilter
 
         $this->add(array(
             'name'     => 'image',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'x',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'y',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'w',
-            'required' => false,
-        ));
-
-        $this->add(array(
-            'name'     => 'h',
             'required' => false,
         ));
 

@@ -29,8 +29,14 @@ class LevelEditFilter extends InputFilter
     /**
      * Initializing validator and filter 
      */
-    public function __construct()
+    public function __construct($options = array())
     {
+        $params = array(
+            'table'  => 'level',
+        );
+        if (isset($options['id']) and $options['id']) {
+            $params['id'] = $options['id'];
+        }
         $this->add(array(
             'name'     => 'name',
             'required' => true,
@@ -42,9 +48,7 @@ class LevelEditFilter extends InputFilter
             'validators' => array(
                 array(
                     'name'    => 'Module\Article\Validator\RepeatName',
-                    'options' => array(
-                        'table'  => 'level',
-                    ),
+                    'options' => $params,
                 ),
             ),
         ));

@@ -47,11 +47,14 @@ class RepeatSlug extends AbstractValidator
         $options = $this->getOptions();
         $module  = Pi::service('module')->current();
         $row     = Pi::model($options['table'], $module)->find($value, 'slug');
-        if ($row) {
-            $this->error(self::SLUG_EXISTS);
-            return false;
+        if (empty($row)) {
+            return true;
         }
-
-        return true;
+        if (isset($options['id']) and $row->id == $options['id']) {
+            return true;
+        }
+        
+        $this->error(self::SLUG_EXISTS);
+        return false;
     }
 }

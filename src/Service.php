@@ -77,7 +77,7 @@ class Service
             'topicHeight'      => $handler->config('topic_height'),
             'featureWidth'     => $handler->config('feature_width'),
             'featureHeight'    => $handler->config('feature_height'),
-            'image_extension'  => array_map('trim', explode(',', $handler->config('image_extension'))),
+            'imageExtension'   => array_map('trim', explode(',', $handler->config('image_extension'))),
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
             'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),
@@ -400,7 +400,7 @@ class Service
         $module = $module ?: Pi::service('module')->current();
         $top    = Pi::path('var/' . $module);
         $relativePath = array(
-            'draft-page-form' => Config::ELEMENT_EDIT_PATH,
+            'draft-edit-form' => Pi::path(Config::ELEMENT_EDIT_PATH),
         );
         
         return $name ? $relativePath[$name] : $relativePath;

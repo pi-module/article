@@ -83,6 +83,7 @@ class Install extends BasicInstall
     {
         $module = $this->event->getParam('module');
         $content  =<<<EOD
+<?php
 return array(
     'mode'     => 'extension',
 );

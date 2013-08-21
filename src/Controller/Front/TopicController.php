@@ -622,7 +622,10 @@ class TopicController extends ActionController
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
-            $form->setInputFilter(new TopicEditFilter);
+            $options = array(
+                'id'   => $post['id'],
+            );
+            $form->setInputFilter(new TopicEditFilter($options));
             $form->setValidationGroup(Topic::getAvailableFields());
             if (!$form->isValid()) {
                 return Service::renderForm($this, $form, __('Can not update data!'), true);
@@ -857,9 +860,20 @@ class TopicController extends ActionController
 
         Upload::saveImage($uploadInfo);
 
-        // Or save info to session
-        $session = Upload::getUploadSession($module, 'topic');
-        $session->$id = $uploadInfo;
+        // Save image to topic
+        $rowTopic = $this->getModel('topic')->find($id);
+        if ($rowTopic) {
+            if ($rowTopic->image && $rowTopic->image != $fileName) {
+                unlink(Pi::path($rowTopic->image));
+            }
+
+            $rowTopic->image = $fileName;
+            $rowTopic->save();
+        } else {
+            // Or save info to session
+            $session = Upload::getUploadSession($module, 'topic');
+            $session->$id = $uploadInfo;
+        }
 
         $imageSize = getimagesize(Pi::path($fileName));
 
@@ -870,6 +884,7 @@ class TopicController extends ActionController
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
             'preview_url'  => Pi::url($fileName),
+            'filename'     => $fileName,
         );
 
         $return['status'] = true;

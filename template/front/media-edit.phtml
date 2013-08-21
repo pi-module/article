@@ -5,7 +5,8 @@ $this->Backbone();
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
-<?php if (isset($error)) { ?>
+<?php $error = $this->formElementErrors($form->get('url')) ? __('Media must be uploaded!') : null; ?>
+<?php if (!empty($error)) { ?>
 <div class="alert alert-error">
     <button class="close" data-dismiss="alert" type="button">×</button>
     <?php echo $this->escape($error) ?>
@@ -18,12 +19,13 @@ $this->Backbone();
 <?php } ?>
 
 <?php include $this->templateComponent('form') ?>
+
 <script id="temp-upload" type="text/template">
     <div id="jsUpload">
         <div class="upload-media">
-        <?php $src = $form->get('media')->getValue() ?>
+        <?php $src = $form->get('url')->getValue() ?>
         <?php if ($src) { ?>
-            <?php if (in_array($type, $image_extension)) { ?>
+            <?php if (in_array(strtolower($form->get('type')->getValue()), $imageExtension)) { ?>
                 <div class="upload-image-bg">
                     <div class="black-bg"><i class="icon-remove"></i></div>    
                     <img src="<?php echo Pi::url($src) ?>">
@@ -61,22 +63,24 @@ var UploadView = Backbone.View.extend({
        "click button.close": "remove"
    },
    initialize: function() {
-       page.$("[name=media]").parents(".control-group:first").find(".controls").html($("#temp-upload").html());
+       page.$("[name=placeholder]").parents(".control-group:first").find(".controls").html($("#temp-upload").html());
        this.$el = $("#jsUpload");
        this.input = this.$("[name=upload]");
        this.fileupload();
    },
    fileupload: function() {
        var self = this;
-       var imageExt = '<?php echo implode(',', $image_extension) ?>';
+       var imageExt = '<?php echo implode(',', $imageExtension) ?>';
        var imageExts = new Array;
        imageExts = imageExt.split(',');
        this.input.fileupload({
            forceIframeTransport: true,
-           url: '<?php echo $this->url('',array('controller' => 'media', 'action' => 'upload', 'source' => 'media')); ?>/' + page.id(),
+           url: '<?php echo $this->url('', array('controller' => 'media', 'action' => 'upload', 'source' => 'media')); ?>/' + page.id(),
            done: function(e, data) {
                var d = $.parseJSON($.trim($(data.result).text()));
                if (d.status == 1) {
+                   page.$("[name=url]").val(d.data.filename);
+                   page.$("[name=type]").val(d.data.type);
                    var isImage = false;
                    for (i = 0; i < imageExts.length; i++) {
                        if (d.data.type == imageExts[i]) {
@@ -92,7 +96,6 @@ var UploadView = Backbone.View.extend({
                                  + d.data.basename
                                  + '</div>';
                        $(".upload-media").html(content);
-                       
                    }
                } else {
                    alert(_.values(d.message).join(","));
@@ -103,6 +106,8 @@ var UploadView = Backbone.View.extend({
    remove: function() {
        var self = this;
        $.getJSON('<?php echo $this->url('', array('controller' => 'media', 'action' => 'remove')); ?>' + page.id()).done(function() {
+           page.$("[name=url]").val('');
+           page.$("[name=type]").val('');
            content = '<div class="alert alert-warning span2">' + '<?php _e('No item!') ?>' + '</div>';
            self.$(".upload-media").html(content);
        });

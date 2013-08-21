@@ -67,40 +67,12 @@ class MediaEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'media',
+            'name'       => 'placeholder',
             'options'    => array(
                 'label'       => __('Media'),
             ),
             'attributes' => array(
                 'type'        => '',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'x',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'y',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'w',
-            'attributes' => array(
-                'type'        => 'hidden',
-            ),
-        ));
-
-        $this->add(array(
-            'name'       => 'h',
-            'attributes' => array(
-                'type'        => 'hidden',
             ),
         ));
 
@@ -118,6 +90,20 @@ class MediaEditForm extends BaseForm
         
         $this->add(array(
             'name'       => 'fake_id',
+            'attributes' => array(
+                'type'        => 'hidden',
+            ),
+        ));
+        
+        $this->add(array(
+            'name'       => 'url',
+            'attributes' => array(
+                'type'        => 'hidden',
+            ),
+        ));
+        
+        $this->add(array(
+            'name'       => 'type',
             'attributes' => array(
                 'type'        => 'hidden',
             ),
