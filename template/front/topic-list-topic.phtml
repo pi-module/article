@@ -24,7 +24,7 @@ $this->Backbone();
                     <img src="<?php echo Pi::url($topic['image']) ?>" alt="<?php echo $this->escape($topic['title']); ?>" style="width: 40px; height: 30px" />
                 <?php } ?>
                 </td>
-                <td><?php echo $this->escape($topic['title']) ?>
+                <td><a href="<?php echo $this->url($route, array('controller' => 'topic', 'action' => 'index', 'topic' => $topic['slug'] ?: $topic['id'])) ?>"><?php echo $this->escape($topic['title']) ?></a>
                     <?php if (!$topic['active']) { ?> - <strong class="text-warning"><?php _e('Deactive'); ?></strong> <?php } ?>
                     <div class="row-actions">
                         <a href="<?php echo $this->url('', array('action' => 'edit', 'id' => $topic['id'])) ?>"><?php _e('Edit') ?></a> |

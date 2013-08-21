@@ -739,9 +739,12 @@ class TopicController extends ActionController
             ),
         ));
 
-        $this->view()->assign('topics', $rowset);
-        $this->view()->assign('title', __('Topic List'));
-        $this->view()->assign('action', 'list-topic');
+        $this->view()->assign(array(
+            'title'   => __('Topic List'),
+            'topics'  => $rowset,
+            'action'  => 'list-topic',
+            'route'   => '.' . Service::getRouteName(),
+        ));
     }
 
     /**
