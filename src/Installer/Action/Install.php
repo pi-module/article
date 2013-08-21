@@ -87,7 +87,7 @@ return array(
     'mode'     => 'extension',
 );
 EOD;
-        $filename = Service::getModuleConfigPath('draft-edit-form');
+        $filename = Service::getModuleConfigPath('draft-edit-form', $module);
         $result   = File::addContent($filename, $content);
         
         $e->setParam('result', $result);
