@@ -181,7 +181,7 @@
                     <?php _e('Choose files') ?>
                 </span>
                 <span class="muted">
-                    <?php echo $this->escape($mediaExtension) ?>
+                    <?php echo $this->escape($attachmentExtension) ?>
                     <span style="margin-left:5px;">
                       <?php _e('Max Size:'); ?><?php echo $maxMediaSize / (1024 * 1024) . 'M'; ?>
                     </span>
@@ -664,7 +664,7 @@ var page = {
     editor:             CKEDITOR.instances.content,
     autosaveInterval:   '<?php echo $this->escape($autoSave) ?>',
     featureImg:         "<?php echo $this->escape($featureThumb) ?>",
-    attachFormate:      "<?php echo $this->escape($mediaExtension) ?>".split(","),
+    attachFormate:      "<?php echo $this->escape($attachmentExtension) ?>".split(","),
     attachMax:          "<?php echo $this->escape($maxMediaSize) ?>",
     imageExtension:     "<?php echo $this->escape($imageExtension) ?>".split(","),
     imageMax:           "<?php echo $this->escape($maxImageSize) ?>",
@@ -1184,6 +1184,7 @@ var AttachmentListView = Backbone.View.extend({
         $.get('<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'search',
+            'type'       => $attachmentExtension,
         )); ?>' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
             var content = '<table class="table table-bordered">'
@@ -1650,7 +1651,8 @@ var GalleryListView = Backbone.View.extend({
         $.get('<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'search',
-        )); ?>' + 'title-' + title, function(result) {
+            'type'       => 'image',
+        )); ?>/' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'

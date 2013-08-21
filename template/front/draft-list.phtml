@@ -53,7 +53,7 @@
                 <td>
                     <?php echo $this->escape($draft['tag']); ?>
                 </td>
-                <td><?php echo date('Y-m-d', $status == $flags['published'] ? $draft['time_publish'] : $draft['time_update']); ?></td>
+                <td><?php echo date('Y-m-d', $status == $flags['published'] ? $draft['time_publish'] : ($draft['time_update'] ?: $draft['time_save'])); ?></td>
             </tr>
             <?php } ?>
         </tbody>

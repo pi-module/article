@@ -148,25 +148,6 @@ class CategoryController extends ActionController
         return $id;
     }
     
-    protected function getCacheKey($category)
-    {
-        $result = false;
-
-        switch ($category) {
-            case '2':
-                $result = Cache::KEY_ARTICLE_NEWS_COUNT;
-                break;
-            case '3':
-                $result = Cache::KEY_ARTICLE_PRODUCT_COUNT;
-                break;
-            case '4':
-                $result = Cache::KEY_ARTICLE_DESIGN_COUNT;
-                break;
-        }
-
-        return $result;
-    }
-
     /**
      * Category index page, which will redirect to category article list page
      */
@@ -215,19 +196,13 @@ class CategoryController extends ActionController
         $resultsetArticle   = Entity::getAvailableArticlePage($where, $page, $limit, $columns, null, $module);
 
         // Total count
-        $cacheKey   = $this->getCacheKey($categoryId);
-        $totalCount = (int) Cache::getSimple($cacheKey);
-        if (empty($totalCount)) {
-            $where = array_merge($where, array(
-                'time_publish <= ?' => time(),
-                'status'            => Article::FIELD_STATUS_PUBLISHED,
-                'active'            => 1,
-            ));
-            $modelArticle   = $this->getModel('article');
-            $totalCount     = $modelArticle->getSearchRowsCount($where);
-
-            Cache::setSimple($cacheKey, $totalCount);
-        }
+        $where = array_merge($where, array(
+            'time_publish <= ?' => time(),
+            'status'            => Article::FIELD_STATUS_PUBLISHED,
+            'active'            => 1,
+        ));
+        $modelArticle   = $this->getModel('article');
+        $totalCount     = $modelArticle->getSearchRowsCount($where);
 
         // Pagination
         $paginator = Paginator::factory($totalCount);

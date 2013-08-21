@@ -694,7 +694,7 @@ class MediaController extends ActionController
                 $data = array(
                     'id'    => 0,
                     'name'  => $fakeId,
-                    'title' => 'Image: ' . $fakeId . ' from outside',
+                    'title' => 'File ' . $fakeId . ' from outside',
                 );
             }
             $mediaId = $this->saveMedia($data);

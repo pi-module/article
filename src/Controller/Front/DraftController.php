@@ -70,15 +70,20 @@ class DraftController extends ActionController
      */
     protected function setModuleConfig()
     {
-        $module = Pi::service('module')->current();
+        $module        = Pi::service('module')->current();
+        $imageExt      = $this->config('image_extension');
+        $mediaExt      = $this->config('media_extension');
+        $attachmentExt = array_diff(
+            array_map('trim', explode(',', $mediaExt)), 
+            array_map('trim', explode(',', $imageExt)));
         $this->view()->assign(array(
             'width'                 => $this->config('feature_width'),
             'height'                => $this->config('feature_height'),
             'thumbWidth'            => $this->config('feature_thumb_width'),
             'thumbHeight'           => $this->config('feature_thumb_height'),
-            'imageExtension'        => $this->config('image_extension'),
+            'imageExtension'        => $imageExt,
             'maxImageSize'          => Media::transferSize($this->config('max_image_size'), false),
-            'mediaExtension'        => $this->config('media_extension'),
+            'mediaExtension'        => $mediaExt,
             'maxMediaSize'          => Media::transferSize($this->config('max_media_size'), false),
             'autoSave'              => $this->config('autosave_interval'),
             'max_summary_length'    => $this->config('max_summary_length'),
@@ -93,6 +98,7 @@ class DraftController extends ActionController
                                            $module),
             'contentImageWidth'     => $this->config('content_thumb_width'),
             'contentImageHeight'    => $this->config('content_thumb_height'),
+            'attachmentExtension'   => implode(',', $attachmentExt),
         ));
     }
 
@@ -1533,40 +1539,41 @@ class DraftController extends ActionController
     {
         Pi::service('log')->active(false);
         
-        $type  = Service::getParam($this, 'type', 'attachment');
-        $media = Service::getParam($this, 'media', 0);
-        $id    = Service::getParam($this, 'id', 0);
-        if (empty($id)) {
-            $id = Service::getParam($this, 'fake_id', 0);
+        $type    = Service::getParam($this, 'type', 'attachment');
+        $mediaId = Service::getParam($this, 'media', 0);
+        $draftId = Service::getParam($this, 'id', 0);
+        if (empty($draftId)) {
+            $draftId = Service::getParam($this, 'fake_id', 0);
         }
         
         $return = array('status' => false);
-        $modelMedia = $this->getModel('media');
-        $rowMedia   = $modelMedia->find($media);
-        if (empty($rowMedia->id)) {
-            $return['message'] = __('Invalid media!');
-            echo json_encode($return);
-            exit();
-        }
-        
-        if (empty($id)) {
+        // Checking if is draft exists
+        if (empty($draftId)) {
             $return['message'] = __('Invalid draft ID!');
             echo json_encode($return);
             exit();
         }
         
-        $data     = array(
-            'media'   => $media,
-            'type'    => $type,
-        );
-        $model    = $this->getModel('asset_draft');
-        $rowAsset = $model->find($id);
-        if ($rowAsset) {
-            $rowAsset->assign($data);
-            $rowAsset->save();
-            $rowId = $rowAsset->id;
-        } else {
-            $data['draft'] = $id;
+        // Checking if is media exists
+        $rowMedia = $this->getModel('media')->find($mediaId);
+        if (empty($rowMedia)) {
+            $return['message'] = __('Invalid media!');
+            echo json_encode($return);
+            exit();
+        }
+        
+        // Saving asset data
+        $model     = $this->getModel('asset_draft');
+        $rowAssets = $model->select(array(
+            'draft' => $draftId,
+            'media' => $mediaId
+        ));
+        if ($rowAssets->count() == 0) {
+            $data     = array(
+                'draft'   => $draftId,
+                'media'   => $mediaId,
+                'type'    => $type,
+            );
             $row = $model->createRow($data);
             $row->save();
             
@@ -1575,20 +1582,20 @@ class DraftController extends ActionController
                 echo json_encode($return);
                 exit();
             }
-            $rowId = $row->id;
         }
         
         $return['data']    = array(
-            'media'       => $media,
-            'id'          => $rowId,
+            'media'       => $mediaId,
+            'id'          => $row->id,
             'title'       => $rowMedia->title,
             'size'        => $rowMedia->size,
             'downloadUrl' => $this->url('', array(
                 'controller' => 'media',
                 'action'     => 'download',
-                'id'         => $media,
+                'id'         => $mediaId,
             )),
         );
+        // Generating a preview url for image file
         if ('image' == $type) {
             $return['data']['preview_url'] = Pi::url($rowMedia->url);
         }
