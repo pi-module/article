@@ -183,7 +183,11 @@ class MediaController extends ActionController
         $limit  = (int) $config['page_limit_front'] ?: 40;
         $types  = array();
         foreach (explode(',', $config['media_extension']) as $item) {
-            $types[$item] = trim($item);
+            $types[$item] = strtolower(trim($item));
+        }
+        $imageTypes = array();
+        foreach (explode(',', $config['image_extension']) as $item) {
+            $imageTypes[$item] = strtolower(trim($item));
         }
         
         $resultSet = Media::getList($where, $page, $limit, null, null, $module);
@@ -220,6 +224,7 @@ class MediaController extends ActionController
             'keyword'       => $keyword,
             'types'         => $types,
             'form'          => $form,
+            'imageTypes'    => $imageTypes,
         ));
     }
     
@@ -353,6 +358,22 @@ class MediaController extends ActionController
             throw new \Exception(__('Invalid category id'));
         }
         
+        // Checking if media is in used
+        $rowAsset = $this->getModel('asset')->select(array('media' => $ids));
+        $medias   = array();
+        foreach ($rowAsset as $row) {
+            $medias[$row->media] = $row->media;
+        }
+        if (!empty($medias)) {
+            return Service::jumpToErrorOperation(
+                $this,
+                __('The following medias is in used, and can not be delete: ')
+                . implode(', ', $medias));
+        }
+        
+        // Removing media in asset_draft
+        $this->getModel('asset_draft')->delete(array('media' => $ids));
+        
         // Removing media statistics
         $model = $this->getModel('media_statistics');
         $model->delete(array('media' => $ids));
@@ -426,7 +447,7 @@ class MediaController extends ActionController
 
         // Checking whether uploaded file is valid
         if (!$upload->isValid()) {
-            $return['message'] = $upload->getMessages();
+            $return['message'] = implode(', ', $upload->getMessages());
             echo json_encode($return);
             exit ;
         }
@@ -678,6 +699,7 @@ class MediaController extends ActionController
         
         $id     = $this->params('id', 0);
         $fakeId = $this->params('fake_id', 0);
+        $source = $this->params('source', 'outside');
         $result = array();
         if (empty($fakeId) and empty($id)) {
             $result = array(
@@ -694,7 +716,7 @@ class MediaController extends ActionController
                 $data = array(
                     'id'    => 0,
                     'name'  => $fakeId,
-                    'title' => 'File ' . $fakeId . ' from outside',
+                    'title' => 'File ' . $fakeId . ' from ' . $source,
                 );
             }
             $mediaId = $this->saveMedia($data);

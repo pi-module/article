@@ -66,10 +66,18 @@ class Media
         $mediaIds = array(0);
         $submitterIds = array(0);
         foreach ($rowset as $row) {
-            $item = $row->toArray();
-            $item['size'] = self::transferSize($item['size']);
-            $meta = !empty($row->meta) ? json_decode($row->meta, true) : array();
+            $item               = $row->toArray();
+            $item['size']       = self::transferSize($item['size']);
+            $item['type']       = strtolower($item['type']);
+            $meta = empty($row->meta) ? array() : json_decode($row->meta, true);
             unset($item['meta']);
+            $item['previewUrl'] = Pi::engine()->application()
+                                              ->getRouter()
+                                              ->assemble(array(
+                                                  'controller' => 'media',
+                                                  'action'     => 'detail',
+                                                  'id'         => $row->id,
+                                              ), array('name' => 'default'));
             $item = array_merge($item, $meta);
             $mediaSet[$row->id] = $item;
             $mediaIds[]         = $row->id;
