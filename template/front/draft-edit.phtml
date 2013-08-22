@@ -1348,8 +1348,6 @@ var FeatureView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-            'width'      => $width,
-            'height'     => $height,
         )); ?>/fake_id-' + page.mediaFakeId;
         this.input.fileupload({
             formData    : function() {
@@ -1372,8 +1370,6 @@ var FeatureView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-                'width'      => $width,
-                'height'     => $height,
             )); ?>/fake_id-' + page.mediaFakeId;
         });  
     },
@@ -1443,7 +1439,6 @@ var FeatureView = Backbone.View.extend({
         });
     },
     remove          : function() {
-        var self = this;
         var parameter = '<?php echo $form->get('id')->getValue()  
                          ? 'id-' . $form->get('id')->getValue()
                          : null ?>';
@@ -1452,12 +1447,12 @@ var FeatureView = Backbone.View.extend({
         }
         $.getJSON('<?php echo $this->url('', array(
             'controller' => 'draft', 'action' => 'remove-image')); ?>' + parameter).done(function() {
-            $(".upload-image-wrap").html('');
-        });  
+            $('#jsUpload').find(".upload-image-wrap").html('');
+        });
     },
     render          : function(obj) {
         obj.preview_url = obj.preview_url + '?' + new Date().getTime();
-        $(".upload-image-wrap").html(this.template(obj));
+        $('#jsUpload').find(".upload-image-wrap").html(this.template(obj));
     },
     // Fetching image from media
     searchMedia     : function() {

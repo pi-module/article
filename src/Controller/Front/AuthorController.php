@@ -160,8 +160,7 @@ class AuthorController extends ActionController
                 return Service::renderForm(
                     $this,
                     $form,
-                    __('There are some error occured!'),
-                    true
+                    __('There are some error occured!')
                 );
             }
             
@@ -171,8 +170,7 @@ class AuthorController extends ActionController
             if (!$id) {
                 return $this->renderForm(
                     $form,
-                    __('Can not save data!'),
-                    true
+                    __('Can not save data!')
                 );
             }
             $this->redirect()->toRoute('', array('action' => 'list'));
@@ -210,8 +208,7 @@ class AuthorController extends ActionController
                 return Service::renderForm(
                     $this,
                     $form,
-                    __('There are some error occured!'),
-                    true
+                    __('There are some error occured!')
                 );
             }
             

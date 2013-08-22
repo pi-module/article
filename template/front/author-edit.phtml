@@ -93,8 +93,6 @@ var UploadView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-            'width'      => $authorWidth,
-            'height'     => $authorHeight,
         )); ?>/fake_id-' + page.mediaFakeId;
         this.input.fileupload({
             formData : function() {
@@ -117,8 +115,6 @@ var UploadView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-                'width'      => $authorWidth,
-                'height'     => $authorHeight,
             )); ?>/fake_id-' + page.mediaFakeId;
         });
     },
