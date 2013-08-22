@@ -40,87 +40,42 @@ $this->bootstrap('js/bootstrap.min.js');
         </div>
     </script>
 
-    <div id="upload-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modal-header" aria-hidden="true">
-        <div class="modal-header">
-            <button id="media-close" type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h3 id="modal-header"><?php echo __('Choose Image') ?></h3>
-        </div>
-        <div class="modal-body">
-            <div class="tabbable">
-                <ul class="nav nav-tabs">
-                    <li class="active">
-                        <a href="#image-upload" data-toggle="tab"><?php _e('Upload Image') ?></a>
-                    </li>
-                    <li>
-                        <a href="#image-choose" data-toggle="tab">
-                            <?php _e('Choose From Media') ?>
-                        </a>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane active" id="image-upload">
-                        <div id="media-image" class="upload-image-bg" style="width: 320px; height: 240px">
-                            <img style="width: 320px; height: 240px" src="<?php echo $defaultMediaImage ?>" />
-                        </div>
-                        <span class="btn upload fileinput-button">
-                            <?php _e('Upload') ?>
-                            <input type="file" name="upload">
-                        </span>
-                    </div>
-                    <div class="tab-pane" id="image-choose">
-                        <div class="clearfix form-inline" style="margin-bottom: 20px">
-                            <div class="pull-right form-search">
-                                <div class="input-append">
-                                    <input type="text" value="" placeholder="<?php _e('Title') ?>" class="input-medium search-query" name="media-title">
-                                    <button id="media-search" class="btn"><?php _e('Search') ?></button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="media-select-result" style="margin-bottom: 20px"></div>
-                        <div id="media-lists"></div>
-                    </div>
-                </div>
-            </div>
-            <input name="image-id" type="hidden" />
-            <input name="image-source" type="hidden" />
-        </div>
-        <div class="modal-footer">
-            <button id="media-cancel" class="btn" data-dismiss="modal" aria-hidden="true"><?php echo __('Cancel') ?></button>
-            <button id="media-process" class="btn btn-primary" data-dismiss="modal" ><?php echo __('Yes') ?></button>
-        </div>
-    </div>
+    <?php include 'media-image-box.phtml' ?>
 </div>
 
 <script>
 (function($) {
 var page = {
     id      : function() {
-        return "<?php echo $form->get('id')->getValue() ? 'id-' 
-               . $form->get('id')->getValue() : 'fake_id-' 
-               . $form->get('fake_id')->getValue(); ?>";
+        return "<?php echo $form->get('id')->getValue()
+            ? 'id-' . $form->get('id')->getValue()
+            : 'fake_id-' . $form->get('fake_id')->getValue(); ?>";
     },
     form    : $("form.form-horizontal"),
     $       : function(selector) {
        return this.form.find(selector);
     },
-    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' + '<?php echo $defaultMediaImage ?>' + '" />',
+    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' 
+                         + '<?php echo $defaultMediaImage ?>' + '" />',
     mediaFakeId : '<?php echo uniqid() ?>'
 };
 
 var UploadView = Backbone.View.extend({
-    mediaTemplate : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
-                + '<img src="<%=preview_url %>">'),
-    template : _.template('<div class="black-bg"><i class="author icon-remove"></i></div>'
-                + '<img src="<%=preview_url %>">'),
+    mediaTemplate : _.template('<div class="black-bg">'
+                  + '<i class="media icon-remove"></i></div>'
+                  + '<img src="<%=preview_url %>">'),
+    template      : _.template('<div class="black-bg">'
+                  + '<i class="author icon-remove"></i></div>'
+                  + '<img src="<%=preview_url %>">'),
     events   : {
-        "click .author.icon-remove": "remove",
-        "click .media.icon-remove": "removeUpload",
-        "click #media-search": "searchMedia",
-        "click .media-insert": "insertMedia",
+        "click .author.icon-remove" : "remove",
+        "click .media.icon-remove"  : "removeUpload",
+        "click #media-search"       : "searchMedia",
+        "click .media-insert"       : "insertMedia",
         "click .media-remove.close" : "removeMedia",
-        "click #media-close" : "cancel",
-        "click #media-cancel" : "cancel",
-        "click #media-process" : "processImage"
+        "click #media-close"        : "cancel",
+        "click #media-cancel"       : "cancel",
+        "click #media-process"      : "processImage"
     },
     initialize   : function() {
         page.$("[name=placeholder]")
@@ -138,8 +93,6 @@ var UploadView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-            'width'      => $authorWidth,
-            'height'     => $authorHeight,
         )); ?>/fake_id-' + page.mediaFakeId;
         this.input.fileupload({
             formData : function() {
@@ -162,8 +115,6 @@ var UploadView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-                'width'      => $authorWidth,
-                'height'     => $authorHeight,
             )); ?>/fake_id-' + page.mediaFakeId;
         });
     },
@@ -174,7 +125,13 @@ var UploadView = Backbone.View.extend({
         }
         
         var self = this;
-        $.getJSON('<?php echo $this->url('', array('controller' => 'media', 'action' => 'remove')); ?>fake_id-'+ page.mediaFakeId).done(function() {
+        $.getJSON('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'media',
+                'action'     => 'remove'
+            )
+        ); ?>fake_id-'+ page.mediaFakeId).done(function() {
             $("#media-image").html(page.mediaDefaultTemplate);
             if (clearData == true) {
                 self.clearMediaData();
@@ -209,7 +166,10 @@ var UploadView = Backbone.View.extend({
                 }
             },
             error: function() {
-                self.renderMessage('error', '<?php _e('Error ocurred when request saving image!') ?>');
+                self.renderMessage(
+                    'error',
+                    '<?php _e('Error ocurred when request saving image!') ?>'
+                );
             }
         })
     },
@@ -235,7 +195,13 @@ var UploadView = Backbone.View.extend({
     },
     remove       : function() {
         var self = this;
-        $.getJSON('<?php echo $this->url('', array('controller' => 'author', 'action' => 'remove-image')); ?>'+page.id()).done(function() {
+        $.getJSON('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'author',
+                'action'     => 'remove-image'
+            )
+        ); ?>'+page.id()).done(function() {
             page.$("[name=photo]").val('');
             self.$("#author-image").html('<i class="icon-user"></i>');
         });  
@@ -246,32 +212,35 @@ var UploadView = Backbone.View.extend({
     },
     // Fetching image from media
     searchMedia  : function() {
-        var self = this;
         var title = $('input[name="media-title"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => 'image',
-        )); ?>/' + 'title-' + title, function(result) {
+        $.get('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'media',
+                'action'     => 'search',
+                'type'       => 'image',
+            )
+        ); ?>/' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
             var content = '<table class="table table-striped">'
-                            + '<tbody><tr>'
-                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
+                        + '<tbody><tr>'
+                        + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
+                        + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
+                        + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
+                        + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
             for (i in lists) {
                 content += '<tr>'
-                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
-                            + '<td>' + lists[i].title + '</td>'
-                            + '<td>' + lists[i].size + '</td>'
-                            + '<td class="media-insert"><a href="#"'
-                                + ' data-id="' + lists[i].id + '"'
-                                + ' data-url="' + lists[i].url + '"'
-                                + ' data-title="' + lists[i].title + '"'
-                                + '>' 
-                                + '<?php _e('Insert') ?>' + '</a></td>'
-                            + '</tr>';
+                        + '<td><img style="width: 40px; height: 40px" src="'
+                            + lists[i].url + '" /></td>'
+                        + '<td>' + lists[i].title + '</td>'
+                        + '<td>' + lists[i].size + '</td>'
+                        + '<td class="media-insert"><a href="#"'
+                            + ' data-id="' + lists[i].id + '"'
+                            + ' data-url="' + lists[i].url + '"'
+                            + ' data-title="' + lists[i].title + '"'
+                            + '>' 
+                            + '<?php _e('Insert') ?>' + '</a></td>'
+                        + '</tr>';
             }
             content += '</tbody></table>';
             $('#media-lists').html(content);
@@ -282,11 +251,15 @@ var UploadView = Backbone.View.extend({
         var url   = $(e.target).attr('data-url');
         var title = $(e.target).attr('data-title');
         var content = '<div class="alert alert-success">'
-                      + '<button class="media-remove close" style="line-height: 40px" data-dismiss="alert" type="button">×</button>'
-                      + '<span style="font-weight: bold; width: 100%">' + '<?php _e('Image choosed: ') ?>'
-                      + '</span><img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
-                      + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
-                      + '</div>';
+                    + '<button class="media-remove close"'
+                        + 'style="line-height: 40px"'
+                        + 'data-dismiss="alert" type="button">×</button>'
+                    + '<span style="font-weight: bold; width: 100%">'
+                    + '<?php _e('Image choosed: ') ?>'
+                    + '</span>'
+                    + '<img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
+                    + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
+                    + '</div>';
         // Clearing data from upload
         this.removeUpload(false);
         

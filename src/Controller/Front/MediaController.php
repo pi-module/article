@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module media controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
@@ -33,7 +24,18 @@ use Pi\File\Transfer\Download;
 use ZipArchive;
 
 /**
- * Public action controller for operating media
+ * Media controller
+ * 
+ * Feature list
+ * 
+ * 1. List\add\edit\delete media
+ * 2. AJAX action for checking upload file
+ * 3. AJAX action for saving media
+ * 4. AJAX action for removing media
+ * 5. AJAX action for search media
+ * 6. Download media
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class MediaController extends ActionController
 {
@@ -83,8 +85,10 @@ class MediaController extends ActionController
         
         // Getting media info
         $session    = Upload::getUploadSession($module, 'media');
-        if (isset($session->$id) || ($fakeId && isset($session->$fakeId))) {
-            $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
+        if (isset($session->$id)
+            || ($fakeId && isset($session->$fakeId))) {
+            $uploadInfo = isset($session->$id)
+                ? $session->$id : $session->$fakeId;
 
             if ($uploadInfo) {
                 $pathInfo = pathinfo($uploadInfo['tmp_name']);
@@ -140,7 +144,10 @@ class MediaController extends ActionController
             }
             $fileName = $pathInfo['dirname'] . '/' . $fileName;
 
-            $rowMedia->url = rename(Pi::path($uploadInfo['tmp_name']), Pi::path($fileName)) ? $fileName : $uploadInfo['tmp_name'];
+            $rowMedia->url = rename(
+                Pi::path($uploadInfo['tmp_name']),
+                Pi::path($fileName)
+            ) ? $fileName : $uploadInfo['tmp_name'];
             $rowMedia->save();
         }
 
@@ -149,12 +156,12 @@ class MediaController extends ActionController
     
     /**
      * Media index page, which will redirect to list page
+     * 
+     * @return ViewModel
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array(
-            'action'    => 'list',
-        ));
+        return $this->redirect()->toRoute('', array('action'    => 'list'));
     }
     
     /**
@@ -203,7 +210,9 @@ class MediaController extends ActionController
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
                 'router'    => $this->getEvent()->getRouter(),
-                'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+                'route'     => $this->getEvent()
+                    ->getRouteMatch()
+                    ->getMatchedRouteName(),
                 'params'    => array(
                     'module'     => $this->getModule(),
                     'controller' => 'media',
@@ -271,13 +280,21 @@ class MediaController extends ActionController
             $columns = array('id', 'name', 'title', 'description', 'url');
             $form->setValidationGroup($columns);
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('There are some error occured!')
+                );
             }
             
             $data = $form->getData();
             $id   = $this->saveMedia($data);
             if (!$id) {
-                return Service::renderForm($this, $form, __('Can not save data!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not save data!')
+                );
             }
             return $this->redirect()->toRoute('', array('action' => 'list'));
         }
@@ -310,7 +327,11 @@ class MediaController extends ActionController
             $columns = array('id', 'name', 'title', 'description', 'url');
             $form->setValidationGroup($columns);
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('Can not update data!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not update data!')
+                );
             }
             $data = $form->getData();
             $id   = $this->saveMedia($data);
@@ -318,7 +339,7 @@ class MediaController extends ActionController
             return $this->redirect()->toRoute('', array('action' => 'list'));
         }
         
-        $id     = $this->params('id', 0);
+        $id = $this->params('id', 0);
         if (empty($id)) {
             $this->jumpto404(__('Invalid media ID!'));
         }
@@ -355,7 +376,10 @@ class MediaController extends ActionController
         $ids    = array_filter(explode(',', $id));
 
         if (empty($ids)) {
-            throw new \Exception(__('Invalid category id'));
+            return Service::jumpToErrorOperation(
+                $this,
+                __('Invalid media ID')
+            );
         }
         
         // Checking if media is in used
@@ -368,7 +392,8 @@ class MediaController extends ActionController
             return Service::jumpToErrorOperation(
                 $this,
                 __('The following medias is in used, and can not be delete: ')
-                . implode(', ', $medias));
+                . implode(', ', $medias)
+            );
         }
         
         // Removing media in asset_draft
@@ -404,42 +429,39 @@ class MediaController extends ActionController
     {
         Pi::service('log')->active(false);
         
-        $module = $this->getModule();
+        $module   = $this->getModule();
+        $config   = Pi::service('module')->config('', $module);
 
-        $result = false; 
-        $return = array('status' => false);
-        $id     = Service::getParam($this, 'id', 0);
+        $return   = array('status' => false);
+        $id       = Service::getParam($this, 'id', 0);
         if (empty($id)) {
             $id = Service::getParam($this, 'fake_id', 0) ?: uniqid();
         }
-        $type   = Service::getParam($this, 'type', 'attachment');
+        $type     = Service::getParam($this, 'type', 'attachment');
         $formName = Service::getParam($this, 'form_name', 'upload');
 
         // Checking whether ID is empty
         if (empty($id)) {
-            $return['message'] = __('Invalid id');
+            $return['message'] = __('Invalid ID!');
             return json_encode($return);
             exit ;
         }
         
-        $width   = Service::getParam($this, 'width', $this->config('image_width'));
-        $height  = Service::getParam($this, 'height', $this->config('image_height'));
+        $width   = Service::getParam($this, 'width', 0);
+        $height  = Service::getParam($this, 'height', 0);
         
-        $rawInfo = $this->request->getFiles($formName);
-        $rename  = $id;
+        $rawInfo     = $this->request->getFiles($formName);
+        $ext         = strtolower(
+            pathinfo($rawInfo['name'], PATHINFO_EXTENSION)
+        );
+        $rename  = $id . '.' . $ext;
 
+        $allowedExtension = ($type == 'image')
+            ? $config['image_extension'] : $config['media_extension'];
+        $mediaSize        = ($type == 'image')
+            ? $config['max_image_size'] : $config['max_media_size'];
         $destination = Upload::getTargetDir('media', $module, true, true);
-        $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
-        if ($ext) {
-            $rename .= '.' . $ext;
-        }
-
-        $allowedExtension = ($type == 'image') ? 
-                            $this->config('image_extension')
-                            : $this->config('media_extension');
-        $mediaSize = ($type == 'image') ? $this->config('max_image_size')
-                        : $this->config('max_media_size');
-        $upload = new UploadHandler;
+        $upload      = new UploadHandler;
         $upload->setDestination(Pi::path($destination))
                 ->setRename($rename)
                 ->setExtension($allowedExtension)
@@ -453,20 +475,29 @@ class MediaController extends ActionController
         }
 
         $upload->receive();
+        $fileName = $destination . '/' . $rename;
         
-        $basename = $rename;
-        $fileName = $destination . '/' . $basename;
-
-        $imageExt = explode(',', $this->config('image_extension'));
+        // Resolve allowed image extension
+        $imageExt = explode(',', $config['image_extension']);
         foreach ($imageExt as &$value) {
-            $value = trim($value);
+            $value = strtolower(trim($value));
         }
+        
         // Scale image if file is image file
         $uploadInfo['tmp_name'] = $fileName;
+        $imageSize              = array();
         if (in_array($ext, $imageExt)) {
-            $uploadInfo['w']        = $width;
-            $uploadInfo['h']        = $height;
+            $scaleImageSize = Upload::scaleImageSize(
+                Pi::path($fileName),
+                $config
+            );
+            $uploadInfo['w'] = $width ?: $scaleImageSize['w'];
+            $uploadInfo['h'] = $height ?: $scaleImageSize['h'];
             Upload::saveImage($uploadInfo);
+            
+            $imageSizeRaw = getimagesize(Pi::path($fileName));
+            $imageSize['w'] = $imageSizeRaw[0];
+            $imageSize['h'] = $imageSizeRaw[1];
         }
 
         // Save uploaded media
@@ -483,29 +514,21 @@ class MediaController extends ActionController
             $session = Upload::getUploadSession($module, 'media');
             $session->$id = $uploadInfo;
         }
-
-        $result = true;
-
-        $imageSize = array();
-        if (in_array($ext, $imageExt)) {
-            $imageSizeRaw   = getimagesize(Pi::path($fileName));
-            $imageSize['w'] = $imageSizeRaw['0'];
-            $imageSize['h'] = $imageSizeRaw['1'];
-        }
         
         // Prepare return data
-        $return['data'] = array_merge(array(
-            'originalName' => $rawInfo['name'],
-            'size'         => $rawInfo['size'],
-            'preview_url'  => Pi::url($fileName),
-            'basename'     => basename($fileName),
-            'type'         => $ext,
-            'id'           => $id,
-            'filename'     => $fileName,
-        ), $imageSize);
-
-        $return['status'] = $result ? self::AJAX_RESULT_TRUE : self::AJAX_RESULT_FALSE;
-
+        $return['data'] = array_merge(
+            array(
+                'originalName' => $rawInfo['name'],
+                'size'         => $rawInfo['size'],
+                'preview_url'  => Pi::url($fileName),
+                'basename'     => basename($fileName),
+                'type'         => $ext,
+                'id'           => $id,
+                'filename'     => $fileName,
+            ),
+            $imageSize
+        );
+        $return['status'] = true;
         echo json_encode($return);
         exit;
     }

@@ -49,7 +49,7 @@ class Service
      * @param string         $message  Message assign to template
      * @param bool           $isError  Whether is error message
      */
-    public static function renderForm($obj, $form, $message = null, $isError = false)
+    public static function renderForm($obj, $form, $message = null, $isError = true)
     {
         $params = array('form' => $form);
         if ($isError) {
