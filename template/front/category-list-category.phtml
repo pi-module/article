@@ -13,7 +13,11 @@ $this->jQuery();
                 <th><?php _e('Title') ?></th>
                 <th><?php _e('Description') ?></th>
             </tr>
-            <?php foreach ($categories as $category) { ?>
+            <?php foreach ($categories as $category) {
+                if ('root' == $category['slug']) {
+                    continue;
+                }
+            ?>
             <tr>
                 <td><?php if ($category['image']) { ?>
                     <img src="<?php echo Pi::url($category['image']) ?>" alt="<?php echo $this->escape($category['title']) ?>"/>

@@ -380,14 +380,11 @@ class DraftController extends ActionController
         $articleId = $rowDraft->article;
         $timestamp = time();
 
-        // Transform foreign images in content
-        $content = Service::transformArticleImages($rowDraft->content, $module);
-
         $article = array(
             'subject'         => $rowDraft->subject,
             'subtitle'        => $rowDraft->subtitle,
             'summary'         => $rowDraft->summary,
-            'content'         => $content ?: $rowDraft->content,
+            'content'         => $rowDraft->content,
             'uid'             => $rowDraft->uid,
             'author'          => $rowDraft->author,
             'source'          => $rowDraft->source,

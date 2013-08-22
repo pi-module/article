@@ -215,7 +215,7 @@ return array(
             'value'       => 'jpg,png,gif',
         ),
         'max_image_size' => array(
-            'category'    => 'image',
+            'category'    => 'media',
             'title'       => _t('Max Image Size'),
             'description' => _t('Max image size allowed'),
             'value'       => '2MB',

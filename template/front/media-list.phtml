@@ -3,6 +3,7 @@ $this->bootstrap();
 $this->css($this->assetModule('script/article-ui.css'));
 $this->jQuery();
 $this->Backbone();
+$this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
 ?>
 <div class="row-fluid">
     <div class="span12">
@@ -49,21 +50,29 @@ $this->Backbone();
                     <th style="width:2.2em;">
                         <input type="checkbox" class="check-all">
                     </th>
+                    <th style="width: 40px"><?php _e('ID') ?></th>
+                    <th style="width: 50px"><?php _e('Image') ?></th>
                     <th><?php _e('Title') ?></th>
-                    <th style="width:8%;"><?php _e('Type') ?></th>
-                    <th style="width:8%"><?php _e('Size') ?></th>
-                    <th style="width:14%"><?php _e('Description') ?></th>
-                    <th style="width:8%"><?php _e('Download') ?></th>
-                    <th style="width:8%"><?php _e('Submitter') ?></th>
-                    <th style="width:100px;"><?php _e('Uploaded date') ?></th>
+                    <th style="width: 5%;"><?php _e('Type') ?></th>
+                    <th style="width: 8%"><?php _e('File size') ?></th>
+                    <th style="width: 10%"><?php _e('Size') ?></th>
+                    <th style="width: 12%"><?php _e('Description') ?></th>
+                    <th style="width: 8%"><?php _e('Download') ?></th>
+                    <th style="width: 8%"><?php _e('Submitter') ?></th>
+                    <th style="width: 80px;"><?php _e('Uploaded date') ?></th>
                 </tr>
                 <?php foreach ($medias as $media) { ?>
                 <tr data-id="<?php echo $this->escape($media['id']) ?>">
                     <td>
                         <input type="checkbox" value="<?php echo $this->escape($media['id']) ?>" class="check-one">
                     </td>
+                    <td><?php echo $this->escape($media['id']) ?></td>
+                    <td><?php if (in_array($media['type'], $imageTypes)) { ?>
+                        <img src="<?php echo Pi::url($media['url']) ?>" style="width: 40px;" />
+                    <?php } ?>
+                    </td>
                     <td>
-                        <a href="<?php echo $this->url('', array('action' => 'detail', 'id' => $media['id'])) ?>" target="_blank"><?php echo $this->escape($media['title']) ?></a>
+                        <a class="media-list-title" href="<?php echo $this->escape($media['previewUrl']) ?>" target="_blank" data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->escape($media['title']) ?>"><?php echo mb_substr($media['title'], 0, 18, 'UTF-8') ?></a>
                         <div class="row-actions">
                             <a href="<?php echo $this->url('', array('action' => 'edit', 'id' => $media['id'])) ?>"><?php _e('Edit') ?></a>
                             <span class="divider">|</span>
@@ -74,7 +83,11 @@ $this->Backbone();
                     </td>
                     <td><?php echo $this->escape($media['type']) ?></td>
                     <td><?php echo $this->escape($media['size']) ?></td>
-                    <td><?php echo mb_substr($media['description'], 0, 15, 'UTF-8') ?></td>
+                    <td><?php if (in_array($media['type'], $imageTypes)) { ?>
+                        <?php echo $this->escape($media['w']) . ' * ' . $this->escape($media['h']) ?>
+                    <?php } ?>
+                    </td>
+                    <td><?php echo mb_substr($media['description'], 0, 20, 'UTF-8') ?></td>
                     <td><?php echo $this->escape($media['download']) ?></td>
                     <td><?php echo $this->escape($media['submitter']) ?></td>
                     <td><?php echo date('Y-m-d', $media['time_upload']) ?></td>
@@ -95,6 +108,7 @@ $this->Backbone();
             return this.el.find(selector);
         },
         init:function(){
+            this.$(".media-list-title").tooltip();
             _.bindAll(this);
             this.$(".check-all").click(this.checkAll);
             this.$(".search-status").change(this.search);

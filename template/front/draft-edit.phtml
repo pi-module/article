@@ -1264,7 +1264,8 @@ var AttachmentListView = Backbone.View.extend({
                     var url = '<?php echo $this->url('', array(
                         'controller' => 'media',
                         'action'     => 'save',
-                    )) ?>' + 'fake_id-' + id;
+                        'source'     => 'attachment',
+                    )) ?>/' + 'fake_id-' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {
@@ -1363,7 +1364,7 @@ var FeatureView = Backbone.View.extend({
                     self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
                     $('#media-select-result').html('');
                 } else {
-                    alert(_.values(d.message).join(","));
+                    alert(d.message);
                 }
             }
         }).bind('fileuploadsend', function(e, data) {
@@ -1398,7 +1399,8 @@ var FeatureView = Backbone.View.extend({
         var url = '<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'save',
-        )) ?>' + id;
+            'source'     => 'feature',
+        )) ?>/' + id;
         var self = this;
         $.ajax({
             cache:    false,
@@ -1533,13 +1535,15 @@ var FeatureView = Backbone.View.extend({
         var source = $('input[name="image-source"]').val();
         var id     = $('input[name="image-id"]').val();
         
-        // Saving uploaded image into media section
-        if ('upload' == source) {
-            self.saveUploadToMedia(id);
-        }
+        if (source.length && id.length) {
+            // Saving uploaded image into media section
+            if ('upload' == source) {
+                self.saveUploadToMedia(id);
+            }
 
-        // Creating temporary image for feature
-        self.saveFeature();
+            // Creating temporary image for feature
+            self.saveFeature();
+        }
     },
     renderMessage : function(status, message) {
         var content = '<div class="alert alert-' + status + '">'
@@ -1731,7 +1735,8 @@ var GalleryListView = Backbone.View.extend({
                     var url = '<?php echo $this->url('', array(
                         'controller' => 'media',
                         'action'     => 'save',
-                    )) ?>' + 'fake_id-' + id;
+                        'source'     => 'gallery',
+                    )) ?>/' + 'fake_id-' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {
