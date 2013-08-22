@@ -80,6 +80,10 @@ class TopicController extends ActionController
         $fakeId = Service::getParam($this, 'fake_id', 0);
 
         unset($data['image']);
+        
+        if (isset($data['slug']) && empty($data['slug'])) {
+            unset($data['slug']);
+        }
 
         if (empty($id)) {
             $rowTopic = $modelTopic->createRow($data);
@@ -498,8 +502,17 @@ class TopicController extends ActionController
         $id    = Service::getParam($this, 'id', 0);
         $ids   = array_filter(explode(',', $id));
         $from  = Service::getParam($this, 'from', '');
-        if (empty($topic) or empty($ids)) {
-            return $this->jumpTo404('Invalid ID or topic');
+        if (empty($topic)) {
+            return Service::jumpToErrorOperation(
+                $this, 
+                __('Target topic is needed!')
+            );
+        }
+        if (empty($ids)) {
+            return Service::jumpToErrorOperation(
+                $this, 
+                __('No articles are selected, please try again!')
+            );
         }
         
         $data  = array();
@@ -726,9 +739,12 @@ class TopicController extends ActionController
             ),
         ));
 
-        $this->view()->assign('topics', $rowset);
-        $this->view()->assign('title', __('Topic List'));
-        $this->view()->assign('action', 'list-topic');
+        $this->view()->assign(array(
+            'title'   => __('Topic List'),
+            'topics'  => $rowset,
+            'action'  => 'list-topic',
+            'route'   => '.' . Service::getRouteName(),
+        ));
     }
 
     /**

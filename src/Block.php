@@ -45,12 +45,13 @@ class Block
         }
         
         $maxTopCount = ($options['top-category'] > 8 or $options['top-category'] <= 0) ? 6 : $options['top-category'];
-        $maxSubCount = ($options['sub-category'] > 5 or $options['sub-category'] <= 0) ? 3 : $options['sub-category'];
+        $maxSubCount = $options['sub-category'] > 5 ? 5 : $options['sub-category'];
+        $maxSubCount = $maxSubCount <= 0 ? 3 : $maxSubCount;
         $route       = $module . '-' . Service::getRouteName();
         $defaultUrl  = Pi::engine()->application()
                                    ->getRouter()
                                    ->assemble(array(
-                                       'category'  => 'all',
+                                       'list'  => 'all',
                                    ), array('name' => $route));
         
         $model       = Pi::model('category', $module);
