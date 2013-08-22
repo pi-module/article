@@ -429,7 +429,7 @@ class MediaController extends ActionController
         $rename  = $id;
 
         $destination = Upload::getTargetDir('media', $module, true, true);
-        $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
+        $ext         = strtolower(pathinfo($rawInfo['name'], PATHINFO_EXTENSION));
         if ($ext) {
             $rename .= '.' . $ext;
         }
@@ -459,7 +459,7 @@ class MediaController extends ActionController
 
         $imageExt = explode(',', $this->config('image_extension'));
         foreach ($imageExt as &$value) {
-            $value = trim($value);
+            $value = strtolower(trim($value));
         }
         // Scale image if file is image file
         $uploadInfo['tmp_name'] = $fileName;
