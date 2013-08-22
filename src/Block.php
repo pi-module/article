@@ -166,6 +166,7 @@ class Block
             'articles'  => $articles,
             'target'    => $options['target'],
             'style'     => $options['block-style'],
+            'config'    => $config,
         );
     }
     
@@ -203,6 +204,7 @@ class Block
             'articles'  => $articles,
             'target'    => $options['target'],
             'style'     => $options['block-style'],
+            'config'    => $config,
         );
     }
     
@@ -321,9 +323,10 @@ class Block
         }
 
         return array(
-            'articles'           => $articles,
-            'target'             => $target,
-            'style'              => $options['block-style'],
+            'articles'  => $articles,
+            'target'    => $target,
+            'style'     => $options['block-style'],
+            'config'    => $config,
         );
     }
     
@@ -400,6 +403,7 @@ class Block
             'target'    => $options['target'],
             'style'     => $options['block-style'],
             'images'    => $images,
+            'config'    => Pi::service('module')->config('', $module),
         );
     }
 }

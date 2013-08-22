@@ -189,7 +189,8 @@ var UploadView = Backbone.View.extend({
         var url = '<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'save',
-        )) ?>' + id;
+            'source'     => 'author',
+        )) ?>/' + id;
         var self = this;
         $.ajax({
             cache:    false,
@@ -320,13 +321,15 @@ var UploadView = Backbone.View.extend({
         var source = $('input[name="image-source"]').val();
         var id     = $('input[name="image-id"]').val();
         
-        // Saving uploaded image into media section
-        if ('upload' == source) {
-            self.saveUploadToMedia(id);
-        }
+        if (source.length && id.length) {
+            // Saving uploaded image into media section
+            if ('upload' == source) {
+                self.saveUploadToMedia(id);
+            }
 
-        // Creating temporary image for author
-        self.saveAuthor();
+            // Creating temporary image for author
+            self.saveAuthor();
+        }
     },
     renderMessage : function(status, message) {
         var content = '<div class="alert alert-' + status + '">'

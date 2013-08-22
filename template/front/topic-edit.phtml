@@ -154,7 +154,7 @@ var UploadView = Backbone.View.extend({
                     self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
                     $('#media-select-result').html('');
                 } else {
-                    alert(_.values(d.message).join(","));
+                    alert(d.message);
                 }
             }
         }).bind('fileuploadsend', function(e, data) {
@@ -189,7 +189,8 @@ var UploadView = Backbone.View.extend({
         var url = '<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'save',
-        )) ?>' + id;
+            'source'     => 'topic',
+        )) ?>/' + id;
         var self = this;
         $.ajax({
             cache:    false,
@@ -319,13 +320,15 @@ var UploadView = Backbone.View.extend({
         var source = $('input[name="image-source"]').val();
         var id     = $('input[name="image-id"]').val();
         
-        // Saving uploaded image into media section
-        if ('upload' == source) {
-            self.saveUploadToMedia(id);
-        }
+        if (source.length && id.length) {
+            // Saving uploaded image into media section
+            if ('upload' == source) {
+                self.saveUploadToMedia(id);
+            }
 
-        // Creating temporary image for topic
-        self.saveTopic();
+            // Creating temporary image for topic
+            self.saveTopic();
+        }
     },
     renderMessage : function(status, message) {
         var content = '<div class="alert alert-' + status + '">'

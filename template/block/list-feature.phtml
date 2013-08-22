@@ -11,7 +11,7 @@ $topArticle = array_shift($articles);
             </strong>
         </h4>
         <div>
-            <img src="<?php echo $this->escape($topArticle['image']) ?>" />
+            <img src="<?php echo Pi::url($topArticle['image']) ?>" style="width: <?php echo $this->escape($block['config']['feature_thumb_width']) ?>px; height: <?php echo $this->escape($block['config']['feature_thumb_height']) ?>px" />
             <div class="muted" style="width: 55%; float: right;">
                 <?php echo $this->escape(mb_substr($topArticle['summary'], 0, 30, 'UTF-8')) ?>
             </div>
