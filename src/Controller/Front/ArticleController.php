@@ -420,13 +420,6 @@ class ArticleController extends ActionController
             }
         }
 
-        $filter = Service::getParam($this, 'filter', '');
-        if ($filter == 'active') {
-            $where['active'] = 1;
-        } else if ($filter == 'deactive') {
-            $where['active'] = 0;
-        }
-
         // Build where
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
         
@@ -435,6 +428,14 @@ class ArticleController extends ActionController
             $where['subject like ?'] = sprintf('%%%s%%', $keyword);
         }
         $where = array_filter($where);
+        
+        // The where must be added after array_filter function
+        $filter = Service::getParam($this, 'filter', '');
+        if ($filter == 'active') {
+            $where['active'] = 1;
+        } else if ($filter == 'deactive') {
+            $where['active'] = 0;
+        }
 
         // Retrieve data
         $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);

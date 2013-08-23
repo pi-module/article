@@ -8,7 +8,7 @@ $this->Backbone();
 
 <div id="jsList">
     <div class="form-inline">
-        <a class="btn" href="<?php echo $this->url('',array('action' => 'add')); ?>"><?php _e('Add') ?></a>
+        <a class="btn" href="<?php echo $this->url('', array('action' => 'add')) ?>"><?php _e('Add') ?></a>
     </div>
     <table class="table table-striped">
         <tbody>
@@ -21,18 +21,40 @@ $this->Backbone();
             <?php foreach ($topics as $topic) { ?>
             <tr>
                 <td><?php if ($topic['image']) { ?>
-                    <img src="<?php echo Pi::url($topic['image']) ?>" alt="<?php echo $this->escape($topic['title']); ?>" style="width: 40px; height: 30px" />
+                    <img src="<?php echo Pi::url($topic['image']) ?>"
+                         alt="<?php echo $this->escape($topic['title']); ?>" 
+                         style="width: 40px; height: 30px">
                 <?php } ?>
                 </td>
-                <td><a href="<?php echo $this->url($route, array('controller' => 'topic', 'action' => 'index', 'topic' => $topic['slug'] ?: $topic['id'])) ?>"><?php echo $this->escape($topic['title']) ?></a>
-                    <?php if (!$topic['active']) { ?> - <strong class="text-warning"><?php _e('Deactive'); ?></strong> <?php } ?>
+                <td><a href="<?php echo $this->url($route, array(
+                    'controller' => 'topic',
+                    'action'     => 'index',
+                    'topic'      => $topic['slug'] ?: $topic['id']))
+                ?>"><?php echo $this->escape($topic['title']) ?></a>
+                    <?php if (!$topic['active']) { ?>
+                    - <strong class="text-warning"><?php _e('Deactive') ?></strong> 
+                    <?php } ?>
                     <div class="row-actions">
-                        <a href="<?php echo $this->url('', array('action' => 'edit', 'id' => $topic['id'])) ?>"><?php _e('Edit') ?></a> |
-                        <a href="<?php echo $this->url('', array('action' => 'delete', 'id' => $topic['id'])) ?>" onclick="return window.confirm('Really delete?');"><?php _e('Delete') ?></a> |
+                        <a href="<?php echo $this->url('', array(
+                            'action' => 'edit',
+                            'id'     => $topic['id']
+                        )) ?>"><?php _e('Edit') ?></a> |
+                        <a href="<?php echo $this->url('', array(
+                            'action' => 'delete',
+                            'id'     => $topic['id']
+                        )) ?>" onclick="return window.confirm('Really delete?');"><?php _e('Delete') ?></a> |
                         <?php if ($topic['active']) { ?>
-                            <a class="one-action" data-id="<?php echo $this->escape($topic['id']) ?>" data-value="active" data-status="0" href="javascript:void(0)"><?php _e('Deactivate') ?></a>
+                            <a class="one-action" 
+                               data-id="<?php echo $this->escape($topic['id']) ?>" 
+                               data-value="active" 
+                               data-status="0" 
+                               href="javascript:void(0)"><?php _e('Deactivate') ?></a>
                         <?php } else { ?>
-                            <a class="one-action" data-id="<?php echo $this->escape($topic['id']) ?>" data-value="active" data-status="1" href="javascript:void(0)"><?php _e('Active') ?></a>
+                            <a class="one-action" 
+                               data-id="<?php echo $this->escape($topic['id']) ?>" 
+                               data-value="active" 
+                               data-status="1" 
+                               href="javascript:void(0)"><?php _e('Active') ?></a>
                         <?php } ?>
                     </div>
                 </td>
@@ -46,31 +68,38 @@ $this->Backbone();
 
 <script>
 (function($) {
-   var page = {
-       url: "<?php echo $this->url('', array('controller' => 'topic','action' => '')) ?>".replace(/\/$/,""),
-       el : $("#jsList"),
-       $  : function(selector) {
-           return this.el.find(selector);
-       },
-       init: function() {
-           _.bindAll(this);
-           this.$(".one-action").click(this.oneAction);
-       },
-       oneAction: function(e) {
-           var el     = $(e.target),
-               id     = el.attr("data-id"),
-               val    = el.attr("data-value"),
-               status = el.attr("data-status");console.log(status);
-          if (status) {
-               location.href = this.url + val + "?id=" + id + "&status=" + status + "&from=" + this.encodeUrl();
-          } else {
-               location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
-          }
-       },
-       encodeUrl: function() {
-           return encodeURIComponent(location.href);
-       }
-   }
-   page.init();
+    var page = {
+        url     : "<?php echo $this->url('', array(
+            'controller' => 'topic',
+            'action'     => ''
+        )) ?>".replace(/\/$/,""),
+        el      : $("#jsList"),
+        $       : function(selector) {
+            return this.el.find(selector);
+        },
+        init    : function() {
+            _.bindAll(this);
+            this.$(".one-action").click(this.oneAction);
+        },
+        oneAction : function(e) {
+            var el     = $(e.target),
+                id     = el.attr("data-id"),
+                val    = el.attr("data-value"),
+                status = el.attr("data-status");
+            if (status) {
+                location.href = this.url + val + "?id=" 
+                              + id + "&status=" 
+                              + status + "&from=" 
+                              + this.encodeUrl();
+            } else {
+                location.href = this.url + val + "?id=" + id + "&from=" 
+                              + this.encodeUrl();
+            }
+        },
+        encodeUrl : function() {
+            return encodeURIComponent(location.href);
+        }
+    }
+    page.init();
 })(jQuery)
 </script>

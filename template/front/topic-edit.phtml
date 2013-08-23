@@ -43,13 +43,15 @@ var page = {
     $       : function(selector) {
        return this.form.find(selector);
     },
-    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' + '<?php echo $defaultMediaImage ?>' + '" />',
+    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="'
+                         + '<?php echo $defaultMediaImage ?>'
+                         + '" />',
     mediaFakeId : '<?php echo uniqid() ?>'
 };
 
 var UploadView = Backbone.View.extend({
     template        : _.template('<div class="black-bg"><i class="topic icon-remove"></i></div>'
-                      + '<img src="<%=preview_url %>">'),
+                    + '<img src="<%=preview_url %>">'),
     events          : {
         "click .topic.icon-remove"  :"remove",
         "click .media.icon-remove"  : "removeUpload",

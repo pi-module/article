@@ -1,12 +1,23 @@
-<?php $this->headTitle($title) ?>
+<?php
+    $this->headTitle($title, 'SET');
+    $this->css($this->assetModule('script/article-front.css'));
+    $this->bootstrap('js/bootstrap.min.js');
+?>
 
-<div class="row-fluid pi-block">
-    <div class="span6 pull-left" style="margin: 0 0 0 10px">
-        <img src="<?php echo $this->escape($image) ?>" />
+<style>
+    .block-nopadding {
+        padding: 0;
+        margin: 0 0 20px 0;
+    }
+</style>
+<div class="row pi-block block-nopadding">
+    <div class="span6 pull-left">
+        <img src="<?php echo $this->escape($image) ?>">
     </div>
-    <div class="span5 pull-right" style="margin: 0 10px 0 0">
-        <div>
-            <?php echo $content ?>
+    <div class="span6 pull-right">
+        <div style="margin: 10px">
+            <div style="font-size: 24px; font-weight: bold"><?php echo $this->escape($title) ?></div>
+            <div class="muted" style="margin: 20px 0 0 0"><?php echo $content ?></div>
         </div>
     </div>
 </div>
@@ -22,15 +33,22 @@
                 <?php foreach ($articles as $row) { ?>
                     <li class="muted">
                         <div class="list-hover">
-                            <span class="pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
-                            <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
+                            <span class="pull-right"><?php echo date('Y-m-d', $row['time_publish']) ?></span>
+                            <a class="article-list-title" href="<?php echo $this->escape($row['url']) ?>" 
+                               target="_blank" title="<?php echo $this->escape($row['subject']) ?>">
+                                   <?php echo $this->escape($row['subject']) ?>
+                            </a>
                         </div>
                     </li>
                     <?php if (!(++$index % 5)) { ?>
                         <li class="dashed"></li>    
                     <?php } ?>    
-                <?php } ?>   
+                <?php } ?>
             </ul>
         </div>
     </div>
 </div>
+
+<script>
+    $("#jsList").find(".dashed:last").css("marginBottom", "0");
+</script>
