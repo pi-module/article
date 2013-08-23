@@ -349,6 +349,12 @@ class AuthorController extends ActionController
         if (empty($id)) {
             $id  = Service::getParam($this, 'fake_id', 0);
         }
+        // Checking is ID exists
+        if (empty($id)) {
+            $return['message'] = __('Invalid ID!');
+            echo json_encode($return);
+            exit;
+        }
         
         $extensions = array_filter(
             explode(',', $this->config('image_extension'))
@@ -356,6 +362,9 @@ class AuthorController extends ActionController
         foreach ($extensions as &$ext) {
             $ext = strtolower(trim($ext));
         }
+        
+        // Get destination path
+        $destination = Upload::getTargetDir('author', $module, true, false);
 
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -371,20 +380,8 @@ class AuthorController extends ActionController
                 echo json_encode($return);
                 exit;
             }
-            // Checking is id valid
-            if (empty($id)) {
-                $return['message'] = __('Invalid ID!');
-                echo json_encode($return);
-                exit;
-            }
             
-            $destination = Upload::getTargetDir('author', $module, true, false);
-            if (!Upload::mkdir($destination)) {
-                $return['message'] = __('Can not create destination directory!');
-                echo json_encode($return);
-                exit;
-            }
-            $ext      = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
+            $ext = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
             $rename   = $id . '.' . $ext;
             $fileName = rtrim($destination, '/') . '/' . $rename;
             if (!copy(Pi::path($rowMedia->url), Pi::path($fileName))) {
@@ -393,21 +390,10 @@ class AuthorController extends ActionController
                 exit;
             }
         } else {
-            // Checking is ID exists
-            if (empty($id)) {
-                $return['message'] = __('Invalid ID!');
-                echo json_encode($return);
-                exit;
-            }
-            
             $rawInfo = $this->request->getFiles('upload');
-            $rename  = $id;
 
-            $destination = Upload::getTargetDir('author', $module, true, false);
-            $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
-            if ($ext) {
-                $rename .= '.' . $ext;
-            }
+            $ext     = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
+            $rename  = $id . '.' . $ext;
             
             $upload = new UploadHandler;
             $upload->setDestination(Pi::path($destination))
@@ -448,13 +434,12 @@ class AuthorController extends ActionController
         }
 
         $imageSize = getimagesize(Pi::path($fileName));
+        $originalName = isset($rawInfo['name']) ? $rawInfo['name'] : $rename;
 
         // Prepare return data
         $return['data'] = array(
-            'originalName' => isset($rawInfo['name'])
-                ? $rawInfo['name'] : $rename,
-            'size'         => isset($rawInfo['size'])
-                ? $rawInfo['size'] : filesize(Pi::path($fileName)),
+            'originalName' => $originalName,
+            'size'         => filesize(Pi::path($fileName)),
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
             'preview_url'  => Pi::url($fileName),
@@ -467,7 +452,7 @@ class AuthorController extends ActionController
     }
     
     /**
-     * Removing image by AJAX.
+     * Remove image by AJAX.
      * This operation will also remove image data in database.
      * 
      * @return ViewModel 
@@ -485,7 +470,7 @@ class AuthorController extends ActionController
 
             if ($rowAuthor && $rowAuthor->photo) {
                 // Delete photo
-                unlink(Pi::path($rowAuthor->photo));
+                @unlink(Pi::path($rowAuthor->photo));
 
                 // Update db
                 $rowAuthor->photo = '';
@@ -498,7 +483,7 @@ class AuthorController extends ActionController
                 $uploadInfo = isset($session->$id)
                     ? $session->$id : $session->$fakeId;
 
-                unlink(Pi::path($uploadInfo['tmp_name']));
+                @unlink(Pi::path($uploadInfo['tmp_name']));
 
                 unset($session->$id);
                 unset($session->$fakeId);
@@ -512,7 +497,7 @@ class AuthorController extends ActionController
     }
     
     /**
-     * Getting author name by AJAX.
+     * Get author name by AJAX
      *  
      */
     public function getFuzzyAuthorAction()

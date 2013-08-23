@@ -73,17 +73,7 @@
     }
 </style>
 
-<?php if (isset($error)) { ?>
-<div class="alert alert-error">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($error) ?>
-</div>
-<?php } elseif (isset($message)) { ?>
-<div class="alert alert-success">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($message) ?>
-</div>
-<?php } ?>
+<?php include 'message-box.phtml' ?>
 
 <form class="row-fluid" method="POST" enctype="multipart/form-data" action="<?php echo $form->getAttribute("action") ?>" onkeypress="return event.keyCode != 13;">
     <div class="span8">
@@ -1317,8 +1307,6 @@ var AttachmentListView = Backbone.View.extend({
 
 // STARTING PROCESSING FEATURE IMAGE
 var FeatureView = Backbone.View.extend({
-    mediaTemplate   : _.template('<div class="black-bg"><i class="media icon-remove"></i></div>'
-                      + '<img src="<%=preview_url %>">'),
     template        : _.template('<div class="black-bg"><i class="feature icon-remove"></i></div>'
                       + '<img src="<%=preview_url %>">'),
     events          : {
@@ -1380,7 +1368,13 @@ var FeatureView = Backbone.View.extend({
         }
         
         var self = this;
-        $.getJSON('<?php echo $this->url('', array('controller' => 'media', 'action' => 'remove')); ?>fake_id-'+ page.mediaFakeId).done(function() {
+        $.getJSON('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'media',
+                'action'     => 'remove'
+            )
+        ); ?>fake_id-'+ page.mediaFakeId).done(function() {
             $("#media-image").html(page.mediaDefaultTemplate);
             if (clearData == true) {
                 self.clearMediaData();
@@ -1389,7 +1383,7 @@ var FeatureView = Backbone.View.extend({
     },
     renderUpload    : function(obj) {
         obj.preview_url = obj.preview_url + '?' + new Date().getTime();
-        $('#media-image').html(this.mediaTemplate(obj));
+        $('#media-image').html(_.template($('#media-uploaded-image').html(), obj));
     },
     saveUploadToMedia : function(id) {
         var url = '<?php echo $this->url('', array(
@@ -1407,15 +1401,14 @@ var FeatureView = Backbone.View.extend({
             success:  function(result) {
                 if (result.status) {
                     $("#media-image").html(page.mediaDefaultTemplate);
-                    self.renderMessage('success', result.data.message);
                     self.setMediaData('media_id-' + result.data.id, 'media');
                     page.mediaFakeId = result.data.newid;
                 } else {
-                    self.renderMessage('error', result.data.message);
+                    alert(result.data.message);
                 }
             },
             error:    function() {
-                self.renderMessage('error', '<?php _e('Error ocurred when request saving image!') ?>');
+                alert(__('Error ocurred when request saving image!'));
             }
         })
     },
@@ -1423,10 +1416,13 @@ var FeatureView = Backbone.View.extend({
     saveFeature    : function() {
         var self    = this;
         var mediaId = $('input[name="image-id"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'draft',
-            'action'     => 'save-image',
-        )); ?>' + 'id-' + page.id + '/fake_id-' + page.featureFakeId + '/' + mediaId, function(result) {
+        $.get('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'draft',
+                'action'     => 'save-image',
+            )
+        ); ?>' + 'id-' + page.id + '/fake_id-' + page.featureFakeId + '/' + mediaId, function(result) {
             result = $.parseJSON(result);
             if (result.status) {
                 self.render({preview_url: result.data.preview_url});
@@ -1445,8 +1441,13 @@ var FeatureView = Backbone.View.extend({
         if (!parameter) {
             parameter = 'fake_id-' + page.featureFakeId;
         }
-        $.getJSON('<?php echo $this->url('', array(
-            'controller' => 'draft', 'action' => 'remove-image')); ?>' + parameter).done(function() {
+        $.getJSON('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'draft',
+                'action'     => 'remove-image'
+            )
+        ); ?>' + parameter).done(function() {
             $('#jsUpload').find(".upload-image-wrap").html('');
         });
     },
@@ -1457,45 +1458,30 @@ var FeatureView = Backbone.View.extend({
     // Fetching image from media
     searchMedia     : function() {
         var title = $('input[name="media-title"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => 'image',
-        )); ?>/' + 'title-' + title, function(result) {
+        $.get('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'media',
+                'action'     => 'search',
+                'type'       => 'image',
+            )
+        ); ?>/' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
-            var content = '<table class="table table-striped">'
-                            + '<tbody><tr>'
-                            + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
             for (i in lists) {
-                content += '<tr>'
-                            + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
-                            + '<td>' + lists[i].title + '</td>'
-                            + '<td>' + lists[i].size + '</td>'
-                            + '<td class="media-insert"><a href="#"'
-                                + ' data-id="' + lists[i].id + '"'
-                                + ' data-url="' + lists[i].url + '"'
-                                + ' data-title="' + lists[i].title + '"'
-                                + '>' 
-                                + '<?php _e('Insert') ?>' + '</a></td>'
-                            + '</tr>';
+                $('#media-lists')
+                .find('tbody')
+                .append(_.template($('#media-searched-item').html(), lists[i]));
             }
-            content += '</tbody></table>';
-            $('#media-lists').html(content);
         });
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');
         var url   = $(e.target).attr('data-url');
         var title = $(e.target).attr('data-title');
-        var content = '<div class="alert alert-success">'
-                      + '<button class="media-remove close" style="line-height: 40px" data-dismiss="alert" type="button">×</button>'
-                      + '<span style="font-weight: bold; width: 100%">' + '<?php _e('Image choosed: ') ?>'
-                      + '</span><img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
-                      + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
-                      + '</div>';
+        var content = _.template($('#media-selected-item').html(), {
+            url     : url,
+            title   : title
+        });
         // Clearing data from upload
         this.removeUpload(false);
         
@@ -1539,13 +1525,6 @@ var FeatureView = Backbone.View.extend({
             // Creating temporary image for feature
             self.saveFeature();
         }
-    },
-    renderMessage : function(status, message) {
-        var content = '<div class="alert alert-' + status + '">'
-                      + '<button class="close" data-dismiss="alert" type="button">×</button>'
-                      + message
-                      + '</div>';
-        $('#message-box').html(content);
     }
 });
 

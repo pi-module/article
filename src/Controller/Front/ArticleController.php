@@ -151,7 +151,7 @@ class ArticleController extends ActionController
         
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
-        //$modelAsset     = $this->getModel('asset');
+        $modelAsset     = $this->getModel('asset');
         
         // Deleting articles that user has permission to do
         $rules = Service::getPermission();
@@ -206,15 +206,7 @@ class ArticleController extends ActionController
         $this->getModel('visit')->delete(array('article' => $ids));
 
         // Delete assets
-        /*$resultsetAsset = $modelAsset->select(array('article' => $ids));
-        foreach ($resultsetAsset as $asset) {
-            unlink(Pi::path($asset->path));
-
-            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-            }
-        }
-        $modelAsset->delete(array('article' => $ids));*/
+        $modelAsset->delete(array('article' => $ids));
 
         // Update status
         $modelArticle->delete(array('id' => $ids));
@@ -428,13 +420,6 @@ class ArticleController extends ActionController
             }
         }
 
-        $filter = Service::getParam($this, 'filter', '');
-        if ($filter == 'active') {
-            $where['active'] = 1;
-        } else if ($filter == 'deactive') {
-            $where['active'] = 0;
-        }
-
         // Build where
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
         
@@ -443,6 +428,14 @@ class ArticleController extends ActionController
             $where['subject like ?'] = sprintf('%%%s%%', $keyword);
         }
         $where = array_filter($where);
+        
+        // The where must be added after array_filter function
+        $filter = Service::getParam($this, 'filter', '');
+        if ($filter == 'active') {
+            $where['active'] = 1;
+        } else if ($filter == 'deactive') {
+            $where['active'] = 0;
+        }
 
         // Retrieve data
         $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);
