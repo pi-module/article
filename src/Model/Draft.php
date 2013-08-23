@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module draft class
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Model;
@@ -24,6 +15,11 @@ use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Zend\Stdlib\ArrayObject;
 
+/**
+ * Draft model
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
+ */
 class Draft extends Model
 {
     const FIELD_STATUS_DRAFT    = 1;
@@ -31,13 +27,12 @@ class Draft extends Model
     const FIELD_STATUS_REJECTED = 3;
 
     protected $encodeColumns = array(
-//        'category' => true,
         'related'      => true,
         'tag'          => true,
     );
     
     /**
-     * Getting table fields exclude id field.
+     * Get table fields exclude id field.
      * 
      * @return array 
      */
@@ -46,7 +41,10 @@ class Draft extends Model
         $table    = $this->getTable();
         $database = Pi::config()->load('service.database.php');
         $schema   = $database['schema'];
-        $sql = 'select COLUMN_NAME as name from information_schema.columns where table_name=\'' . $table . '\' and table_schema=\'' . $schema . '\'';
+        $sql = 'select COLUMN_NAME as name from information_schema.columns '
+             . 'where table_name=\'' 
+             . $table . '\' and table_schema=\'' 
+             . $schema . '\'';
         try {
             $rowset = Pi::db()->getAdapter()->query($sql, 'prepare')->execute();
         } catch (\Exception $exception) {
@@ -64,11 +62,20 @@ class Draft extends Model
         return $fields;
     }
 
+    /**
+     * Get available fields
+     * 
+     * @param string  $module
+     * @return array
+     */
     public static function getAvailableFields($module = null)
     {
-        $result = array('id', 'article', 'subject', 'subtitle', 'image', 'author', 'uid', 'source', 'content',
-            'category', 'related', 'time_publish', 'time_update', 'time_submit', 'time_save', 'slug', 'seo_title',
-            'seo_keywords', 'seo_description');
+        $result = array(
+            'id', 'article', 'subject', 'subtitle', 'image', 'author', 
+            'uid', 'source', 'content', 'category', 'related', 'time_publish', 
+            'time_update', 'time_submit', 'time_save', 'slug', 'seo_title',
+            'seo_keywords', 'seo_description'
+        );
 
         $module = $module ?: Pi::service('module')->current();
         $moduleConfig = Pi::service('registry')->config->read($module);
@@ -85,7 +92,7 @@ class Draft extends Model
     }
     
     /**
-     * Getting the fields needed defines by user
+     * Get the fields needed defines by user
      * 
      * @param string  $module  Module name
      * @return array 
@@ -94,18 +101,35 @@ class Draft extends Model
     {
         $options         = Service::getFormConfig();
         $availableFields = self::getAvailableFields($module);
-        $remainFields    = array('id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit');
-        $validFields     = array_merge($remainFields, array_intersect($availableFields, $options['elements']));
+        $remainFields    = array(
+            'id', 'article', 'uid', 'time_publish', 'time_update', 'time_submit'
+        );
+        $validFields     = array_merge(
+            $remainFields,
+            array_intersect($availableFields, $options['elements'])
+        );
         
         return $validFields;
     }
 
+    /**
+     * Get default column
+     * 
+     * @return array
+     */
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'subtitle', 'category', 'image', 'uid', 'author', 'slug', 'source',
-            'time_save');
+        return array(
+            'id', 'subject', 'subtitle', 'category', 'image', 'uid', 
+            'author', 'slug', 'source', 'time_save'
+        );
     }
 
+    /**
+     * Create a draft
+     * 
+     * @return bool|int
+     */
     public function createOne()
     {
         $data = array(
@@ -119,7 +143,7 @@ class Draft extends Model
     }
 
     /**
-     * Getting draft articles by condition.
+     * Get draft articles by condition
      * 
      * @param array   $where
      * @param int     $limit
@@ -128,8 +152,13 @@ class Draft extends Model
      * @param string  $order
      * @return array 
      */
-    public function getSearchRows($where = array(),  $limit = null, $offset = null, $columns = null, $order = null)
-    {
+    public function getSearchRows(
+        $where = array(),
+        $limit = null,
+        $offset = null,
+        $columns = null,
+        $order = null
+    ) {
         $result = $rows = array();
 
         $fields        = $this->getValidColumns();
@@ -177,10 +206,14 @@ class Draft extends Model
         return $result;
     }
 
+    /**
+     * Get searched row count
+     * 
+     * @param array  $where
+     * @return int
+     */
     public function getSearchRowsCount($where = array())
     {
-        $result = 0;
-
         $select = $this->select()
             ->columns(array('total' => new Expression('count(id)')));
 
@@ -189,13 +222,13 @@ class Draft extends Model
         }
 
         $resultset = $this->selectWith($select);
-        $result = intval($resultset->current()->total);
+        $result    = intval($resultset->current()->total);
 
         return $result;
     }
     
     /**
-     * Saving a row.
+     * Save a row
      * 
      * @param array  $data
      * @return ArrayObject 
@@ -220,7 +253,7 @@ class Draft extends Model
     }
     
     /**
-     * Updating draft row.
+     * Update draft row.
      * 
      * @param array  $data
      * @param array  $where 
@@ -249,7 +282,7 @@ class Draft extends Model
     }
     
     /**
-     * Find a article.
+     * Find a article
      * 
      * @param string  $value
      * @param string  $key

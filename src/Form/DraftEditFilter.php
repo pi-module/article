@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module DraftEditFilter filter
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Form;
@@ -24,7 +15,9 @@ use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
 
 /**
- * Class for initializing validator and filter 
+ * Filter and valid of draft edit form
+ * 
+ * @author Zongshu Lin <lin40553024@163.com> 
  */
 class DraftEditFilter extends InputFilter
 {
@@ -41,7 +34,7 @@ class DraftEditFilter extends InputFilter
     protected $items = array();
     
     /**
-     * Initializing class and filter
+     * Initialize class and filter
      * 
      * @param array $options 
      */
@@ -51,7 +44,8 @@ class DraftEditFilter extends InputFilter
             $this->mode = $options['mode'];
         }
         if (Config::FORM_MODE_CUSTOM == $this->mode) {
-            $this->items = isset($options['elements']) ? $options['elements'] : array();
+            $this->items = isset($options['elements']) 
+                ? $options['elements'] : array();
         } elseif (!empty($options['elements'])) {
             $this->items = $options['elements'];
         } else {
@@ -73,17 +67,10 @@ class DraftEditFilter extends InputFilter
         $this->add($filterParams['time_submit']);
         $this->add($filterParams['article']);
         $this->add($filterParams['jump']);
-
-        if (isset($this->items['image'])) {
-            $this->add($filterParams['x']);
-            $this->add($filterParams['y']);
-            $this->add($filterParams['w']);
-            $this->add($filterParams['h']);
-        }
     }
     
     /**
-     * Getting filter parameters
+     * Get filter parameters
      * 
      * @return array 
      */
@@ -205,26 +192,6 @@ class DraftEditFilter extends InputFilter
 
             'jump'          => array(
                 'name'         => 'jump',
-                'required'     => false,
-            ),
-
-            'x'             => array(
-                'name'         => 'x',
-                'required'     => false,
-            ),
-
-            'y'             => array(
-                'name'         => 'y',
-                'required'     => false,
-            ),
-
-            'w'             => array(
-                'name'         => 'w',
-                'required'     => false,
-            ),
-
-            'h'             => array(
-                'name'         => 'h',
                 'required'     => false,
             ),
         );

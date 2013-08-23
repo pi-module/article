@@ -568,7 +568,7 @@ class Service
             $where   = array('id' => $relatedIds);
             $columns = array('id', 'subject');
 
-            $resultsetRelated = Service::getArticlePage($where, 1, null, $columns, null, $module);
+            $resultsetRelated = Entity::getArticlePage($where, 1, null, $columns, null, $module);
 
             foreach ($resultsetRelated as $key => $val) {
                 if (array_key_exists($key, $related)) {
