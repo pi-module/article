@@ -19,7 +19,7 @@
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="image-upload">
-                    <div id="media-image" class="upload-image-bg" style="width: 320px; height: 240px">
+                    <div id="media-image" class="upload-image-bg" style="width: 320px; height: 240px; line-height: 220px; vertical-align: middle">
                         <img style="width: 320px; height: 240px" src="<?php echo $defaultMediaImage ?>" />
                     </div>
                     <span class="btn upload fileinput-button">
@@ -37,7 +37,18 @@
                         </div>
                     </div>
                     <div id="media-select-result" style="margin-bottom: 20px"></div>
-                    <div id="media-lists"></div>
+                    <div id="media-lists">
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <th><?php echo _e('Image') ?></th>
+                                    <th><?php echo _e('Title') ?></th>
+                                    <th><?php echo _e('Size') ?></th>
+                                    <th><?php echo _e('Select') ?></th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -50,3 +61,33 @@
         <button id="media-process" class="btn btn-primary" data-dismiss="modal" ><?php echo __('Yes') ?></button>
     </div>
 </div>
+
+<!-- Template used to list searched items -->
+<script id="media-searched-item" type="text/template">
+    <tr>
+        <td><img style="width: 40px; height: 40px" src="<%= url %>" /></td>
+        <td><%= title %></td>
+        <td><%= size %></td>
+        <td class="media-insert">
+            <a href="#" data-id="<%= id %>" data-url="<%= url %>" data-title="<%= title %>">
+                <?php _e('Insert') ?>
+            </a>
+        </td>
+    </tr>
+</script>
+
+<!-- Template used to list selected item -->
+<script id="media-selected-item" type="text/template">
+    <div class="alert alert-success">
+        <button class="media-remove close" style="line-height: 40px" data-dismiss="alert" type="button">×</button>
+        <span style="font-weight: bold; width: 100%"><?php _e('Image choosed: ') ?></span>
+        <img style="width: 40px; height: 40px; margin-left: 10px" src="<%= url %>" />
+        <span class="muted" style="margin-left: 10px"><%= title %></span>
+    </div>
+</script>
+
+<!-- Template used to show uploaded image -->
+<script id="media-uploaded-image" type="text/template">
+    <div class="black-bg"><i class="media icon-remove"></i></div>
+    <img style="<% if (h / w > 0.75) { %>height: 240px; <% } else { %> width: 320px <% } %>" src="<%= preview_url %>">
+</script>

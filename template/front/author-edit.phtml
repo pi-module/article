@@ -6,24 +6,12 @@ $this->bootstrap('js/bootstrap.min.js');
 ?>
 <h2 class="page-header"><?php echo $this->escape($title); ?></h2>
 
-<div id="message-box">
-    <?php if (isset($error)) { ?>
-    <div class="alert alert-error">
-        <button class="close" data-dismiss="alert" type="button">×</button>
-        <?php echo $this->escape($error) ?>
-    </div>
-    <?php } elseif (isset($message)) { ?>
-    <div class="alert alert-success">
-        <button class="close" data-dismiss="alert" type="button">×</button>
-        <?php echo $this->escape($message) ?>
-    </div>
-    <?php } ?>
-</div>
+<?php include 'message-box.phtml' ?>
 
 <div id="jsUpload">
     <?php include $this->templateComponent('form'); ?>
 
-    <script id="temp-upload" type="text/template">
+    <script id="template-upload" type="text/template">
         <div>
             <div id="author-image" class="upload-image-bg">
                 <?php $src = $form->get('photo')->getValue(); ?>
@@ -61,9 +49,6 @@ var page = {
 };
 
 var UploadView = Backbone.View.extend({
-    mediaTemplate : _.template('<div class="black-bg">'
-                  + '<i class="media icon-remove"></i></div>'
-                  + '<img src="<%=preview_url %>">'),
     template      : _.template('<div class="black-bg">'
                   + '<i class="author icon-remove"></i></div>'
                   + '<img src="<%=preview_url %>">'),
@@ -81,7 +66,7 @@ var UploadView = Backbone.View.extend({
         page.$("[name=placeholder]")
             .parents(".control-group:first")
             .find(".controls")
-            .html($("#temp-upload").html());
+            .html($("#template-upload").html());
         this.$el   = $("#jsUpload");
         this.input = $('input[name="upload"]');
         this.fileupload();
@@ -98,12 +83,12 @@ var UploadView = Backbone.View.extend({
             formData : function() {
                 return [];
             },
-            url: url,
+            url      : url,
             done     : function(e, data) {
                 var d = $.parseJSON(data.result);
                 if (d.status == 1) {
                     self.renderUpload(d.data);
-                    // Clear hidden input value and select image of media section
+                    // Clear hidden input value and select image of media
                     self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
                     $('#media-select-result').html('');
                 } else {
@@ -140,7 +125,7 @@ var UploadView = Backbone.View.extend({
     },
     renderUpload  : function(obj) {
         obj.preview_url = obj.preview_url + '?' + new Date().getTime();
-        $('#media-image').html(this.mediaTemplate(obj));
+        $('#media-image').html(_.template($('#media-uploaded-image').html(), obj));
     },
     saveUploadToMedia : function(id) {
         var url = '<?php echo $this->url('', array(
@@ -222,44 +207,22 @@ var UploadView = Backbone.View.extend({
             )
         ); ?>/' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
-            var content = '<table class="table table-striped">'
-                        + '<tbody><tr>'
-                        + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
-                        + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
-                        + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
-                        + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
             for (i in lists) {
-                content += '<tr>'
-                        + '<td><img style="width: 40px; height: 40px" src="'
-                            + lists[i].url + '" /></td>'
-                        + '<td>' + lists[i].title + '</td>'
-                        + '<td>' + lists[i].size + '</td>'
-                        + '<td class="media-insert"><a href="#"'
-                            + ' data-id="' + lists[i].id + '"'
-                            + ' data-url="' + lists[i].url + '"'
-                            + ' data-title="' + lists[i].title + '"'
-                            + '>' 
-                            + '<?php _e('Insert') ?>' + '</a></td>'
-                        + '</tr>';
+                $('#media-lists')
+                .find('tbody')
+                .append(_.template($('#media-searched-item').html(), lists[i]));
             }
-            content += '</tbody></table>';
-            $('#media-lists').html(content);
         });
     },
     insertMedia : function(e) {
-        var id    = $(e.target).attr('data-id');
-        var url   = $(e.target).attr('data-url');
-        var title = $(e.target).attr('data-title');
-        var content = '<div class="alert alert-success">'
-                    + '<button class="media-remove close"'
-                        + 'style="line-height: 40px"'
-                        + 'data-dismiss="alert" type="button">×</button>'
-                    + '<span style="font-weight: bold; width: 100%">'
-                    + '<?php _e('Image choosed: ') ?>'
-                    + '</span>'
-                    + '<img style="width: 40px; height: 40px; margin-left: 10px" src="' + url + '" />'
-                    + '<span class="muted" style="margin-left: 10px">' + title + '</span>'
-                    + '</div>';
+        var id      = $(e.target).attr('data-id');
+        var url     = $(e.target).attr('data-url');
+        var title   = $(e.target).attr('data-title');
+        var content = _.template($('#media-selected-item').html(), {
+            url     : url,
+            title   : title
+        });
+
         // Clearing data from upload
         this.removeUpload(false);
         
@@ -305,11 +268,12 @@ var UploadView = Backbone.View.extend({
         }
     },
     renderMessage : function(status, message) {
-        var content = '<div class="alert alert-' + status + '">'
-                      + '<button class="close" data-dismiss="alert" type="button">×</button>'
-                      + message
-                      + '</div>';
-        $('#message-box').html(content);
+        $('#message-box').html(
+            _.template($('#template-message').html(), {
+                status      : status,
+                message     : message
+            })
+        );
     }
 });
 

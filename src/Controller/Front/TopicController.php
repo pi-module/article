@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module topic controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
@@ -35,12 +26,23 @@ use Module\Article\Topic as TopicService;
 use Pi\File\Transfer\Upload as UploadHandler;
 
 /**
- * Public action controller for operating topic
+ * Topic controller
+ * 
+ * Feature list:
+ * 
+ * 1. List\add\edit\delete a topic
+ * 2. Pull\remove article to\from topic
+ * 3. Homepage of a certain topic
+ * 4. Article list of a certain topic
+ * 5. All topic list
+ * 6. AJAX action used to save or remove a topic image
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class TopicController extends ActionController
 {
     /**
-     * Getting topic form object
+     * Get topic form object
      * 
      * @param string $action  Form name
      * @return \Module\Article\Form\TopicEditForm 
@@ -59,7 +61,7 @@ class TopicController extends ActionController
     }
 
     /**
-     * Saving topic information
+     * Save topic information
      * 
      * @param  array    $data  Topic information
      * @return boolean
@@ -102,8 +104,11 @@ class TopicController extends ActionController
 
         // Save image
         $session    = Upload::getUploadSession($module, 'topic');
-        if (isset($session->$id) || ($fakeId && isset($session->$fakeId))) {
-            $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
+        if (isset($session->$id) 
+            || ($fakeId && isset($session->$fakeId))
+        ) {
+            $uploadInfo = isset($session->$id)
+                ? $session->$id : $session->$fakeId;
 
             if ($uploadInfo) {
                 $fileName = $rowTopic->id;
@@ -114,7 +119,10 @@ class TopicController extends ActionController
                 }
                 $fileName = $pathInfo['dirname'] . '/' . $fileName;
 
-                $rowTopic->image = rename(Pi::path($uploadInfo['tmp_name']), Pi::path($fileName)) ? $fileName : $uploadInfo['tmp_name'];
+                $rowTopic->image = rename(
+                    Pi::path($uploadInfo['tmp_name']),
+                    Pi::path($fileName)
+                ) ? $fileName : $uploadInfo['tmp_name'];
                 $rowTopic->save();
             }
 
@@ -126,7 +134,9 @@ class TopicController extends ActionController
     }
     
     /**
-     * Topic index page
+     * Homepage of a topic
+     * 
+     * @return ViewModel
      */
     public function indexAction()
     {
@@ -144,10 +154,13 @@ class TopicController extends ActionController
         }
         // Return 503 code if topic is not active
         if (!$row->active) {
-            return $this->jumpToException(__('The topic requested is not active'), 503);
+            return $this->jumpToException(
+                __('The topic requested is not active'),
+                503
+            );
         }
         
-        // Getting topic articles
+        // Get topic articles
         $rowRelations = $this->getModel('article_topic')
                              ->select(array('topic' => $row->id));
         $articleIds   = array();
@@ -169,10 +182,14 @@ class TopicController extends ActionController
             'articles'  => $articles,
         ));
         
-        $template = ('default' == $row->template) ? 'topic-index' : $row->template;
+        $template = ('default' == $row->template)
+            ? 'topic-index' : $row->template;
         $this->view()->setTemplate($template);
     }
     
+    /**
+     * Topic list page for viewing 
+     */
     public function allTopicAction()
     {
         $page       = Service::getParam($this, 'p', 1);
@@ -226,7 +243,7 @@ class TopicController extends ActionController
     }
     
     /**
-     * Processing listing topic articles.
+     * list articles of a topic for users to view
      */
     public function listAction()
     {
@@ -242,7 +259,10 @@ class TopicController extends ActionController
         $title = $row->title;
         // Return 503 code if topic is not active
         if (!$row->active) {
-            return $this->jumpToException(__('The topic requested is not active'), 503);
+            return $this->jumpToException(
+                __('The topic requested is not active'),
+                503
+            );
         }
         
         $topicId    = $row->id;
@@ -266,7 +286,11 @@ class TopicController extends ActionController
         );
         
         // Get articles
-        $resultsetArticle = Entity::getAvailableArticlePage($where, $page, $limit, null, null, $module);
+        $resultsetArticle = Entity::getAvailableArticlePage(
+            $where,
+            $page,
+            $limit
+        );
 
         // Total count
         $where = array_merge($where, array(
@@ -299,7 +323,7 @@ class TopicController extends ActionController
     }
     
     /**
-     * Processing listing topic articles.
+     * List articles of a topic for management
      */
     public function listArticleAction()
     {
@@ -322,7 +346,8 @@ class TopicController extends ActionController
         $where  = array();
         
         if (!empty($topic)) {
-            $topicId = is_numeric($topic) ? (int) $topic : $modelTopic->slugToId($topic);
+            $topicId = is_numeric($topic) 
+                ? (int) $topic : $modelTopic->slugToId($topic);
             $where['topic'] = $topicId;
         }
         
@@ -341,9 +366,13 @@ class TopicController extends ActionController
             $articleIds[] = $row['article'];
         }
         $articleIds    = empty($articleIds) ? 0 : $articleIds;
-        $articles      = Entity::getArticlePage(array('id' => $articleIds), 1, $limit);
+        $articles      = Entity::getArticlePage(
+            array('id' => $articleIds),
+            1,
+            $limit
+        );
         
-        // Getting topic details
+        // Get topic details
         $rowTopicSet   = $modelTopic->select(array());
         $topics        = array();
         foreach ($rowTopicSet as $row) {
@@ -351,10 +380,11 @@ class TopicController extends ActionController
         }
         
         // Get topic info
-        $select        = $modelRelation->select()
-                                       ->where($where)
-                                       ->columns(array('count' => new Expression('count(id)')));
-        $totalCount    = (int) $modelRelation->selectWith($select)->current()->count;
+        $select     = $modelRelation->select()
+            ->where($where)
+            ->columns(array('count' => new Expression('count(id)')));
+        $totalCount = (int) $modelRelation->selectWith($select)
+            ->current()->count;
 
         // Pagination
         $paginator = Paginator::factory($totalCount);
@@ -362,11 +392,13 @@ class TopicController extends ActionController
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
                 'router'    => $this->getEvent()->getRouter(),
-                'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+                'route'     => $this->getEvent()
+                    ->getRouteMatch()
+                    ->getMatchedRouteName(),
                 'params'    => array_filter(array(
                     'module'        => $module,
-                    'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                    'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                    'controller'    => 'topic',
+                    'action'        => 'list-article',
                     'topic'         => $topic,
                 )),
             ));
@@ -378,14 +410,13 @@ class TopicController extends ActionController
             'topics'        => $topics,
             'topic'         => $topic,
             'paginator'     => $paginator,
-            'p'             => $page,
             'config'        => $config,
             'action'        => 'list-article',
         ));
     }
     
     /**
-     * Listing all articles for pull. 
+     * List all articles for pulling
      */
     public function pullAction()
     {
@@ -406,7 +437,7 @@ class TopicController extends ActionController
         $modelArticle   = $this->getModel('article');
         $categoryModel  = $this->getModel('category');
 
-        // Getting category
+        // Get category
         $category = Service::getParam($this, 'category', 0);
         if ($category > 1) {
             $categoryIds = $categoryModel->getDescendantIds($category);
@@ -415,7 +446,7 @@ class TopicController extends ActionController
             }
         }
         
-        // Getting topic
+        // Get topic
         $modelTopic = $this->getModel('topic');
         $topics     = $modelTopic->getList();
 
@@ -428,14 +459,15 @@ class TopicController extends ActionController
         }
 
         // Retrieve data
-        $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);
+        $data = Entity::getArticlePage($where, $page, $limit);
         
         // Getting article topic
         $articleIds  = array_keys($data);
         if (empty($articleIds)) {
             $articleIds = array(0);
         }
-        $rowRelation = $this->getModel('article_topic')->select(array('article' => $articleIds));
+        $rowRelation = $this->getModel('article_topic')
+            ->select(array('article' => $articleIds));
         $relation    = array();
         foreach ($rowRelation as $row) {
             if (isset($relation[$row['article']])) {
@@ -458,11 +490,13 @@ class TopicController extends ActionController
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
             'router'    => $this->getEvent()->getRouter(),
-            'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'route'     => $this->getEvent()
+                ->getRouteMatch()
+                ->getMatchedRouteName(),
             'params'    => array_filter(array(
                 'module'        => $module,
-                'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                'controller'    => 'topic',
+                'action'        => 'pull',
                 'category'      => $category,
                 'keyword'       => $keyword,
             )),
@@ -486,7 +520,7 @@ class TopicController extends ActionController
     }
     
     /**
-     * Pulling articles into topic.
+     * Pull articles into topic
      * 
      * @return ViewModel 
      */
@@ -540,12 +574,15 @@ class TopicController extends ActionController
             $from = urldecode($from);
             return $this->redirect()->toUrl($from);
         } else {
-            return $this->redirect()->toRoute('', array('action' => 'list-article'));
+            return $this->redirect()->toRoute(
+                '',
+                array('action' => 'list-article')
+            );
         }
     }
     
     /**
-     * Removing pull articles.
+     * Remove pulled articles from a topic
      * 
      * @return ViewModel 
      */
@@ -569,12 +606,15 @@ class TopicController extends ActionController
             $from = urldecode($from);
             return $this->redirect()->toUrl($from);
         } else {
-            return $this->redirect()->toRoute('', array('action' => 'list-article'));
+            return $this->redirect()->toRoute(
+                '',
+                array('action' => 'list-article')
+            );
         }
     }
     
     /**
-     * Adding category information
+     * Add topic information
      * 
      * @return ViewModel 
      */
@@ -603,20 +643,31 @@ class TopicController extends ActionController
             $form->setInputFilter(new TopicEditFilter);
             $form->setValidationGroup(Topic::getAvailableFields());
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('There are some error occured!')
+                );
             }
             
             $data = $form->getData();
             $id   = $this->saveTopic($data);
             if (!$id) {
-                return Service::renderForm($this, $form, __('Can not save data!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not save data!')
+                );
             }
-            return $this->redirect()->toRoute('', array('action' => 'list-topic'));
+            return $this->redirect()->toRoute(
+                '',
+                array('action' => 'list-topic')
+            );
         }
     }
 
     /**
-     * Editing topic information
+     * Edit topic information
      * 
      * @return ViewModel
      */
@@ -641,17 +692,24 @@ class TopicController extends ActionController
             $form->setInputFilter(new TopicEditFilter($options));
             $form->setValidationGroup(Topic::getAvailableFields());
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('Can not update data!'), true);
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not update data!')
+                );
             }
             $data = $form->getData();
             $id   = $this->saveTopic($data);
 
-            return $this->redirect()->toRoute('', array('action' => 'list-topic'));
+            return $this->redirect()->toRoute(
+                '',
+                array('action' => 'list-topic')
+            );
         }
         
         $id     = $this->params('id', 0);
         if (empty($id)) {
-            $this->jumpto404(__('Invalid topic id!'));
+            $this->jumpto404(__('Invalid topic ID!'));
         }
 
         $model = $this->getModel('topic');
@@ -666,9 +724,9 @@ class TopicController extends ActionController
     }
     
     /**
-     * Deleting a topic
+     * Delete topic
      * 
-     * @throws \Exception 
+     * @return ViewModel 
      */
     public function deleteAction()
     {
@@ -679,7 +737,7 @@ class TopicController extends ActionController
         
         $id     = $this->params('id');
         if (empty($id)) {
-            throw new \Exception(__('Invalid topic id'));
+            return $this->jumpTo404(__('Invalid topic ID!'));
         }
 
         $topicModel = $this->getModel('topic');
@@ -690,18 +748,21 @@ class TopicController extends ActionController
         // Delete image
         $row = $topicModel->find($id);
         if ($row && $row->image) {
-            unlink(Pi::path($row->image));
+            @unlink(Pi::path($row->image));
         }
 
         // Remove topic
         $topicModel->delete(array('id' => $id));
 
         // Go to list page
-        return $this->redirect()->toRoute('', array('action' => 'list-topic'));
+        return $this->redirect()->toRoute(
+            '',
+            array('action' => 'list-topic')
+        );
     }
 
     /**
-     * Processing added topic list
+     * List all added topic for management
      */
     public function listTopicAction()
     {
@@ -723,7 +784,8 @@ class TopicController extends ActionController
                         ->limit($limit);
         $rowset = $model->selectWith($select);
         
-        $select = $model->select()->columns(array('count' => new Expression('count(*)')));
+        $select = $model->select()
+            ->columns(array('count' => new Expression('count(*)')));
         $count  = (int) $model->selectWith($select)->current()->count;
         
         $paginator = Paginator::factory($count);
@@ -731,7 +793,9 @@ class TopicController extends ActionController
         $paginator->setCurrentPageNumber($page);
         $paginator->setUrlOptions(array(
             'router'        => $this->getEvent()->getRouter(),
-            'route'         => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'route'         => $this->getEvent()
+                ->getRouteMatch()
+                ->getMatchedRouteName(),
             'params'        => array(
                 'module'        => $this->getModule(),
                 'controller'    => 'topic',
@@ -763,7 +827,7 @@ class TopicController extends ActionController
         $id     = Service::getParam($this, 'id', 0);
         $from   = Service::getParam($this, 'from', 0);
         if (empty($id)) {
-            return $this->jumpTo404(__('Invalid ID!'));
+            return $this->jumpTo404(__('Invalid topic ID!'));
         }
         
         $this->getModel('topic')->setActiveStatus($id, $status);
@@ -772,14 +836,17 @@ class TopicController extends ActionController
             $from = urldecode($from);
             return $this->redirect()->toUrl($from);
         } else {
-            return $this->redirect()->toRoute('', array('action' => 'list-topic'));
+            return $this->redirect()->toRoute(
+                '',
+                array('action' => 'list-topic')
+            );
         }
     }
     
     /**
      * Saving image by AJAX, but do not save data into database.
      * If the image is fetched by upload, try to receive image by Upload class,
-     * if the image is from media, try to copy the image from media to topic path.
+     * if it comes from media, try to copy the image from media to topic path.
      * Finally the image data will be saved into session.
      * 
      */
@@ -794,11 +861,21 @@ class TopicController extends ActionController
         if (empty($id)) {
             $id = Service::getParam($this, 'fake_id', 0);
         }
+        // Checking is ID exists
+        if (empty($id)) {
+            $return['message'] = __('Invalid ID!');
+            echo json_encode($return);
+            exit;
+        }
         
-        $extensions = array_filter(explode(',', $this->config('image_extension')));
+        $extensions = array_filter(
+            explode(',', $this->config('image_extension')));
         foreach ($extensions as &$ext) {
             $ext = strtolower(trim($ext));
         }
+        
+        // Get distination path
+        $destination = Upload::getTargetDir('topic', $module, true, false);
 
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -814,20 +891,8 @@ class TopicController extends ActionController
                 echo json_encode($return);
                 exit;
             }
-            // Checking is id valid
-            if (empty($id)) {
-                $return['message'] = __('Invalid ID!');
-                echo json_encode($return);
-                exit;
-            }
             
-            $destination = Upload::getTargetDir('topic', $module, true, false);
-            if (!Upload::mkdir($destination)) {
-                $return['message'] = __('Can not create destination directory!');
-                echo json_encode($return);
-                exit;
-            }
-            $ext         = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
+            $ext = strtolower(pathinfo($rowMedia->url, PATHINFO_EXTENSION));
             $rename      = $id . '.' . $ext;
             $fileName    = rtrim($destination, '/') . '/' . $rename;
             if (!copy(Pi::path($rowMedia->url), Pi::path($fileName))) {
@@ -836,21 +901,10 @@ class TopicController extends ActionController
                 exit;
             }
         } else {
-            // Checking is ID exists
-            if (empty($id)) {
-                $return['message'] = __('Invalid ID!');
-                echo json_encode($return);
-                exit;
-            }
-
             $rawInfo = $this->request->getFiles('upload');
-            $rename  = $id;
 
-            $destination = Upload::getTargetDir('topic', $module, true, false);
-            $ext         = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
-            if ($ext) {
-                $rename .= '.' . $ext;
-            }
+            $ext     = pathinfo($rawInfo['name'], PATHINFO_EXTENSION);
+            $rename  = $id . '.' . $ext;
 
             $upload = new UploadHandler;
             $upload->setDestination(Pi::path($destination))
@@ -880,7 +934,7 @@ class TopicController extends ActionController
         $rowTopic = $this->getModel('topic')->find($id);
         if ($rowTopic) {
             if ($rowTopic->image && $rowTopic->image != $fileName) {
-                unlink(Pi::path($rowTopic->image));
+                @unlink(Pi::path($rowTopic->image));
             }
 
             $rowTopic->image = $fileName;
@@ -892,11 +946,12 @@ class TopicController extends ActionController
         }
 
         $imageSize = getimagesize(Pi::path($fileName));
+        $originalName = isset($rawInfo['name']) ? $rawInfo['name'] : $rename;
 
         // Prepare return data
         $return['data'] = array(
-            'originalName' => isset($rawInfo['name']) ? $rawInfo['name'] : $rename,
-            'size'         => isset($rawInfo['size']) ? $rawInfo['size'] : filesize(Pi::path($fileName)),
+            'originalName' => $originalName,
+            'size'         => filesize(Pi::path($fileName)),
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
             'preview_url'  => Pi::url($fileName),
@@ -909,7 +964,8 @@ class TopicController extends ActionController
     }
     
     /**
-     * Removing image by AJAX. This operation will also remove image data in database.
+     * Removing image by AJAX.
+     * This operation will also remove image data in database.
      * 
      * @return ViewModel 
      */
@@ -926,7 +982,7 @@ class TopicController extends ActionController
 
             if ($rowTopic && $rowTopic->image) {
                 // Delete image
-                unlink(Pi::path($rowTopic->image));
+                @unlink(Pi::path($rowTopic->image));
 
                 // Update db
                 $rowTopic->image = '';
@@ -936,9 +992,10 @@ class TopicController extends ActionController
             $session = Upload::getUploadSession($module, 'topic');
 
             if (isset($session->$fakeId)) {
-                $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
+                $uploadInfo = isset($session->$id) 
+                    ? $session->$id : $session->$fakeId;
 
-                unlink(Pi::path($uploadInfo['tmp_name']));
+                @unlink(Pi::path($uploadInfo['tmp_name']));
 
                 unset($session->$id);
                 unset($session->$fakeId);
