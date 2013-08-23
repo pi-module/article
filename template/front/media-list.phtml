@@ -144,7 +144,7 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
                 };
             if (val) {
                 if (val == "delete") {
-                    if (confirm("<?php _e('Are you sure delete selected article'); ?>")) {
+                    if (confirm("<?php _e('Are you sure delete selected media?'); ?>")) {
                         fn.call(this);
                     } else {
                         this.$(".bulk-operation").val("");

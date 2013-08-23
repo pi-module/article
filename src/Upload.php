@@ -457,4 +457,52 @@ class Upload
 
         return $result ? $dest : false;
     }
+    
+    /**
+     * Calculate the image size by allowed image size.
+     * 
+     * @param string|array  $image
+     * @param array         $allowSize
+     * @return array
+     * @throws \Exception 
+     */
+    public static function scaleImageSize($image, $allowSize)
+    {
+        if (is_string($image)) {
+            $imageSizeRaw = getimagesize($image);
+            $imageSize['w'] = $imageSizeRaw[0];
+            $imageSize['h'] = $imageSizeRaw[1];
+        } else {
+            $imageSize = $image;
+        }
+        
+        if (!isset($imageSize['w']) or !isset($imageSize['h'])) {
+            throw \Exception(__('Raw image width and height data is needed!'));
+        }
+        
+        if (!isset($allowSize['image_width'])
+            or !isset($allowSize['image_height'])
+        ) {
+            throw \Exception(__('The limitation data is needed!'));
+        }
+        
+        $scaleImage = $imageSize;
+        if ($imageSize['w'] >= $imageSize['h']) {
+            if ($imageSize['w'] > $allowSize['image_width']) {
+                $scaleImage['w'] = (int) $allowSize['image_width'];
+                $scaleImage['h'] = (int) (($allowSize['image_width']
+                                 * $imageSize['h'])
+                                 / $imageSize['w']);
+            }
+        } else {
+            if ($imageSize['h'] > $allowSize['image_height']) {
+                $scaleImage['h'] = (int) $allowSize['image_height'];
+                $scaleImage['w'] = (int) (($allowSize['image_height'] 
+                                 * $imageSize['w'])
+                                 / $imageSize['h']);
+            }
+        }
+        
+        return $scaleImage;
+    }
 }
