@@ -1,20 +1,10 @@
 <?php
 /**
- * Article module repeat slug validator
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
- * @subpackage      Validator
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Validator;
@@ -22,6 +12,11 @@ namespace Module\Article\Validator;
 use Pi;
 use Zend\Validator\AbstractValidator;
 
+/**
+ * Repeat slug valid class
+ * 
+ * @author Zongshu Lin <lin40553024@163.com> 
+ */
 class RepeatSlug extends AbstractValidator
 {
     const SLUG_EXISTS        = 'slugExists';
@@ -34,7 +29,7 @@ class RepeatSlug extends AbstractValidator
     );
 
     /**
-     * Repeat validate
+     * Check whether a slug is repeat
      *
      * @param  mixed  $value
      * @param  array  $context

@@ -151,7 +151,7 @@ class ArticleController extends ActionController
         
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
-        //$modelAsset     = $this->getModel('asset');
+        $modelAsset     = $this->getModel('asset');
         
         // Deleting articles that user has permission to do
         $rules = Service::getPermission();
@@ -206,15 +206,7 @@ class ArticleController extends ActionController
         $this->getModel('visit')->delete(array('article' => $ids));
 
         // Delete assets
-        /*$resultsetAsset = $modelAsset->select(array('article' => $ids));
-        foreach ($resultsetAsset as $asset) {
-            unlink(Pi::path($asset->path));
-
-            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-            }
-        }
-        $modelAsset->delete(array('article' => $ids));*/
+        $modelAsset->delete(array('article' => $ids));
 
         // Update status
         $modelArticle->delete(array('id' => $ids));
