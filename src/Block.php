@@ -1,38 +1,29 @@
 <?php
 /**
- * Article module block renderer
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
 
 use Pi;
-use Module\System\Form\LoginForm;
 use Module\Article\Service;
-use Module\Article\Model\Article;
 use Module\Article\Topic;
 use Module\Article\Statistics;
 use Module\Article\Entity;
 
 /**
- * Public class for rendering block content 
+ * Block class for providing article blocks
+ * 
+ * @author Zongshu Lin <lin40553024@163.com> 
  */
 class Block
 {
     /**
-     * Listing all categories and its children
+     * List all categories and its children
      * 
      * @param array   $options  Block parameters
      * @param string  $module   Module name
@@ -44,15 +35,21 @@ class Block
             return false;
         }
         
-        $maxTopCount = ($options['top-category'] > 8 or $options['top-category'] <= 0) ? 6 : $options['top-category'];
+        $count       = $options['top-category'];
+        $maxTopCount = ($count > 8 or $count <= 0) ? 6 : $count;
         $maxSubCount = $options['sub-category'] > 5 ? 5 : $options['sub-category'];
         $maxSubCount = $maxSubCount <= 0 ? 3 : $maxSubCount;
         $route       = $module . '-' . Service::getRouteName();
         $defaultUrl  = Pi::engine()->application()
-                                   ->getRouter()
-                                   ->assemble(array(
-                                       'list'  => 'all',
-                                   ), array('name' => $route));
+            ->getRouter()
+            ->assemble(
+                array(
+                    'list'  => 'all',
+                ), 
+                array(
+                    'name' => $route
+                )
+            );
         
         $model       = Pi::model('category', $module);
         $root        = $model->find('root', 'name');
@@ -69,10 +66,15 @@ class Block
             $allItems[$id] = array(
                 'title'     => $category['title'],
                 'url'       => Pi::engine()->application()
-                                           ->getRouter()
-                                           ->assemble(array(
-                                               'category'  => $category['slug'] ?: $category['id'],
-                                           ), array('name' => $route)),
+                    ->getRouter()
+                    ->assemble(
+                        array(
+                            'category'  => $category['slug'] ?: $category['id'],
+                        ), 
+                        array(
+                            'name' => $route
+                        )
+                    ),
             );
             $topCount++;
             
@@ -85,17 +87,22 @@ class Block
                 $allItems[$id]['child'][$child['id']] = array(
                     'title'    => $child['title'],
                     'url'      => Pi::engine()->application()
-                                              ->getRouter()
-                                              ->assemble(array(
-                                                  'category'  => $child['slug'] ?: $child['id'],
-                                              ), array('name' => $route)),
+                        ->getRouter()
+                        ->assemble(
+                            array(
+                                'category'  => $child['slug'] ?: $child['id'],
+                            ), 
+                            array(
+                                'name' => $route
+                            )
+                        ),
                 );
                 $subCount++;
             }
             for ($i = count($allItems[$id]['child']); $i < $maxSubCount; $i++) {
                 $allItems[$id]['child'][] = array(
-                    'title'    => empty($options['default-category']) ? __('None') : $options['default-category'],
-                    'url'      => $defaultUrl,
+                    'title' => $options['default-category'] ?: __('None'),
+                    'url'   => $defaultUrl,
                 );
             }
         }
@@ -103,14 +110,14 @@ class Block
             $child = array();
             for ($i = 0; $i < $maxSubCount; $i++) {
                 $child[] = array(
-                    'title'    => empty($options['default-category']) ? __('None') : $options['default-category'],
-                    'url'      => $defaultUrl,
+                    'title' => $options['default-category'] ?: __('None'),
+                    'url'   => $defaultUrl,
                 );
             }
             $allItems[] = array(
-                'title'    => empty($options['default-category']) ? __('None') : $options['default-category'],
-                'url'      => $defaultUrl,
-                'child'    => $child,
+                'title' => $options['default-category'] ?: __('None'),
+                'url'   => $defaultUrl,
+                'child' => $child,
             );
             
         }
@@ -119,14 +126,16 @@ class Block
     }
     
     /**
-     * Listing newest published articles.
+     * List newest published articles
      * 
      * @param array   $options
      * @param string  $module
      * @return boolean 
      */
-    public static function newestPublishedArticles($options = array(), $module = null)
-    {
+    public static function newestPublishedArticles(
+        $options = array(), 
+        $module = null
+    ) {
         if (empty($module)) {
             return false;
         }
@@ -134,12 +143,19 @@ class Block
         $params   = Pi::engine()->application()->getRouteMatch()->getParams();
         
         $config   = Pi::service('module')->config('', $module);
-        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
-        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
+        $image    = $config['default_feature_thumb'];
+        $image    = Pi::service('asset')->getModuleAsset($image, $module);
+        $length   = isset($options['max_subject_length']) 
+            ? intval($options['max_subject_length']) : 15;
         
-        $category = $options['category'] ? $options['category'] : (isset($params['category']) ? $params['category'] : 0);
-        $topic    = $options['topic'] ? $options['topic'] : (isset($params['topic']) ? $params['topic'] : 0);
-        $topic    = is_numeric($topic) ? $topic : Pi::model('topic', $module)->slugToId($topic);
+        $postCategory = isset($params['category']) ? $params['category'] : 0;
+        $postTopic    = isset($params['topic']) ? $params['topic'] : 0;
+        
+        $category = $options['category'] ? $options['category'] : $postCategory;
+        $topic    = $options['topic'] ? $options['topic'] : $postTopic;
+        if (!is_numeric($topic)) {
+            $topic = Pi::model('topic', $module)->slugToId($topic);
+        }
         $limit    = ($options['list-count'] <= 0) ? 10 : $options['list-count'];
         $page     = 1;
         $order    = 'time_publish DESC';
@@ -152,9 +168,23 @@ class Block
             if (!empty($topic)) {
                 $where['topic'] = $topic;
             }
-            $articles = Topic::getTopicArticles($where, $page, $limit, $columns, $order, $module);
+            $articles = Topic::getTopicArticles(
+                $where, 
+                $page, 
+                $limit, 
+                $columns, 
+                $order, 
+                $module
+            );
         } else {
-            $articles = Entity::getAvailableArticlePage($where, $page, $limit, $columns, $order, $module);
+            $articles = Entity::getAvailableArticlePage(
+                $where, 
+                $page, 
+                $limit, 
+                $columns, 
+                $order, 
+                $module
+            );
         }
         
         foreach ($articles as &$article) {
@@ -171,7 +201,7 @@ class Block
     }
     
     /**
-     * Listing articles defined by user.
+     * List articles defined by user.
      * 
      * @param array   $options
      * @param string  $module
@@ -184,8 +214,10 @@ class Block
         }
         
         $config   = Pi::service('module')->config('', $module);
-        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
-        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
+        $image    = $config['default_feature_thumb'];
+        $image    = Pi::service('asset')->getModuleAsset($image, $module);
+        $length   = isset($options['max_subject_length']) 
+            ? intval($options['max_subject_length']) : 15;
         
         $columns  = array('subject', 'summary', 'time_publish', 'image');
         $ids      = explode(',', $options['articles']);
@@ -193,7 +225,14 @@ class Block
             $id = trim($id);
         }
         $where    = array('id' => $ids);
-        $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
+        $articles = Entity::getAvailableArticlePage(
+            $where, 
+            1, 
+            10, 
+            $columns, 
+            null, 
+            $module
+        );
         
         foreach ($articles as &$article) {
             $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
@@ -209,7 +248,7 @@ class Block
     }
     
     /**
-     * Exporting a search form.
+     * Export a search form.
      * 
      * @param array   $options
      * @param string  $module
@@ -236,7 +275,7 @@ class Block
     }
 
     /**
-     * Statistic all article count according to submitter.
+     * Count all article according to submitter
      * 
      * @param array   $options
      * @param string  $module
@@ -248,7 +287,7 @@ class Block
             return false;
         }
         
-        $limit     = ($options['list-count'] <= 0) ? 10 : $options['list-count'];
+        $limit    = ($options['list-count'] <= 0) ? 10 : $options['list-count'];
         $time      = time();
         $today     = strtotime(date('Y-m-d', $time));
         $tomorrow  = $today + 24 * 3600;
@@ -257,7 +296,7 @@ class Block
         $daySets   = Statistics::getSubmittersInPeriod($today, $tomorrow, $limit, $module);
         $weekSets  = Statistics::getSubmittersInPeriod($week, $tomorrow, $limit, $module);
         $monthSets = Statistics::getSubmittersInPeriod($month, $tomorrow, $limit, $module);
-        $historySets   = Statistics::getSubmittersInPeriod(0, $tomorrow, $limit, $module);
+        $historySets = Statistics::getSubmittersInPeriod(0, $tomorrow, $limit, $module);
         
         return array(
             'day'     => $daySets,
@@ -268,7 +307,7 @@ class Block
     }
     
     /**
-     * Listing newest topics.
+     * List newest topics.
      * 
      * @param array   $options
      * @param string  $module
@@ -288,7 +327,7 @@ class Block
     }
 
     /**
-     * Listing hot articles by visiting count.
+     * List hot articles by visit count
      * 
      * @param array   $options
      * @param string  $module
@@ -300,17 +339,20 @@ class Block
             return false;
         }
         
-        $limit  = isset($options['list-count']) ? intval($options['list-count']) : 10;
+        $limit  = isset($options['list-count']) ? (int) $options['list-count'] : 10;
         $target = isset($options['target']) ?: '_blank';
         $config = Pi::service('module')->config('', $module);
-        $image  = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
-        $length = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
+        $image  = $config['default_feature_thumb'];
+        $image  = Pi::service('asset')->getModuleAsset($image, $module);
+        $length = isset($options['max_subject_length']) 
+            ? intval($options['max_subject_length']) : 15;
         $day    = $options['day-range'] ? intval($options['day-range']) : 7;
 
         if ($options['is-topic']) {
-            $params   = Pi::engine()->application()->getRouteMatch()->getParams();
+            $params = Pi::engine()->application()->getRouteMatch()->getParams();
             if (is_string($params)) {
-                $params['topic'] = Pi::model('topic', $module)->slugToId($params['topic']);
+                $params['topic'] = Pi::model('topic', $module)
+                    ->slugToId($params['topic']);
             }
             $articles = Topic::getVisitsRecently($day, $limit, null, $params['topic'], $module);
         } else {
@@ -331,7 +373,7 @@ class Block
     }
     
     /**
-     * Listing custom articles and with a slideshow besides article list.
+     * List custom articles and with a slideshow besides article list
      * 
      * @param array   $options
      * @param string  $module
@@ -352,8 +394,11 @@ class Block
         $where    = array('id' => $ids);
         $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
         
-        $image    = Pi::service('asset')->getModuleAsset($config['default_feature_thumb'], $module);
-        $length   = isset($options['max_subject_length']) ? intval($options['max_subject_length']) : 15;
+        $config   = Pi::service('module')->config('', $module);
+        $image    = $config['default_feature_thumb'];
+        $image    = Pi::service('asset')->getModuleAsset($image, $module);
+        $length   = isset($options['max_subject_length']) 
+            ? intval($options['max_subject_length']) : 15;
         foreach ($articles as &$article) {
             $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
             $article['image']   = $article['image'] ?: $image;
@@ -375,7 +420,7 @@ class Block
             if (is_numeric($image)) {
                 $imageIds[] = $image;
             } else {
-                $url   = !empty($image) ? $image : 'image/default-recommended.png';
+                $url   = $image ?: 'image/default-recommended.png';
                 $image = array(
                     'url'         => Pi::service('asset')->getModuleAsset($url, $module),
                     'link'        => $imageLinks[$key + 1],

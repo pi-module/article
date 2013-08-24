@@ -506,7 +506,7 @@ class Entity
             'article'   => $id,
             'type'      => 'attachment',
         ));
-        $mediaIds = array();
+        $mediaIds = array(0);
         foreach ($resultsetAsset as $asset) {
             $mediaIds[$asset->media] = $asset->media;
         }

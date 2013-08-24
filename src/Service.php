@@ -1,29 +1,17 @@
 <?php
 /**
- * Article module service api
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
 
 use Pi;
-use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
-use Module\Article\Model\Asset;
 use Module\Article\Upload;
 use Module\Article\Cache;
 use Pi\Mvc\Controller\ActionController;
@@ -31,18 +19,19 @@ use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;
-use Module\Article\Statistics;
 use Module\Article\Controller\Admin\PermissionController as Perm;
 
 /**
- * Public APIs for article module itself 
+ * Common service API
+ * 
+ * @author Zongshu Lin <lin40553024@163.com> 
  */
 class Service
 {
     protected static $module = 'article';
 
     /**
-     * Rendering form
+     * Render form
      * 
      * @param Pi\Mvc\Controller\ActionController $obj  ActionController instance
      * @param Zend\Form\Form $form     Form instance
@@ -81,25 +70,32 @@ class Service
             'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
             'media_extension'  => $handler->config('media_extension'),
             'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),
-            'defaultMediaImage' => Pi::service('asset')->getModuleAsset(
-                                   $handler->config('default_media_image'),
-                                   $module),
-            'defaultMediaThumb' => Pi::service('asset')->getModuleAsset(
-                                   $handler->config('default_media_thumb'),
-                                   $module),
+            'defaultMediaImage' => Pi::service('asset')
+                ->getModuleAsset(
+                    $handler->config('default_media_image'),
+                    $module
+                ),
+            'defaultMediaThumb' => Pi::service('asset')
+                ->getModuleAsset(
+                    $handler->config('default_media_thumb'),
+                    $module
+                ),
         ));
     }
     
     /**
-     * Getting param post by post, get or query.
+     * Get param post by post, get or query.
      * 
      * @param ActionController $handler
      * @param string  $param    Parameter key
      * @param mixed   $default  Default value if parameter is no exists
      * @return mixed 
      */
-    public static function getParam(ActionController $handler = null, $param = null, $default = null)
-    {      
+    public static function getParam(
+        ActionController $handler = null, 
+        $param = null, 
+        $default = null
+    ) {      
         // Route parameter first
         $result = $handler->params()->fromRoute($param);
 
@@ -120,8 +116,25 @@ class Service
         return $result;
     }
 
-    public static function getDraftPage($where, $page, $limit, $columns = null, $order = null, $module = null)
-    {
+    /**
+     * Get draft page
+     * 
+     * @param array  $where
+     * @param int    $page
+     * @param int    $limit
+     * @param array  $columns
+     * @param string $order
+     * @param string $module
+     * @return array
+     */
+    public static function getDraftPage(
+        $where, 
+        $page, 
+        $limit, 
+        $columns = null, 
+        $order = null, 
+        $module = null
+    ) {
         $offset     = ($limit && $page) ? $limit * ($page - 1) : null;
 
         $module     = $module ?: Pi::service('module')->current();
@@ -132,7 +145,7 @@ class Service
         $modelUser      = Pi::model('user');
         $modelAuthor    = Pi::model('author', $module);
 
-        $resultset      = $modelDraft->getSearchRows($where, $limit, $offset, $columns, $order);
+        $resultset = $modelDraft->getSearchRows($where, $limit, $offset, $columns, $order);
 
         if ($resultset) {
             foreach ($resultset as $row) {
@@ -200,7 +213,7 @@ class Service
     }
 
     /**
-     * Deleting draft, along with featured image and attachment.
+     * Delete draft, along with featured image and attachment.
      * 
      * @param array   $ids     Draft ID
      * @param string  $module  Current module name
@@ -208,7 +221,6 @@ class Service
      */
     public static function deleteDraft($ids, $module = null)
     {
-        $affectedRows   = false;
         $module         = $module ?: Pi::service('module')->current();
 
         $modelDraft     = Pi::model('draft', $module);
@@ -219,30 +231,21 @@ class Service
         foreach ($resultsetFeatureImage as $featureImage) {
             if ($featureImage->article) {
                 $rowArticle = $modelArticle->find($featureImage->article);
-                if ($featureImage->image && strcmp($featureImage->image, $rowArticle->image) != 0) {
-                    unlink(Pi::path($featureImage->image));
-                    unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
+                if ($featureImage->image 
+                    && strcmp($featureImage->image, $rowArticle->image) != 0
+                ) {
+                    @unlink(Pi::path($featureImage->image));
+                    @unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
                 }
             } else if ($featureImage->image) {
-                unlink(Pi::path($featureImage->image));
-                unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
+                @unlink(Pi::path($featureImage->image));
+                @unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
             }
         }
 
         // Delete assets
-        /*$modelDraftAsset = Pi::model('draft_asset', $module);
-        $resultsetAsset = $modelDraftAsset->select(array(
-            'draft'     => $ids,
-            'published' => 0,
-        ));
-        foreach ($resultsetAsset as $asset) {
-            unlink(Pi::path($asset->path));
-
-            if (Asset::FIELD_TYPE_IMAGE == $asset->type) {
-                unlink(Pi::path(Upload::getThumbFromOriginal($asset->path)));
-            }
-        }
-        $modelDraftAsset->delete(array('draft' => $ids));*/
+        $modelDraftAsset = Pi::model('asset_draft', $module);
+        $modelDraftAsset->delete(array('draft' => $ids));
 
         // Delete draft
         $affectedRows = $modelDraft->delete(array('id' => $ids));
@@ -250,13 +253,23 @@ class Service
         return $affectedRows;
     }
 
+    /**
+     * Break article content by delimiter
+     * 
+     * @param string  $content
+     * @return array
+     */
     public static function breakPage($content)
     {
         $result = $matches = $row = array();
-        $title = $body = '';
-        $page = 0;
+        $page   = 0;
 
-        $matches = preg_split(Article::PAGE_BREAK_PATTERN, $content, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $matches = preg_split(
+            Article::PAGE_BREAK_PATTERN, 
+            $content, 
+            null, 
+            PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY
+        );
         foreach ($matches as $text) {
             if (preg_match(Article::PAGE_BREAK_PATTERN, $text)) {
                 if (isset($row['title']) || isset($row['content'])) {
@@ -279,75 +292,29 @@ class Service
         return $result;
     }
 
+    /**
+     * Generate article summary
+     * 
+     * @param string  $content
+     * @param int     $length
+     * @return string
+     */
     public static function generateArticleSummary($content, $length)
     {
-        $result = '';
-
         // Remove title
-        $result = preg_replace(array(Article::PAGE_BREAK_PATTERN, '/&nbsp;/'), '', $content);
+        $result = preg_replace(
+            array(Article::PAGE_BREAK_PATTERN, '/&nbsp;/'), 
+            '', 
+            $content
+        );
         // Strip tags
         $result = preg_replace('/<[^>]*>/', '', $result);
         // Trim blanks
         $result = trim($result);
-        // Get first paragraph
-//        if (preg_match('|(.+)[\r\n]+|', $result, $matches)) {
-//            $result = $matches[1];
-//        }
         // Limit length
         $result = mb_substr($result, 0, $length, 'utf-8');
 
         return $result;
-    }
-
-    public static function transformArticleImages($content, $module = null)
-    {
-        $module = $module ?: self::$module;
-
-        if (preg_match_all(Upload::PATTERN_HTML_IMAGE, $content, $matches)) {
-            // Get host uri
-            $uris = array();
-            $host = Pi::config()->load('host.php');
-            foreach ($host['uri'] as $uri) {
-                $uris[] = preg_quote($uri, '/');
-            }
-            $patternUris = sprintf('/(%s)/i', implode('|', $uris));
-
-            // Filter host url
-            $urls  = array_flip($matches[1]);
-            $index = 0;
-            foreach ($urls as $url => $val) {
-                if (preg_match($patternUris, $url)) {
-                    unset($urls[$url]);
-                } else {
-                    $dest = Upload::remoteToLocal($url, $module);
-                    if (false !== $dest) {
-                        $urls[$url] = array(
-                            'source_url'    => Pi::url($dest),
-                            'thumb_url'     => Pi::url(Upload::getThumbFromOriginal($dest)),
-                        );
-                        $index     += 1;
-                    } else {
-                        unset($urls[$url]);
-                    }
-                }
-            }
-
-            // Replace image tags
-            $replacement = array();
-            foreach ($matches[1] as $key => $url) {
-                if (isset($urls[$url])) {
-                    $tagImage       = $matches[0][$key];
-                    $patternSource  = sprintf('/%s/i', preg_quote($url, '/'));
-                    $patternImage   = sprintf('/%s/i', preg_quote($tagImage, '/'));
-                    $newTagImage    = preg_replace($patternSource, $urls[$url]['thumb_url'], $tagImage);
-                    $replacement[$patternImage] = sprintf(Upload::FORMAT_IMAGE_ANCHOR, $urls[$url]['source_url'], $newTagImage);
-                }
-            }
-
-            $content = preg_replace(array_keys($replacement), $replacement, $content);
-        }
-
-        return $content;
     }
 
     /**
@@ -362,14 +329,15 @@ class Service
                 $data[$key] = static::deepHtmlspecialchars($val);
             }
         } else {
-            $data = is_string($data) ? htmlspecialchars($data, ENT_QUOTES, 'utf-8') : $data;
+            $data = is_string($data) 
+                ? htmlspecialchars($data, ENT_QUOTES, 'utf-8') : $data;
         }
 
         return $data;
     }
     
     /**
-     * Reading configuration of form to display from file define by user
+     * Read configuration of form to display from file define by user
      * 
      * @return array 
      */
@@ -389,7 +357,7 @@ class Service
     }
     
     /**
-     * Getting absolute module config path name.
+     * Get absolute module config path name.
      * 
      * @param string  $name
      * @param string  $module
@@ -407,9 +375,10 @@ class Service
     }
     
     /**
-     * Getting count statistics of draft with different status and published article
-     * @param type $from
-     * @return type 
+     * Get count statistics of draft with different status and published article
+     * 
+     * @param string  $from
+     * @return array 
      */
     public static function getSummary($from = 'my', $rules = array())
     {
@@ -435,10 +404,14 @@ class Service
         if ('my' == $from) {
             $where['uid'] = Pi::registry('user')->id;
         }
-        $where = array_filter($where);
+        $where      = array_filter($where);
         $modelDraft = Pi::model('draft', $module);
         $select     = $modelDraft->select()
-            ->columns(array('status', 'total' => new Expression('count(status)'), 'category'))
+            ->columns(array(
+                'status', 
+                'total' => new Expression('count(status)'), 
+                'category'
+            ))
             ->where($where)
             ->group(array('status', 'category'));
         $resultset  = $modelDraft->selectWith($select);
@@ -446,7 +419,9 @@ class Service
             if (Draft::FIELD_STATUS_DRAFT == $row->status) {
                 $result['draft'] += $row->total;
             } else if (Draft::FIELD_STATUS_PENDING == $row->status) {
-                if ('all' == $from and in_array($row->category, $pendingCategories)) {
+                if ('all' == $from 
+                    and in_array($row->category, $pendingCategories)
+                ) {
                     $result['pending'] += $row->total;
                 } elseif ('my' == $from) {
                     $result['pending'] += $row->total;
@@ -466,8 +441,8 @@ class Service
         }
         $where = array_filter($where);
         $select = $modelArticle->select()
-                               ->columns(array('total' => new Expression('count(id)')))
-                               ->where($where);
+            ->columns(array('total' => new Expression('count(id)')))
+            ->where($where);
         $resultset = $modelArticle->selectWith($select);
         if ($resultset->count()) {
             $result['published'] = $resultset->current()->total;
@@ -477,7 +452,7 @@ class Service
     }
     
     /**
-     * Getting draft article details.
+     * Get draft article details.
      * 
      * @param int  $id  Draft article ID
      * @return array 
@@ -530,35 +505,47 @@ class Service
             if ($author) {
                 $result['author'] = $author->toArray();
                 if (empty($result['author']['photo'])) {
-                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $module);
+                    $result['author']['photo'] = 
+                        Pi::service('asset')->getModuleAsset(
+                            $config['default_author_photo'], 
+                            $module
+                        );
                 }
             }
         }
 
         // Get attachments
-        /*$resultsetDraftAsset = Pi::model('draft_asset', $module)->select(array(
+        $resultsetDraftAsset = Pi::model('asset_draft', $module)->select(array(
             'draft' => $id,
-            'type'  => Asset::FIELD_TYPE_ATTACHMENT,
+            'type'  => 'attachment',
         ));
+        $mediaIds = array(0);
+        foreach ($resultsetDraftAsset as $asset) {
+            $mediaIds[$asset->media] = $asset->media;
+        }
 
-        foreach ($resultsetDraftAsset as $attachment) {
+        $modelMedia = Pi::model('media', $module);
+        $rowMedia   = $modelMedia->select(array('media' => $mediaIds));
+        foreach ($rowMedia as $media) {
             $result['attachment'][] = array(
-                'original_name' => $attachment->original_name,
-                'extension'     => $attachment->extension,
-                'size'          => $attachment->size,
-                'url'           => Pi::engine()->application()->getRouter()->assemble(
-                    array(
-                        'module'     => $this->getModule(),
-                        'controller' => 'download',
-                        'action'     => 'attachment',
-                        'name'       => $attachment->name,
+                'original_name' => $media->title,
+                'extension'     => $media->type,
+                'size'          => $media->size,
+                'url'           => Pi::engine()->application()
+                    ->getRouter()
+                    ->assemble(
+                        array(
+                            'module'     => $module,
+                            'controller' => 'media',
+                            'action'     => 'download',
+                            'name'       => $media->id,
+                        ),
+                        array(
+                            'name'       => 'default',
+                        )
                     ),
-                    array(
-                        'name'       => 'default',
-                    )
-                ),
             );
-        }*/
+        }
 
         // Get related articles
         $relatedIds = $related = array();
@@ -568,7 +555,14 @@ class Service
             $where   = array('id' => $relatedIds);
             $columns = array('id', 'subject');
 
-            $resultsetRelated = Entity::getArticlePage($where, 1, null, $columns, null, $module);
+            $resultsetRelated = Entity::getArticlePage(
+                $where, 
+                1, 
+                null, 
+                $columns, 
+                null, 
+                $module
+            );
 
             foreach ($resultsetRelated as $key => $val) {
                 if (array_key_exists($key, $related)) {
@@ -600,7 +594,7 @@ class Service
     }
     
     /**
-     * Getting route name.
+     * Get route name
      * 
      * @return string 
      */
@@ -631,7 +625,7 @@ class Service
     }
     
     /**
-     * Checking whether a given user is current loged user.
+     * Check whether a given user is current loged user
      * 
      * @param int  $uid  User ID
      * @return boolean 
@@ -647,7 +641,7 @@ class Service
     }
     
     /**
-     * Changing status number to slug string
+     * Change status number to slug string
      * 
      * @param int  $status
      * @return string 
@@ -677,7 +671,7 @@ class Service
     }
     
     /**
-     * Getting user permission according to given category or operation name.
+     * Get user permission according to given category or operation name.
      * The return array has a format such as:
      * array('{Category ID}' => array('{Operation name}' => true));
      * 
@@ -686,8 +680,12 @@ class Service
      * @param int         $uid
      * @return array
      */
-    public static function getPermission($isMine = false, $operation = null, $category = null, $uid = null)
-    {
+    public static function getPermission(
+        $isMine = false, 
+        $operation = null, 
+        $category = null, 
+        $uid = null
+    ) {
         $module     = Pi::service('module')->current();
         $identity   = Pi::service('authentication')->getIdentity();
         
@@ -735,12 +733,19 @@ class Service
         $levelCategory = array();
         foreach ($userLevels as $level) {
             $userCategories = explode(',', $level['category']);
-            $userCategories = !empty($userCategories) ? $userCategories : array_keys($categories);
-            $needCategories = empty($category) ? $userCategories : (in_array($category, $userCategories) ? (array) $category : '');
+            $userCategories = $userCategories ?: array_keys($categories);
+            $needCategories = empty($category) 
+                ? $userCategories 
+                : (in_array($category, $userCategories) 
+                    ? (array) $category : ''
+                );
             $levelIds[]     = $level['level'];
             if (!empty($needCategories)) {
                 if (isset($levelCategory[$level['level']])) {
-                    $levelCategory[$level['level']] = array_merge($levelCategory[$level['level']], $needCategories);
+                    $levelCategory[$level['level']] = array_merge(
+                        $levelCategory[$level['level']], 
+                        $needCategories
+                    );
                 } else {
                     $levelCategory[$level['level']] = $needCategories;
                 }
@@ -774,7 +779,9 @@ class Service
             $myRules  = array();
             foreach (array_keys($categories) as $key) {
                 $categoryRule = array();
-                if (isset($rules[$key]['compose']) and $rules[$key]['compose']) {
+                if (isset($rules[$key]['compose']) 
+                    and $rules[$key]['compose']
+                ) {
                     $categoryRule = array(
                         'draft-edit'      => true,
                         'draft-delete'    => true,
@@ -784,7 +791,10 @@ class Service
                         'rejected-delete' => true,
                     );
                 }
-                $myRules[$key] = array_merge(isset($rules[$key]) ? $rules[$key] : array(), $categoryRule);
+                $myRules[$key] = array_merge(
+                    isset($rules[$key]) ? $rules[$key] : array(), 
+                    $categoryRule
+                );
             }
             $rules = $myRules;
         }
@@ -793,7 +803,7 @@ class Service
     }
     
     /**
-     * Getting permission of resources which define in acl config.
+     * Get permission of resources which define in acl config.
      * 
      * @param string  $resource
      * @param int     $uid
