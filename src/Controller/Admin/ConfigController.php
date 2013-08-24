@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module config controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Admin;
@@ -27,7 +18,13 @@ use Module\Article\Form\DraftEditForm;
 use Module\Article\Service;
 
 /**
- * Public action controller for config module
+ * Config controller
+ * 
+ * Feature list:
+ * 
+ * 1. Custom config the form to display in draft edit page
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class ConfigController extends ActionController
 {
@@ -40,13 +37,17 @@ class ConfigController extends ActionController
     /**
      * Saving config result into file
      * 
-     * @param array|int  $elements     Elements want to display, if mode is not custom, its value is mode name
+     * @param array|int  $elements     Elements want to display, if mode is 
+     *                                 not custom, its value is mode name
      * @param array      $allElements  All elements in article edit page
      * @param array      $options      Elements of normal and extended mode
      * @return bool 
      */
-    protected function saveFormConfig($elements, $allElements, $options = array())
-    {
+    protected function saveFormConfig(
+        $elements, 
+        $allElements, 
+        $options = array()
+    ) {
         $content =<<<EOD
 <?php
 /**
@@ -80,8 +81,8 @@ EOD;
         }
         
         $all =<<<EOD
- * The all elements for displaying are showed as follows, if you choose custom mode,
- * you need to return the element wants to display in `elements` field.
+ * The all elements for displaying are showed as follows, if you choose custom 
+ * mode, you need to return the element wants to display in `elements` field.
  * For example:
  * return array(
  *     'mode'     => 'custom',
@@ -106,7 +107,9 @@ EOD;
         if (is_string($elements)) {
             $codeContent .= '    \'mode\'     => \'' . $elements . '\',' . "\r\n";
         } else {
-            $codeContent .= '    \'mode\'     => \'' . self::FORM_MODE_CUSTOM . '\',' . "\r\n";
+            $codeContent .= '    \'mode\'     => \'' 
+                         . self::FORM_MODE_CUSTOM 
+                         . '\',' . "\r\n";
             $codeContent .= '    \'elements\' => array(' . "\r\n";
             foreach ($elements as $element) {
                 $codeContent .= '        \'' . $element . '\',' . "\r\n";
@@ -129,13 +132,11 @@ EOD;
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array(
-            'action'    => 'form',
-        ));
+        return $this->redirect()->toRoute('', array('action' => 'form'));
     }
 
     /**
-     * Configuring whether to display form in draft edit page
+     * Config whether to display form in draft edit page
      * 
      * @return ViewModel 
      */
@@ -175,10 +176,17 @@ EOD;
             }
             $neededElements = DraftEditForm::getNeededElements();
             $form->setData($post);
-            $form->setInputFilter(new DraftCustomFilter($post['mode'], array('needed' => $neededElements)));
+            $form->setInputFilter(
+                new DraftCustomFilter($post['mode'], 
+                array('needed' => $neededElements))
+            );
 
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('There are some error occured!')
+                );
             }
             
             $data     = $form->getData();
@@ -193,12 +201,16 @@ EOD;
                 $elements = $data['mode'];
             }
             $options = array(
-                self::FORM_MODE_NORMAL   => DraftEditForm::getDefaultElements(self::FORM_MODE_NORMAL),
-                self::FORM_MODE_EXTENDED => DraftEditForm::getDefaultElements(self::FORM_MODE_EXTENDED),
+                self::FORM_MODE_NORMAL   => DraftEditForm::getDefaultElements(
+                    self::FORM_MODE_NORMAL
+                ),
+                self::FORM_MODE_EXTENDED => DraftEditForm::getDefaultElements(
+                    self::FORM_MODE_EXTENDED
+                ),
             );
             $result  = $this->saveFormConfig($elements, $items, $options);
             if (!$result) {
-                return Service::renderForm($this, $form, __('Can not save data!'), true);
+                return Service::renderForm($this, $form, __('Can not save data!'));
             }
             
             Service::renderForm($this, $form, __('Data saved successful!'), false);
