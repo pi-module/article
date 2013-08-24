@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module article class
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Model;
@@ -22,6 +13,11 @@ use Pi;
 use Pi\Application\Model\Model;
 use Zend\Db\Sql\Expression;
 
+/**
+ * Article model class
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
+ */
 class Article extends Model
 {
     const FIELD_STATUS_PUBLISHED = 11;
@@ -40,16 +36,24 @@ class Article extends Model
 
     const PAGE_BREAK_PATTERN = '|(<p class="pagebreak page-title">.*?</p>)|is';
 
+    /**
+     * Get default columns
+     * 
+     * @return array
+     */
     public static function getDefaultColumns()
     {
-        return array('id', 'subject', 'summary', 'image', 'uid', 'author', 'time_publish', 'category', 'active');
+        return array(
+            'id', 'subject', 'summary', 'image', 'uid', 'author', 
+            'time_publish', 'category', 'active'
+        );
     }
 
     /**
      * Get articles by ids
      *
-     * @param $ids Article ids
-     * @param null $columns Columns, null for default
+     * @param  array  $ids      Article ids
+     * @param  null   $columns  Columns, null for default
      * @return array
      */
     public function getRows($ids, $columns = null)
@@ -78,7 +82,7 @@ class Article extends Model
     }
 
     /**
-     * Returning rows by search condition.
+     * Return rows by search condition
      * 
      * @param array        $where
      * @param int|null     $limit
@@ -87,8 +91,13 @@ class Article extends Model
      * @param string|null  $order
      * @return array 
      */
-    public function getSearchRows($where = array(),  $limit = null, $offset = null, $columns = null, $order = null)
-    {
+    public function getSearchRows(
+        $where = array(),
+        $limit = null,
+        $offset = null,
+        $columns = null,
+        $order = null
+    ) {
         $result = $rows = array();
 
         if (null === $columns) {
@@ -129,10 +138,14 @@ class Article extends Model
         return $result;
     }
 
+    /**
+     * Get count of searched row
+     * 
+     * @param array  $where
+     * @return int
+     */
     public function getSearchRowsCount($where = array())
     {
-        $result = 0;
-
         $select = $this->select()
             ->columns(array('total' => new Expression('count(id)')));
 
@@ -147,7 +160,7 @@ class Article extends Model
     }
 
     /**
-     * Setting status of active field.
+     * Set status of active field
      * 
      * @param array  $ids
      * @param int    $active
@@ -161,6 +174,13 @@ class Article extends Model
         );
     }
 
+    /**
+     * Check whether subject is already exists in database
+     * 
+     * @param string  $subject
+     * @param int     $id
+     * @return bool
+     */
     public function checkSubjectExists($subject, $id = null)
     {
         $result = false;
@@ -182,6 +202,13 @@ class Article extends Model
         return $result;
     }
 
+    /**
+     * Check whether slug is already exists
+     * 
+     * @param string  $slug
+     * @param int     $id
+     * @return bool
+     */
     public function checkSlugExists($slug, $id = null)
     {
         $result = false;

@@ -81,7 +81,7 @@ if ($details['seo']['description']) {
 <div class="pi-block">
     <div class="article-header">
         <h1 class="article-headline"><?php echo $this->escape($details['title']) ?></h1>
-        <?php if($details['subtitle']) { ?>
+        <?php if ($details['subtitle']) { ?>
         <div class="byline">
             <?php echo $this->escape($details['subtitle']); ?>
         </div>
@@ -126,31 +126,35 @@ if ($details['seo']['description']) {
                 <?php if (isset($remain) and '0' === $remain) {
                     foreach ($details['content'] as $content) {
                         if ( $content['title']) {
-                            echo '<div class="title title18">'.$content['title'].'</div>';
+                            echo '<div class="title title18">' . $this->escape($content['title']) . '</div>';
                         }
                         echo $content['content'];
                     } 
                 } elseif (isset($remain) and (int) $remain > 0) {
-                        for ($p = (int) $remain; $p < $details['pages']; $p++) {
-                            if( $details['content'][$p]['title'] ) {
-                                echo '<div class="title title18">'.$details['content'][$p]['title'].'</div>';
-                            }
-                            echo $details['content'][$p]['content'];
+                    for ($p = (int) $remain; $p < $details['pages']; $p++) {
+                        if ($details['content'][$p]['title']) {
+                            echo '<div class="title title18">' . $this->escape($details['content'][$p]['title']) . '</div>';
                         }
-                } else {
-                    if ($details['content'][$page-1]['title']) {
-                        echo '<div class="title title18">'. $this->escape(isset($details['content'][$page-1]['title']) ? $details['content'][$page-1]['title'] : '') .'</div>';
+                        echo $details['content'][$p]['content'];
                     }
-                    echo $details['content'][$page-1]['content'];
+                } else {
+                    if ($details['content'][$page - 1]['title']) {
+                        echo '<div class="title title18">' . $this->escape(isset($details['content'][$page-1]['title']) ? $details['content'][$page-1]['title'] : '') .'</div>';
+                    }
+                    echo $details['content'][$page - 1]['content'];
                 }
                 ?>  
             </div>
-            <div class="article-subline-desc muted" style="margin-bottom: 10px"><?php echo _e('Tags: ') ?>
+            <div class="article-subline-desc muted" style="margin-bottom: 10px"><?php _e('Tags: ') ?>
             <?php if (empty($details['tag'])) {
                 echo '<span>' . __('None') . '</span>';
             } ?>
             <?php foreach ($details['tag'] as $tag) { ?>
-                <span><a href="<?php echo $this->url('', array('controller' => 'tag', 'action' => 'list', 'tag' => $tag)) ?>"><?php echo $this->escape($tag) ?></a></span>
+                <span>
+                    <a href="<?php echo $this->url('', array('controller' => 'tag', 'action' => 'list', 'tag' => $tag)) ?>">
+                        <?php echo $this->escape($tag) ?>
+                    </a>
+                </span>
                 <?php if ($tag != end($details['tag'])) {
                     echo '<span>, </span>'; ?>
                 <?php } ?>
@@ -159,27 +163,34 @@ if ($details['seo']['description']) {
         </div>
         <div class="clearfix" style="line-height: 18px; margin-bottom: 20px;">
             <?php if (!isset($remain) and (int) $page < $details['pages']) { ?>
-                <div class="pull-right muted" style="margin-left:10px;">
-                    <a class="link mr10" style="font-size:14px;" href="<?php echo $this->escape($details['content'][$page]['url']); ?>"><?php _e('Next Page') ?></a>
-                    <a class="link mr10" style="font-size:14px;" href="<?php echo $this->escape($details['remain']); ?>" rel="nofollow"><?php _e('Remain Page') ?></a>
+                <div class="pull-right muted" style="margin-left: 10px;">
+                    <a class="link mr10" style="font-size: 14px;" href="<?php echo $this->escape($details['content'][$page]['url']); ?>"><?php _e('Next Page') ?></a>
+                    <a class="link mr10" style="font-size: 14px;" href="<?php echo $this->escape($details['remain']); ?>" rel="nofollow"><?php _e('Remain Page') ?></a>
                 </div>
             <?php } ?>
         </div>
-        <?php if($details['pages']>1) { ?> 
+        <?php if ($details['pages'] > 1) { ?> 
         <div class="pagination pagination-centered">
             <ul>
-            <?php for($i=1;$i<=$details['pages'];$i++) { ?>
-                <li <?php if($i==$page && !isset($remain)) { echo 'class="active"'; } ?> >  
-                <a href="<?php echo $this->escape($details['content'][$i-1]['url']); ?>"><?php echo $this->escape($i); ?></a>
+            <?php for ($i = 1; $i <= $details['pages']; $i++) { ?>
+                <li <?php if ($i == $page && !isset($remain)) { echo 'class="active"'; } ?>>  
+                    <a href="<?php echo $this->escape($details['content'][$i-1]['url']); ?>">
+                        <?php echo $this->escape($i); ?>
+                    </a>
+                </li>
             <?php } ?>
-            <li class="<?php if (isset($remain) and $remain === '0') { echo 'active'; }?>"><a href="<?php echo $this->escape($details['view']); ?>" rel="nofollow"><?php _e('Read More'); ?></a>
+                <li class="<?php if (isset($remain) and $remain === '0') { echo 'active'; } ?>">
+                    <a href="<?php echo $this->escape($details['view']); ?>" rel="nofollow">
+                        <?php _e('Read More'); ?>
+                    </a>
+                </li>
             </ul>
         </div>
         <?php } ?>
         <div class="article-statistics row-fluid">
             <div class="span4 statistics-details details-comment" style="border-right: 1px #DDDDDD solid">
                 <span style="font-size: 16px; font-weight: bold; font-family: Arial, microsoft yahei; color: #333333">
-                    <?php echo isset($details['comments']) ? $details['comments'] : '0' ?>
+                    <?php echo isset($details['comments']) ? $this->escape($details['comments']) : '0' ?>
                 </span>&nbsp;
                 <a href="#" style="font-weight: bold"><?php _e('Comments') ?>&nbsp;&gt;&gt;</a>
             </div>
@@ -187,13 +198,13 @@ if ($details['seo']['description']) {
             <div style="width: 40%;" class="pull-left details-center">
                 <a href="#" style="color: #000000"><i class="icon-thumbs-up"></i></a>&nbsp;&nbsp;
                 <span class="text-warning">
-                    <?php echo isset($details['up']) ? $details['up'] : '0' ?>
+                    <?php echo isset($details['up']) ? $this->escape($details['up']) : '0' ?>
                 </span>
             </div>
             <div style="width: 50%; border-left: 1px #DDDDDD solid" class="pull-right details-center">
                 <a href="#" style="color: #000000"><i class="icon-thumbs-down"></i></a>&nbsp;&nbsp;
                 <span class="muted">
-                    <?php echo isset($details['down']) ? $details['down'] : '0' ?>
+                    <?php echo isset($details['down']) ? $this->escape($details['down']) : '0' ?>
                 </span>
             </div>
             </div>
@@ -212,18 +223,21 @@ if ($details['seo']['description']) {
                 </div>
             </div>
         </div>
-        <?php if($details['related']){ ?>
+        <?php if ($details['related']) { ?>
         <div class="related" style="margin-bottom: 20px">
             <div class="dashed"></div>    
             <div class="title mb10" style="margin: 15px 0px 15px 0px; color: #333333"><?php _e('Continue read') ?></div>
             <ul class="list list-double" style="margin-bottom:0;">
                 <?php $leftright = 0; foreach($details['related'] as $related) { ?>
-                <li class="muted" style="width:300px;"><a target="_blank" href="<?php echo $this->escape($related['url']); ?>" title="<?php echo $this->escape($related['subject']); ?>"><?php echo $this->escape($related['subject']); ?></a>
+                <li class="muted" style="width:300px;">
+                    <a target="_blank" href="<?php echo $this->escape($related['url']); ?>" title="<?php echo $this->escape($related['subject']); ?>">
+                    <?php echo $this->escape($related['subject']); ?>
+                    </a>
                 <?php $leftright++; } ?>    
             </ul>
         </div>
         <?php } ?>
-        <?php if($details['author']) { ?>
+        <?php if ($details['author']) { ?>
         <div class="dashed"></div>
         <div class="title mb10" style="margin: 15px 0px 15px 0px; color: #333333"><?php _e('Author introduction') ?></div>
         <div class="dashed"></div>

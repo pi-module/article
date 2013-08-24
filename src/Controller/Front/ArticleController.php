@@ -1,20 +1,10 @@
 <?php
 /**
- * Article module article controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
@@ -24,20 +14,25 @@ use Pi;
 use Pi\Paginator\Paginator;
 use Module\Article\Model\Article;
 use Module\Article\Model\Draft;
-use Module\Article\Model\Asset;
 use Module\Article\Upload;
-use Module\Article\Form\DraftSearchForm;
 use Module\Article\Form\SimpleSearchForm;
-use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Cache;
-use Module\Article\Role;
 use Module\Article\Entity;
-use Module\Article\Model\Extended;
 
 /**
- * Public class for article 
+ * Article controller
+ * 
+ * Feature list:
+ * 
+ * 1. Article homepage
+ * 2. Article detail page
+ * 3. Published article list page for management
+ * 4. Active/deactivate/detete/edit article
+ * 5. AJAX action for seaching article
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class ArticleController extends ActionController
 {
@@ -50,7 +45,7 @@ class ArticleController extends ActionController
     }
     
     /**
-     * Article detail page.
+     * Article detail page
      * 
      * @return ViewModel 
      */
@@ -76,7 +71,10 @@ class ArticleController extends ActionController
             return $this->jumpTo404(__('Page not found'));
         }
         if (empty($details['active'])) {
-            return $this->jumpToException(__('The article requested is not active'), 503);
+            return $this->jumpToException(
+                __('The article requested is not active'),
+                503
+            );
         }
         $route = '.' . Service::getRouteName();
         if (strval($slug) != $details['slug']) {
@@ -91,7 +89,9 @@ class ArticleController extends ActionController
             if ($remain) {
                 $params['r'] = $remain;
             }
-            return $this->redirect()->setStatusCode(301)->toRoute($route, array_merge($routeParams, $params));
+            return $this->redirect()
+                ->setStatusCode(301)
+                ->toRoute($route, array_merge($routeParams, $params));
         }
         
         foreach ($details['content'] as &$value) {
@@ -103,7 +103,9 @@ class ArticleController extends ActionController
                 'controller' => 'article',
                 'action'     => 'detail',
             ), $params));
-            if (isset($value['title']) and preg_replace('/&nbsp;/', '', trim($value['title'])) !== '') {
+            if (isset($value['title']) 
+                and preg_replace('/&nbsp;/', '', trim($value['title'])) !== ''
+            ) {
                 $showTitle = true;
             } else {
                 $value['title'] = '';
@@ -126,16 +128,17 @@ class ArticleController extends ActionController
             'action'      => 'detail',
         ), $params));
 
+        $config = Pi::service('module')->config('', $this->getModule());
         $this->view()->assign(array(
             'details'     => $details,
             'page'        => $page,
             'showTitle'   => isset($showTitle) ? $showTitle : null,
-            'config'      => Pi::service('module')->config('', $this->getModule()),
+            'config'      => $config,
         ));
     }
 
     /**
-     * Deleting published articles
+     * Delete published articles
      * 
      * @return ViewModel 
      */
@@ -153,13 +156,15 @@ class ArticleController extends ActionController
         $modelArticle   = $this->getModel('article');
         $modelAsset     = $this->getModel('asset');
         
-        // Deleting articles that user has permission to do
+        // Delete articles that user has permission to do
         $rules = Service::getPermission();
         if (1 == count($ids)) {
             $row      = $modelArticle->find($ids[0]);
             $slug     = Service::getStatusSlug($row->status);
             $resource = $slug . '-delete';
-            if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
+            if (!(isset($rules[$row->category][$resource]) 
+                and $rules[$row->category][$resource])
+            ) {
                 return $this->jumpToDenied();
             }
         } else {
@@ -168,7 +173,9 @@ class ArticleController extends ActionController
             foreach ($rows as $row) {
                 $slug     = Service::getStatusSlug($row->status);
                 $resource = $slug . '-delete';
-                if (isset($rules[$row->category][$resource]) and $rules[$row->category][$resource]) {
+                if (isset($rules[$row->category][$resource]) 
+                    and $rules[$row->category][$resource]
+                ) {
                     $ids[] = $row->id;
                 }
             }
@@ -180,8 +187,8 @@ class ArticleController extends ActionController
         foreach ($resultsetArticle as $article) {
             // Delete feature image
             if ($article->image) {
-                unlink(Pi::path($article->image));
-                unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
+                @unlink(Pi::path($article->image));
+                @unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
             }
         }
         
@@ -208,7 +215,7 @@ class ArticleController extends ActionController
         // Delete assets
         $modelAsset->delete(array('article' => $ids));
 
-        // Update status
+        // Delete article directly
         $modelArticle->delete(array('id' => $ids));
 
         // Clear cache
@@ -216,7 +223,7 @@ class ArticleController extends ActionController
 
         if ($from) {
             $from = urldecode($from);
-            $this->redirect()->toUrl($from);
+            return $this->redirect()->toUrl($from);
         } else {
             // Go to list page
             return $this->redirect()->toRoute('', array(
@@ -228,7 +235,9 @@ class ArticleController extends ActionController
     }
 
     /**
-     * Active or deactivate article 
+     * Active or deactivate articles
+     * 
+     * @return ViewModel
      */
     public function activateAction()
     {
@@ -245,14 +254,18 @@ class ArticleController extends ActionController
             $rules = Service::getPermission();
             if (1 == count($ids)) {
                 $row      = $modelArticle->find($ids[0]);
-                if (!(isset($rules[$row->category]['active']) and $rules[$row->category]['active'])) {
+                if (!(isset($rules[$row->category]['active']) 
+                    and $rules[$row->category]['active'])
+                ) {
                     return $this->jumpToDenied();
                 }
             } else {
                 $rows     = $modelArticle->select(array('id' => $ids));
                 $ids      = array();
                 foreach ($rows as $row) {
-                    if (isset($rules[$row->category]['active']) and $rules[$row->category]['active']) {
+                    if (isset($rules[$row->category]['active']) 
+                        and $rules[$row->category]['active']
+                    ) {
                         $ids[] = $row->id;
                     }
                 }
@@ -262,22 +275,23 @@ class ArticleController extends ActionController
 
             // Clear cache
             Pi::service('render')->flushCache($module);
-            Pi::service('render')->flushCache('channel');
         }
 
         if ($from) {
             $from = urldecode($from);
-            $this->redirect()->toUrl($from);
+            return $this->redirect()->toUrl($from);
         } else {
             // Go to list page
-            $this->redirect()->toRoute('', array('action' => 'published', 'from' => 'all'));
+            return $this->redirect()->toRoute(
+                '', 
+                array('action' => 'published', 'from' => 'all')
+            );
         }
-        $this->view()->setTemplate(false);
     }
 
     /**
-     * Editing a published article, the article details will be copy to draft table,
-     * and then redirecting to edit page.
+     * Edit a published article, the article details will be copied to 
+     * draft table, and then redirect to edit page.
      * 
      * @return ViewModel 
      */
@@ -293,11 +307,13 @@ class ArticleController extends ActionController
         $model = $this->getModel('article');
         $row   = $model->find($id);
 
-        // Checking user has permission to edit
+        // Check user has permission to edit
         $rules = Service::getPermission();
         $slug  = Service::getStatusSlug($row->status);
         $resource = $slug . '-edit';
-        if (!(isset($rules[$row->category][$resource]) and $rules[$row->category][$resource])) {
+        if (!(isset($rules[$row->category][$resource]) 
+            and $rules[$row->category][$resource])
+        ) {
             return $this->jumpToDenied();
         }
         
@@ -332,7 +348,7 @@ class ArticleController extends ActionController
             'image'           => $row->image,
         );
         
-        // Getting extended fields
+        // Get extended fields
         $modelExtended = $this->getModel('extended');
         $rowExtended   = $modelExtended->find($row->id, 'article');
         $extendColumns = $modelExtended->getValidColumns();
@@ -382,7 +398,9 @@ class ArticleController extends ActionController
     }
 
     /**
-     * Processing published article list 
+     * List all published article for management
+     * 
+     * @return ViewModel 
      */
     public function publishedAction()
     {
@@ -392,7 +410,7 @@ class ArticleController extends ActionController
         $from   = Service::getParam($this, 'from', 'my');
         $order  = 'time_publish DESC';
 
-        // Getting permission
+        // Get permission
         $rules = Service::getPermission();
         if (empty($rules)) {
             return $this->jumpToDenied();
@@ -402,8 +420,6 @@ class ArticleController extends ActionController
             $categories[$key] = true;
         }
         $where['category'] = array_keys($categories);
-        
-        $data   = $ids = array();
 
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
@@ -438,7 +454,7 @@ class ArticleController extends ActionController
         }
 
         // Retrieve data
-        $data = Entity::getArticlePage($where, $page, $limit, null, $order, $module);
+        $data = Entity::getArticlePage($where, $page, $limit, null, $order);
 
         // Total count
         $select = $modelArticle->select()
@@ -453,11 +469,13 @@ class ArticleController extends ActionController
             ->setCurrentPageNumber($page)
             ->setUrlOptions(array(
             'router'    => $this->getEvent()->getRouter(),
-            'route'     => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'route'     => $this->getEvent()
+                ->getRouteMatch()
+                ->getMatchedRouteName(),
             'params'    => array_filter(array(
                 'module'        => $module,
-                'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                'controller'    => 'article',
+                'action'        => 'published',
                 'category'      => $category,
                 'filter'        => $filter,
                 'keyword'       => $keyword,
@@ -475,6 +493,7 @@ class ArticleController extends ActionController
             'published' => Article::FIELD_STATUS_PUBLISHED,
         );
 
+        $cacheCategories = Cache::getCategoryList();
         $this->view()->assign(array(
             'title'      => __('Published'),
             'data'       => $data,
@@ -483,7 +502,7 @@ class ArticleController extends ActionController
             'summary'    => Service::getSummary($from, $rules),
             'category'   => $category,
             'filter'     => $filter,
-            'categories' => array_intersect_key(Cache::getCategoryList(), $categories),
+            'categories' => array_intersect_key($cacheCategories, $categories),
             'action'     => 'published',
             'flags'      => $flags,
             'status'     => Article::FIELD_STATUS_PUBLISHED,
@@ -492,12 +511,12 @@ class ArticleController extends ActionController
         ));
         
         if ('my' == $from) {
-            $this->view()->setTemplate('draft-list');
+            return $this->view()->setTemplate('draft-list');
         }
     }
     
     /**
-     * Getting article by title via AJAX.
+     * Get article by title via AJAX.
      * 
      * @return ViewModel 
      */
@@ -525,13 +544,26 @@ class ArticleController extends ActionController
                 $pageCount = ceil($total / $limit);
 
                 // Get article ids
-                $articleIds = Pi::service('tag')->getList($module, $keyword, null, $limit, $offset);
+                $articleIds = Pi::service('tag')->getList(
+                    $module, 
+                    $keyword,
+                    null, 
+                    $limit, 
+                    $offset
+                );
                 if ($articleIds) {
                     $where['id'] = $articleIds;
                     $articles    = array_flip($articleIds);
 
                     // Get articles
-                    $resultsetArticle = Service::getArticlePage($where, 1, $limit, null, null, $module);
+                    $resultsetArticle = Service::getArticlePage(
+                        $where, 
+                        1, 
+                        $limit, 
+                        null, 
+                        null, 
+                        $module
+                    );
 
                     foreach ($resultsetArticle as $key => $val) {
                         $articles[$key] = $val;
@@ -548,7 +580,7 @@ class ArticleController extends ActionController
                 $where['subject like ?'] = sprintf('%%%s%%', $keyword);
             }
 
-            $articles = Entity::getArticlePage($where, $page, $limit, null, null, $module);
+            $articles = Entity::getArticlePage($where, $page, $limit);
 
             // Get total
             $total      = $articleModel->getSearchRowsCount($where);
@@ -559,7 +591,10 @@ class ArticleController extends ActionController
             if ($exclude && $exclude == $key) {
                 unset($articles[$key]);
             }
-            $article['time_publish_text'] = date('Y-m-d', $article['time_publish']);
+            $article['time_publish_text'] = date(
+                'Y-m-d',
+                $article['time_publish']
+            );
         }
 
         echo json_encode(array(
