@@ -1,45 +1,38 @@
 <?php
 /**
- * Article module ajax controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) http://www.eefocus.com
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
-use Zend\Db\Sql\Select;
-use Zend\Db\Sql\Expression;
-use Module\Article\Model\Article;
-use Module\Article\Model\Draft;
-use Module\Article\Model\Asset;
-use Module\Article\Upload;
-use Module\Article\Service;
-use Module\Article\Controller\Admin\PermController;
 
+/**
+ * Ajax controller
+ * 
+ * Feature list:
+ * 
+ * 1. Fuzzy search user by name
+ * 2. Fuzzy search tag
+ * 3. Check whether an article is exists
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
+ */
 class AjaxController extends ActionController
 {
     const AJAX_RESULT_TRUE = 1;
     const AJAX_RESULT_FALSE = 0;
-   
-    public function indexAction()
-    {
-        //
-    }
 
+    /**
+     * Get user name
+     * 
+     * @return array
+     */
     public function getFuzzyUserAction()
     {
         Pi::service('log')->active(false);
@@ -49,7 +42,10 @@ class AjaxController extends ActionController
         $limit = Service::getParam($this, 'limit', 10);
 
         $model = Pi::model('user');
-        $select = $model->select()->columns(array('id', 'name' => 'identity'))->order('identity ASC')->limit($limit);
+        $select = $model->select()
+            ->columns(array('id', 'name' => 'identity'))
+            ->order('identity ASC')
+            ->limit($limit);
         if ($name) {
             $select->where->like('identity', "{$name}%");
         }
@@ -70,6 +66,11 @@ class AjaxController extends ActionController
         );
     }
 
+    /**
+     * Get tag
+     * 
+     * @return array
+     */
     public function getFuzzyTagAction()
     {
         Pi::service('log')->active(false);
@@ -91,6 +92,11 @@ class AjaxController extends ActionController
         );
     }
 
+    /**
+     * Check whether article is exists
+     * 
+     * @return array
+     */
     public function checkArticleExistsAction()
     {
         Pi::service('log')->active(false);
@@ -104,8 +110,8 @@ class AjaxController extends ActionController
         }
 
         return array(
-            'status'    => $result ? self::AJAX_RESULT_FALSE : self::AJAX_RESULT_TRUE,
-            'message'   => $result ? __('Subject is used by another article.') : __('ok'),
+            'status'  => $result ? self::AJAX_RESULT_FALSE : self::AJAX_RESULT_TRUE,
+            'message' => $result ? __('Subject is used by another article.') : __('ok'),
         );
     }
 }

@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module list controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
@@ -26,12 +17,14 @@ use Pi\Paginator\Paginator;
 use Pi;
 
 /**
- * Public action controller for listing articles
+ * List controller
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class ListController extends ActionController
 {
     /**
-     * Listing all articles for users to review. 
+     * Listing all articles for users to review 
      */
     public function allAction()
     {
@@ -58,11 +51,19 @@ class ListController extends ActionController
         foreach ($resultset as $row) {
             $items[$row->id] = $row->toArray();
             $publishTime     = date('Ymd', $row->time_publish);
-            $items[$row->id]['url'] = $this->url($route, array('id' => $row->id, 'time' => $publishTime));
+            $items[$row->id]['url'] = $this->url(
+                $route, 
+                array(
+                    'id'   => $row->id, 
+                    'time' => $publishTime
+                )
+            );
         }
 
         // Total count
-        $select     = $model->select()->where($where)->columns(array('total' => new Expression('count(id)')));
+        $select = $model->select()
+            ->where($where)
+            ->columns(array('total' => new Expression('count(id)')));
         $articleCountResultset = $model->selectWith($select);
         $totalCount = intval($articleCountResultset->current()->total);
 
@@ -75,8 +76,8 @@ class ListController extends ActionController
                 'route'     => $route,
                 'params'    => array(
                     'module'        => $this->getModule(),
-                    'controller'    => $this->getEvent()->getRouteMatch()->getParam('controller'),
-                    'action'        => $this->getEvent()->getRouteMatch()->getParam('action'),
+                    'controller'    => 'list',
+                    'action'        => 'all',
                     'list'          => 'all',
                 ),
             ));
