@@ -146,7 +146,7 @@
                 <?php 
                     $element = $form->get('category');
                     $element->setAttribute("class", "span3");
-                    if (!empty($draft['article'])) {
+                    if (isset($draft['article']) and !empty($draft['article'])) {
                         $element->setAttribute("disabled", "disabled");
                     }
                     echo $this->formElement($element); 
@@ -220,17 +220,22 @@
             <div class="widget-header">
                 <?php _e('Status:') ?>
                 <strong class="status">
-                    <?php if ($draft['article']) {
+                    <?php if (isset($draft['article']) and $draft['article']) {
                          _e('Published'); 
                     } else {
-                        switch ($draft['status']) {
+                        $draftStatus = isset($draft['status']) ? $draft['status'] : 0;
+                        switch ($draftStatus) {
                             case 1: _e('Draft');
                                 break;
                             case 2: _e('Pending');
                                 break; 
                             case 3: _e('Rejected');
                     ?>
-                    <i class="icon-question-sign" id="jsReject" data-content="<?php echo $draft['reject_reason'] ?>" data-placement="bottom">
+                    <i class="icon-question-sign" id="jsReject" data-content="
+                        <?php 
+                            echo isset($draft['reject_reason']) 
+                                ? $this->escape($draft['reject_reason']) : '' 
+                        ?>" data-placement="bottom">
                     </i>
                     <script>
                     (function($) {
@@ -307,7 +312,7 @@
                     <?php if ($draft['article']) { ?>
                     <button class="btn btn-primary pull-right update"><?php _e('Update') ?></button>    
                     <?php } elseif ($draft['status'] == 2) { ?>
-                    <?php if ($currentApprove) { ?>
+                    <?php if (isset($currentApprove) and $currentApprove) { ?>
                         <div class="btn-group pull-right">
                             <button class="btn btn-primary approve"><?php _e('Approve') ?></button>
                             <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -325,7 +330,7 @@
                     <?php } else { ?>    
                     <button class="btn btn-primary pull-right pending"><?php _e('Submit') ?></button>
                     <?php } ?>
-                    <?php if ($currentDelete) { ?>
+                    <?php if (isset($currentDelete) and $currentDelete) { ?>
                         <span class="link-btn delete"><?php _e('Delete') ?></span>
                     <?php } ?>
                 </div>
@@ -621,7 +626,7 @@ var page = {
     },
     status  : "<?php echo $this->escape($draft['status']) ?>",
     form    : $("form.row-fluid"),
-    from    : "<?php echo $this->escape($from) ?>",
+    from    : "<?php echo isset($from) ? $this->escape($from) : '' ?>",
     mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' 
                          + '<?php echo $this->escape($defaultMediaImage) ?>' 
                          + '" />',
@@ -700,7 +705,7 @@ var page = {
     },
     editor:             CKEDITOR.instances.content,
     autosaveInterval:   '<?php echo $this->escape($autoSave) ?>',
-    featureImg:         "<?php echo $this->escape($featureThumb) ?>",
+    featureImg:         "<?php echo isset($featureThumb) ? $this->escape($featureThumb) : '' ?>",
     attachFormate:      "<?php echo $this->escape($attachmentExtension) ?>".split(","),
     attachMax:          "<?php echo $this->escape($maxMediaSize) ?>",
     imageExtension:     "<?php echo $this->escape($imageExtension) ?>".split(","),
@@ -1145,7 +1150,9 @@ function fileupload(name,url,formate,size,collection) {
 }
 
 // STARTING PROCESSING ATTACHMENT
-var attachmentCollection = new Backbone.Collection(<?php echo json_encode($attachments); ?>);
+var attachmentCollection = new Backbone.Collection(
+    <?php echo isset($attachments) ? json_encode($attachments) : '' ?>
+);
 var mediaCollection      = new Backbone.Collection();
 var MediaItemView        = Backbone.View.extend({
     className   : "media-item",
@@ -1594,8 +1601,12 @@ var FeatureView = Backbone.View.extend({
 });
 
 // STARTING PROCESS IMAGE ABLUM
-var galleryCollection    = new Backbone.Collection(<?php echo json_encode($images); ?>);
-var mediaImageCollection = new Backbone.Collection(<?php echo json_encode($images); ?>);
+var galleryCollection    = new Backbone.Collection(
+    <?php echo isset($images) ? json_encode($images) : '' ?>
+);
+var mediaImageCollection = new Backbone.Collection(
+    <?php echo isset($images) ? json_encode($images) : '' ?>
+);
 var GalleryItemView      = Backbone.View.extend({
     className : "upload-image-wrap",
     events    : {
@@ -2026,7 +2037,9 @@ $("#jsSeo").on("click", ".widget-header", function() {
     $("#jsSeo").find(".seo-other").toggleClass("hide");
     $("#jsSeo").find(".widget-header").toggleClass("active");
 });
-var relatedCollection = new Backbone.Collection(<?php echo json_encode(array_values($related)); ?>);
+var relatedCollection = new Backbone.Collection(
+    <?php echo isset($related) ? json_encode(array_values($related)) : '' ?>
+);
 var searchCollection  = new Backbone.Collection;
 var RelatedView       = Backbone.View.extend({
     el          : $("#jsRelated"),

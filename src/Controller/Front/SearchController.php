@@ -33,7 +33,7 @@ class SearchController extends ActionController
         $module = $this->getModule();
 
         $config = Pi::service('module')->config('', $module);
-        $limit  = intval($config['page_limit_front']) ?: 40;
+        $limit  = intval($config['page_limit_all']) ?: 40;
         $offset = $limit * ($page - 1);
 
         // Build where

@@ -40,7 +40,7 @@ class Statistics extends Model
     public function increaseVisits($id)
     {
         $row = $this->find($id, 'article');
-        if (!$row->id) {
+        if (empty($row)) {
             $data = array(
                 'article'  => $id,
                 'visits'   => 1,

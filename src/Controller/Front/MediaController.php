@@ -186,7 +186,7 @@ class MediaController extends ActionController
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_limit_front'] ?: 40;
+        $limit  = (int) $config['page_limit_all'] ?: 40;
         $types  = array();
         foreach (explode(',', $config['media_extension']) as $item) {
             $types[$item] = strtolower(trim($item));
@@ -505,8 +505,11 @@ class MediaController extends ActionController
             if ($rowMedia->url && $rowMedia->url != $fileName) {
                 unlink(Pi::path($rowMedia->url));
             }
-
-            $rowMedia->url = $fileName;
+            
+            $rowMedia->url  = $fileName;
+            $rowMedia->type = $ext;
+            $rowMedia->size = filesize(Pi::path($fileName));
+            $rowMedia->meta = json_encode($imageSize);
             $rowMedia->save();
         } else {
             // Or save info to session
