@@ -1,36 +1,27 @@
 <?php
 /**
- * Article module media api
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
 
 use Pi;
-use Module\Article\Service;
-use Zend\Db\Sql\Expression;
 
 /**
- * Public APIs for article module itself 
+ * Media service API
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Media
 {
     protected static $module = 'article';
     
     /**
-     * Getting media list.
+     * Get media list
      * 
      * @param array        $where
      * @param int|null     $page
@@ -40,8 +31,14 @@ class Media
      * @param string|null  $module
      * @return array 
      */
-    public static function getList($where = array(), $page = null, $limit = null, $columns = null, $order = null, $module = null)
-    {
+    public static function getList(
+        $where = array(), 
+        $page = null, 
+        $limit = null, 
+        $columns = null, 
+        $order = null, 
+        $module = null
+    ) {
         $module = $module ?: Pi::service('module')->current();
         $model  = Pi::model('media', $module);
         
@@ -112,7 +109,7 @@ class Media
     }
     
     /**
-     * Transfering size.
+     * Transfer size
      * 
      * @param string|int   $value
      * @param bool         $direction  

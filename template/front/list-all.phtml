@@ -14,7 +14,9 @@ $this->bootstrap('js/bootstrap.min.js');
                 <li class="muted">
                     <div class="list-hover">
                         <span class="pull-right"><?php echo date('Y-m-d', $row['time_publish']); ?></span>
-                        <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>"><?php echo $this->escape($row['subject']) ?></a>
+                        <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" title="<?php echo $this->escape($row['subject']) ?>">
+                            <?php echo $this->escape($row['subject']) ?>
+                        </a>
                     </div>
                 </li>
                 <?php if (!(++$index % 5)) { ?>
@@ -22,9 +24,9 @@ $this->bootstrap('js/bootstrap.min.js');
                 <?php } ?>    
             <?php } ?>
         </ul>
-        <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-centered')); ?>
+        <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml', array('class' => 'pagination-centered')); ?>
     </div>
 </div>
 <script>
-    $("#jsList").find(".dashed:last").css("marginBottom","0");
+    $("#jsList").find(".dashed:last").css("marginBottom", "0");
 </script>

@@ -37,7 +37,7 @@ $this->Backbone();
             <?php _e('Rejected') ?>(<?php echo $summary['rejected'] ?>)
         </a>
     </li>
-    <li style="margin-left:20px;">
+    <li style="margin-left: 20px;">
         <?php $allowCompose = false;
         foreach ($rules as $rule) {
             if ($rule['compose']) {
@@ -46,65 +46,67 @@ $this->Backbone();
             }
         } ?>
         <?php if ($allowCompose) { ?>
-            <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn"><?php _e('Compose'); ?></a>
+            <a href="<?php echo $this->url('', array('controller' => 'draft' ,'action'=>'add')); ?>" class="btn">
+                <?php _e('Compose') ?>
+            </a>
         <?php } ?>
     </li>
 </ul>
 <script>
-$(function(){
-    var page={ 
-        el:$("#jsList"),
-        url: "<?php echo $this->url('', array('action' => 'delete', 'controller' => $controller)) ?>",
-        $:function(selector){
+$(function() {
+    var page = { 
+        el  : $("#jsList"),
+        url : "<?php echo $this->url('', array('action' => 'delete', 'controller' => $controller)) ?>",
+        $   : function(selector) {
             return this.el.find(selector);
         },
-        init:function(){
+        init : function() {
             _.bindAll(this);
             this.$(".check-all").click(this.checkAll);
             this.$(".btn-delete").click(this.deleteMore);
             this.$(".delete").click(this.deleteOne);
             this.$(".check-one").click(this.clickOne);
         },
-        checkAll:function(){
-           var flag=this.$(".check-all").prop("checked");
-           this.$(".check-one").prop("checked",flag).each(function(){
-               var tr=$(this).parents("tr:first");
-                if(flag){
+        checkAll : function() {
+           var flag = this.$(".check-all").prop("checked");
+           this.$(".check-one").prop("checked",flag).each(function() {
+               var tr = $(this).parents("tr:first");
+                if (flag) {
                     tr.addClass("info");
-                }else{
+                } else {
                     tr.removeClass("info");
                 }
            });
         },
-        clickOne:function(e){
-           var el=$(e.target),
-               tr=el.parents("tr:first");
-           if(el.prop("checked")){
+        clickOne : function(e) {
+           var el = $(e.target),
+               tr = el.parents("tr:first");
+           if (el.prop("checked")) {
                tr.addClass("info");
-           }else{
+           } else {
                tr.removeClass("info");
            }
        },
-        deleteMore:function(){
-            var id=[];
-            this.$(".check-one:checked").each(function(){
+        deleteMore : function() {
+            var id = [];
+            this.$(".check-one:checked").each(function() {
                 id.push($(this).val()); 
             });
-            if(id.length){
-                if(confirm("<?php _e('Are you sure delete checked article?') ?>")){
-                    location.href= this.url+ "?id="+id.join(",")+"&from="+this.encodeUrl();
+            if (id.length) {
+                if (confirm("<?php _e('Are you sure delete checked article?') ?>")) {
+                    location.href = this.url + "?id=" + id.join(",") + "&from=" + this.encodeUrl();
                 }
             }
         },
-        deleteOne:function(e){
-            var id=$(e.target).parents("tr").attr("data-id");
-            if(confirm("<?php _e('Are you sure delete this article?') ?>")){
-                location.href=this.url+"?id="+id+"&from="+this.encodeUrl();
+        deleteOne : function(e) {
+            var id = $(e.target).parents("tr").attr("data-id");
+            if (confirm("<?php _e('Are you sure delete this article?') ?>")) {
+                location.href = this.url + "?id=" + id + "&from=" + this.encodeUrl();
             }
         },
-        encodeUrl:function(){
+        encodeUrl : function() {
            return encodeURIComponent(location.href);
-       }
+        }
     };
     page.init();
 })

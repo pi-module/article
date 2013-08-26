@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module permission controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Admin;
@@ -30,12 +21,20 @@ use Pi\Paginator\Paginator;
 use Pi\Acl\Acl;
 
 /**
- * Public class for operating permission
+ * Permission controller
+ * 
+ * Feature list:
+ * 
+ * 1. List/add/edit/delete a level
+ * 2. List/add/edit/delete a user level
+ * 3. Active/deactivate a level
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class PermissionController extends ActionController
 {
     /**
-     * Getting module resources.
+     * Get module resources
      * 
      * @param  bool   $columns  Whether to fetch columns or full resources
      * @return array 
@@ -77,7 +76,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Setting module rules.
+     * Set module rules
      * 
      * @param string  $role   Role name
      * @param array   $rules  Resource name and its permission
@@ -87,14 +86,20 @@ class PermissionController extends ActionController
     {
         $aclHandler = new Acl('admin');
         foreach ($rules as $name => $permission) {
-            $aclHandler->setRule($permission, $role, 'admin', $this->getModule(), $name);
+            $aclHandler->setRule(
+                $permission, 
+                $role, 
+                'admin', 
+                $this->getModule(), 
+                $name
+            );
         }
         
         return true;
     }
     
     /**
-     * Getting module rules.
+     * Get module rules
      * 
      * @param string  $role  Role name
      * @return array 
@@ -116,7 +121,7 @@ class PermissionController extends ActionController
     }
 
     /**
-     * Getting level form object
+     * Get level form object
      * 
      * @param string $action  Form name
      * @return \Module\Article\Form\LevelEditForm 
@@ -137,7 +142,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Getting valid column name.
+     * Get valid column name
      * 
      * @return array 
      */
@@ -153,7 +158,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Getting user level form object
+     * Get user level form object
      * 
      * @param string $action  Form name
      * @return \Module\Article\Form\UserLevelEditForm 
@@ -171,7 +176,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Getting category id and title by passed un-resolve category ids.
+     * Get category id and title by passed un-resolve category ids
      * 
      * @param string|array  $categoryIds
      * @return array 
@@ -182,7 +187,8 @@ class PermissionController extends ActionController
             $categoryIds = explode(',', $categoryIds);
         }
         
-        $rowCategory = $this->getModel('category')->getRows($categoryIds, array('id', 'title'));
+        $rowCategory = $this->getModel('category')
+            ->getRows($categoryIds, array('id', 'title'));
         $categories  = array();
         foreach ($rowCategory as $row) {
             if (!in_array($row['id'], $categoryIds)) {
@@ -195,7 +201,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Checking whether user and category is already exisits.
+     * Check whether user and category is already exisits
      * 
      * @param int     $uid
      * @param string  $category
@@ -203,7 +209,8 @@ class PermissionController extends ActionController
      */
     protected function isUserCategoryExists($uid, $category, $ownId = null)
     {
-        $category = is_numeric($category) ? (array) $category : explode(',', $category);
+        $category = is_numeric($category) 
+            ? (array) $category : explode(',', $category);
         $category = array_filter($category);
         
         $model  = $this->getModel('user_level');
@@ -237,7 +244,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Listing levels.
+     * List levels
      *  
      */
     public function listLevelAction()
@@ -255,7 +262,8 @@ class PermissionController extends ActionController
                         ->limit($limit);
         $rowset = $model->selectWith($select);
         
-        $select = $model->select()->columns(array('count' => new Expression('count(*)')));
+        $select = $model->select()
+            ->columns(array('count' => new Expression('count(*)')));
         $count  = (int) $model->selectWith($select)->current()->count;
         
         $paginator = Paginator::factory($count);
@@ -263,7 +271,8 @@ class PermissionController extends ActionController
         $paginator->setCurrentPageNumber($page);
         $paginator->setUrlOptions(array(
             'router'        => $this->getEvent()->getRouter(),
-            'route'         => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'route'         => $this->getEvent()
+                ->getRouteMatch()->getMatchedRouteName(),
             'params'        => array(
                 'module'        => $module,
                 'controller'    => 'permission',
@@ -277,7 +286,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Adding a level.
+     * Add a level
      * 
      * @return ViewModel 
      */
@@ -299,7 +308,11 @@ class PermissionController extends ActionController
             $form->setInputFilter(new LevelEditFilter);
             $form->setValidationGroup($this->getValidColumns());
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('There are some error occured!')
+                );
             }
             
             $data = $form->getData();
@@ -318,18 +331,25 @@ class PermissionController extends ActionController
             $row = $this->getModel('level')->createRow($data);
             $row->save();
             if (!$row->id) {
-                return Service::renderForm($this, $form, __('Can not save data!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('Can not save data!')
+                );
             }
             
             // Setting rules
             $this->setRules($data['name'], $rules);
             
-            return $this->redirect()->toRoute('', array('action' => 'list-level'));
+            return $this->redirect()->toRoute(
+                '', 
+                array('action' => 'list-level')
+            );
         }
     }
     
     /**
-     * Editing a level.
+     * Edit a level
      * 
      * @return ViewModel 
      */
@@ -350,7 +370,11 @@ class PermissionController extends ActionController
             $form->setInputFilter(new LevelEditFilter($options));
             $form->setValidationGroup($this->getValidColumns());
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('There are some error occured!')
+                );
             }
             $data = $form->getData();
             
@@ -369,7 +393,10 @@ class PermissionController extends ActionController
             // Updating rules
             $this->setRules($data['name'], $rules);
 
-            return $this->redirect()->toRoute('', array('action' => 'list-level'));
+            return $this->redirect()->toRoute(
+                '', 
+                array('action' => 'list-level')
+            );
         }
         
         $id     = $this->params('id', 0);
@@ -391,7 +418,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Deleting a level.
+     * Delete a level
      * 
      * @return ViewModel
      * @throws \Exception 
@@ -414,7 +441,12 @@ class PermissionController extends ActionController
         $resources  = self::getResources(true);
         foreach ($resources as $row) {
             foreach ($row as $resource) {
-                $aclHandler->removeRule($rowLevel->name, 'admin', $this->getModule(), $resource);
+                $aclHandler->removeRule(
+                    $rowLevel->name, 
+                    'admin', 
+                    $this->getModule(), 
+                    $resource
+                );
             }
         }
 
@@ -426,7 +458,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Active or deactivate a level.
+     * Active or deactivate a level
      * 
      * @return ViewModel 
      */
@@ -453,12 +485,15 @@ class PermissionController extends ActionController
             $from = urldecode($from);
             return $this->redirect()->toUrl($from);
         } else {
-            return $this->redirect()->toRoute('', array('action' => 'list-level'));
+            return $this->redirect()->toRoute(
+                '', 
+                array('action' => 'list-level')
+            );
         }
     }
     
     /**
-     * Listing user levels. 
+     * List user levels
      */
     public function listAction()
     {
@@ -492,7 +527,8 @@ class PermissionController extends ActionController
         }
         
         // Getting category
-        $rowCategory = $this->getModel('category')->select(array('id' => $categoryIds));
+        $rowCategory = $this->getModel('category')
+            ->select(array('id' => $categoryIds));
         $categories  = array();
         foreach ($rowCategory as $row) {
             $categories[$row->id] = $row->title;
@@ -512,7 +548,8 @@ class PermissionController extends ActionController
             $users[$row->id] = $row->name;
         }
         
-        $select = $model->select()->columns(array('count' => new Expression('count(*)')));
+        $select = $model->select()
+            ->columns(array('count' => new Expression('count(*)')));
         $count  = (int) $model->selectWith($select)->current()->count;
         
         $paginator = Paginator::factory($count);
@@ -520,7 +557,8 @@ class PermissionController extends ActionController
         $paginator->setCurrentPageNumber($page);
         $paginator->setUrlOptions(array(
             'router'        => $this->getEvent()->getRouter(),
-            'route'         => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),
+            'route'         => $this->getEvent()
+                ->getRouteMatch()->getMatchedRouteName(),
             'params'        => array(
                 'module'        => $module,
                 'controller'    => 'permission',
@@ -539,7 +577,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Adding user level.
+     * Add user level
      * 
      * @return ViewModel 
      */
@@ -559,23 +597,42 @@ class PermissionController extends ActionController
             $form->setInputFilter(new UserLevelEditFilter);
             $columns = array('id', 'uid', 'category', 'level');
             $form->setValidationGroup($columns);
-            $this->view()->assign('categories', $this->resolveCategory($post['category']));
+            $this->view()->assign(
+                'categories', 
+                $this->resolveCategory($post['category'])
+            );
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('There are some error occured!')
+                );
             }
             
             $data = $form->getData();
             if (empty($data['uid']) or empty($data['level'])) {
-                return Service::renderForm($this, $form, __('Invalid user or level!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('Invalid user or level!')
+                );
             }
             if (!$this->isUserCategoryExists($data['uid'], $data['category'])) {
-                return Service::renderForm($this, $form, __('User and category is already exists!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('User and category is already exists!')
+                );
             }
             
             $row = $this->getModel('user_level')->createRow($data);
             $row->save();
             if (!$row->id) {
-                return Service::renderForm($this, $form, __('Can not save data!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('Can not save data!')
+                );
             }
             
             return $this->redirect()->toRoute('', array('action' => 'list'));
@@ -583,7 +640,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Editing user level.
+     * Edit user level
      * 
      * @return ViewModel 
      */
@@ -599,21 +656,43 @@ class PermissionController extends ActionController
             $form->setInputFilter(new UserLevelEditFilter);
             $columns = array('id', 'uid', 'category', 'level');
             $form->setValidationGroup($columns);
-            $this->view()->assign('categories', $this->resolveCategory($post['category']));
+            $this->view()->assign(
+                'categories', 
+                $this->resolveCategory($post['category'])
+            );
             if (!$form->isValid()) {
-                return Service::renderForm($this, $form, __('There are some error occured!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('There are some error occured!')
+                );
             }
             
             $data = $form->getData();
             if (empty($data['uid']) or empty($data['level'])) {
-                return Service::renderForm($this, $form, __('Invalid user or level!'), true);
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('Invalid user or level!')
+                );
             }
-            if (!$this->isUserCategoryExists($data['uid'], $data['category'], $data['id'])) {
-                return Service::renderForm($this, $form, __('User and category is already exists!'), true);
+            if (!$this->isUserCategoryExists(
+                $data['uid'], 
+                $data['category'], 
+                $data['id']
+            )) {
+                return Service::renderForm(
+                    $this, 
+                    $form, 
+                    __('User and category is already exists!')
+                );
             }
             
             // Saving user level
-            $this->getModel('user_level')->update($data, array('id' => $data['id']));
+            $this->getModel('user_level')->update(
+                $data, 
+                array('id' => $data['id'])
+            );
             
             return $this->redirect()->toRoute('', array('action' => 'list'));
         }
@@ -638,7 +717,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Deleting user level.
+     * Delete user level
      * 
      * @return ViewModel
      * @throws \Exception 
@@ -661,7 +740,7 @@ class PermissionController extends ActionController
     }
     
     /**
-     * Getting available categories by AJAX.
+     * Get available categories by AJAX
      * 
      * @return JSON 
      */
@@ -673,7 +752,9 @@ class PermissionController extends ActionController
         
         $model  = $this->getModel('category');
         if (!empty($title)) {
-            $rows = $model->select(array('title like ?' => '%' . $title . '%'))->toArray();
+            $rows = $model->select(
+                array('title like ?' => '%' . $title . '%')
+            )->toArray();
         } else {
             $rows   = $model->getList(array('id', 'title'));
         }

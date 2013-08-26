@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module statistics api
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
@@ -22,9 +13,12 @@ use Pi;
 use Zend\Mvc\MvcEvent;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
+use Module\Article\Service;
 
 /**
- * Public APIs for article module itself 
+ * Statistics service API
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Statistics
 {
@@ -49,7 +43,7 @@ class Statistics
     }
 
     /**
-     * Adding visit count and visit record.
+     * Add visit count and visit record.
      * 
      * @param int|string $name    Article ID or slug
      * @param string     $module  Module name
@@ -68,7 +62,7 @@ class Statistics
     }
     
     /**
-     * Getting articles which are mostly visit.
+     * Get articles which are mostly visit.
      * 
      * @param int     $limit   Article limitation
      * @param string  $module
@@ -93,7 +87,7 @@ class Statistics
     }
     
     /**
-     * Getting article total count in period.
+     * Get article total count in period.
      * 
      * @param int     $dateFrom  
      * @param int     $dateTo
@@ -102,7 +96,6 @@ class Statistics
      */
     public static function getTotalInPeriod($dateFrom, $dateTo, $module = null)
     {
-        $result = 0;
         $where  = array();
         $module = $module ?: Pi::service('module')->current();
 
@@ -127,7 +120,7 @@ class Statistics
     }
 
     /**
-     * Getting article total count in period.
+     * Get article total count in period.
      * 
      * @param int     $days
      * @param string  $module
@@ -142,16 +135,19 @@ class Statistics
     }
 
     /**
-     * Getting total article counts group by category.
+     * Get total article counts group by category.
      * 
      * @param int     $dateFrom
      * @param int     $dateTo
      * @param string  $module
      * @return int 
      */
-    public static function getTotalInPeriodByCategory($dateFrom, $dateTo, $module)
-    {
-        $result = $where = array();
+    public static function getTotalInPeriodByCategory(
+        $dateFrom, 
+        $dateTo, 
+        $module
+    ) {
+        $where  = array();
         $module = $module ?: Pi::service('module')->current();
 
         if (!empty($dateFrom)) {
@@ -161,7 +157,7 @@ class Statistics
             $where['time_submit <= ?'] = $dateTo;
         }
 
-        $result = Cache::getCategoryList();
+        $result = Service::getCategoryList();
 
         foreach ($result as &$val) {
             $val['total'] = 0;
@@ -169,7 +165,10 @@ class Statistics
 
         $modelArticle = Pi::model('article', $module);
         $select = $modelArticle->select()
-            ->columns(array('category', 'total' => new Expression('count(category)')))
+            ->columns(array(
+                'category', 
+                'total' => new Expression('count(category)')
+            ))
             ->where($where)
             ->group('category');
         $groupResultset = $modelArticle->selectWith($select)->toArray();
@@ -182,14 +181,16 @@ class Statistics
     }
 
     /**
-     * Getting total article counts group by category.
+     * Get total article counts group by category
      * 
      * @param int     $days
      * @param string  $module
      * @return int 
      */
-    public static function getTotalRecentlyByCategory($days = null, $module = null)
-    {
+    public static function getTotalRecentlyByCategory(
+        $days = null, 
+        $module = null
+    ) {
         $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
         $dateTo   = time();
 
@@ -197,7 +198,7 @@ class Statistics
     }
 
     /**
-     * Getting submitter count in period.
+     * Get submitter count in period.
      * 
      * @param int     $dateFrom
      * @param int     $dateTo
@@ -205,10 +206,14 @@ class Statistics
      * @param string  $module
      * @return int 
      */
-    public static function getSubmittersInPeriod($dateFrom, $dateTo, $limit = null, $module = null)
-    {
-        $result = $userIds = $users = $where = array();
-        $module = $module ?: self::$module;
+    public static function getSubmittersInPeriod(
+        $dateFrom, 
+        $dateTo, 
+        $limit = null, 
+        $module = null
+    ) {
+        $users = $where = array();
+        $module = $module ?: Pi::service('module')->current();
 
         if (!empty($dateFrom)) {
             $where['time_submit >= ?'] = $dateFrom;
@@ -261,15 +266,18 @@ class Statistics
     }
 
     /**
-     * Getting submitter count in period.
+     * Get submitter count in period
      * 
      * @param int     $days
      * @param int     $limit
      * @param string  $module
      * @return int 
      */
-    public static function getSubmittersRecently($days = null, $limit = null, $module = null)
-    {
+    public static function getSubmittersRecently(
+        $days = null, 
+        $limit = null, 
+        $module = null
+    ) {
         $dateFrom = !is_null($days) ? strtotime(sprintf('-%d day', $days)) : 0;
         $dateTo   = time();
 

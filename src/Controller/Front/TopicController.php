@@ -19,7 +19,6 @@ use Module\Article\Model\Topic;
 use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
-use Module\Article\Cache;
 use Module\Article\Model\Article;
 use Module\Article\Entity;
 use Module\Article\Topic as TopicService;
@@ -512,7 +511,7 @@ class TopicController extends ActionController
             'form'       => $form,
             'paginator'  => $paginator,
             'category'   => $category,
-            'categories' => Cache::getCategoryList(),
+            'categories' => Service::getCategoryList(),
             'action'     => 'pull',
             'topics'     => $topics,
             'relation'   => $relation,

@@ -101,13 +101,13 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
 </div>
 <script>
 (function($){
-    var page={
-        url: "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
-        el: $("#jsList"),
-        $: function(selector){
+    var page = {
+        url : "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
+        el  : $("#jsList"),
+        $   : function(selector) {
             return this.el.find(selector);
         },
-        init:function(){
+        init : function() {
             this.$(".media-list-title").tooltip();
             _.bindAll(this);
             this.$(".check-all").click(this.checkAll);
@@ -117,30 +117,30 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
             this.$(".check-one").click(this.clickOne);
             this.$(".one-action").click(this.oneAction);
         },
-        checkAll: function() {
+        checkAll : function() {
             var flag = this.$(".check-all").prop("checked");
-            this.$(".check-one").prop("checked",flag).each(function(){
-                var tr=$(this).parents("tr:first");
-                    if(flag){
-                        tr.addClass("info");
-                    }else{
-                        tr.removeClass("info");
-                    }
+            this.$(".check-one").prop("checked",flag).each(function() {
+                var tr = $(this).parents("tr:first");
+                if (flag) {
+                    tr.addClass("info");
+                } else {
+                    tr.removeClass("info");
+                }
             });
             this.toggleBulk();
         },
-        search:function(){
+        search : function() {
             var url = "<?php echo $this->url('', array('action' => 'list')) ?>";
-            location.href = url+"?type=" + this.$(".search-type").val();
+            location.href = url + "?type=" + this.$(".search-type").val();
         },
-        bulk:function(){
+        bulk : function() {
             var id  = [],
                 val = this.$(".bulk-operation").val(),
-                fn  = function(){
-                        this.$(".check-one:checked").each(function(){
-                            id.push($(this).val()); 
-                        });
-                        location.href = this.url + val + "?id=" + id.join(",") + "&from=" + this.encodeUrl();
+                fn  = function() {
+                    this.$(".check-one:checked").each(function() {
+                        id.push($(this).val()); 
+                    });
+                    location.href = this.url + val + "?id=" + id.join(",") + "&from=" + this.encodeUrl();
                 };
             if (val) {
                 if (val == "delete") {
@@ -170,14 +170,14 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
             }
             this.toggleBulk();
         },
-        toggleBulk: function(){
+        toggleBulk : function() {
             if (this.$(".check-one:checked").length) {
                 this.$(".bulk-operation").show();
             } else {
                 this.$(".bulk-operation").hide();
             }
         },
-        oneAction: function(e){
+        oneAction : function(e) {
             var el = $(e.target),
                 id = el.parents("tr:first").attr("data-id"),
                 val = el.attr("data-value");
@@ -189,10 +189,10 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
                 location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
             }
         },
-        encodeUrl: function(){
+        encodeUrl : function() {
             return encodeURIComponent(location.href);
         },
-        removeAttr: function() {
+        removeAttr : function() {
             $('.check-one').removeAttr('checked');
             this.$(".bulk-operation").val("");
             this.$(".bulk-operation").hide();

@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module route installer resource
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Installer\Resource;
@@ -22,7 +13,9 @@ use Pi\Application\Installer\Resource\Route as BasicRoute;
 use Pi;
 
 /**
- * Class for installing route resource self-defined
+ * Custom route resource install class
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Route extends BasicRoute
 {
@@ -39,7 +32,11 @@ class Route extends BasicRoute
     public function installAction()
     {
         $module     = $this->event->getParam('module');
-        $filename   = sprintf('var/%s/config/%s', $module, self::RESOURCE_CONFIG_NAME);
+        $filename   = sprintf(
+            'var/%s/config/%s', 
+            $module, 
+            self::RESOURCE_CONFIG_NAME
+        );
         $configPath = Pi::path($filename);
         if (file_exists($configPath)) {
             $configs      = include $configPath;
@@ -57,14 +54,18 @@ class Route extends BasicRoute
     }
 
     /**
-     * Updating route resource
+     * Update route resource
      * 
      * @return bool 
      */
     public function updateAction()
     {
         $module     = $this->event->getParam('module');
-        $filename   = sprintf('var/%s/config/%s', $module, self::RESOURCE_CONFIG_NAME);
+        $filename   = sprintf(
+            'var/%s/config/%s', 
+            $module, 
+            self::RESOURCE_CONFIG_NAME
+        );
         $configPath = Pi::path($filename);
         if (file_exists($configPath)) {
             $configs      = include $configPath;

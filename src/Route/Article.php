@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module article route
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Route;
@@ -48,6 +39,8 @@ use Pi;
  * // Topic title list page
  * $this->url($routeName, array('topic' => 'all'));
  * </CODE>
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Article extends Standard
 {
@@ -65,7 +58,7 @@ class Article extends Standard
     );
 
     /**
-     * Matching url and resolving parameters
+     * Match url and resolving parameters
      * 
      * @param Request  $request
      * @param int      $pathOffset
@@ -95,12 +88,18 @@ class Article extends Standard
                 $controller = 'list';
                 $action     = 'all';
             } elseif (preg_match('/^list-/', $urlParams[0])) {
-                list($ignored, $category) = explode($this->keyValueDelimiter, $urlParams[0]);
+                list($ignored, $category) = explode(
+                    $this->keyValueDelimiter, 
+                    $urlParams[0]
+                );
                 $controller = 'category';
                 $action     = 'list';
                 $category   = urldecode($category);
             } elseif (preg_match('/^tag-/', $urlParams[0])) {
-                list($ignored, $tag) = explode($this->keyValueDelimiter, $urlParams[0]);
+                list($ignored, $tag) = explode(
+                    $this->keyValueDelimiter, 
+                    $urlParams[0]
+                );
                 $tag        = urldecode($tag);
                 $controller = 'tag';
                 $action     = 'list';
@@ -119,7 +118,10 @@ class Article extends Standard
                 if (!isset($urlParams[1])) {
                     $action = 'all-topic';
                 } elseif (preg_match('/^list-/', $urlParams[1])) {
-                    list($ignored, $topic) = explode($this->keyValueDelimiter, $urlParams[1]);
+                    list($ignored, $topic) = explode(
+                        $this->keyValueDelimiter, 
+                        $urlParams[1]
+                    );
                     $action = 'list';
                 } else {
                     $topic = $urlParams[1];
@@ -127,7 +129,9 @@ class Article extends Standard
                 }
             }
         }
-        $matches  = compact('controller', 'action', 'category', 'tag', 'id', 'slug', 'topic');
+        $matches  = compact(
+            'controller', 'action', 'category', 'tag', 'id', 'slug', 'topic'
+        );
         
         $params   = array_filter(explode(self::COMBINE_DELIMITER, $parameter));
         foreach ($params as $param) {
@@ -141,19 +145,29 @@ class Article extends Standard
             $matches['action']     = 'preview';
         }
         
-        // Attaching listener to add visit count, then if the action is cached, visit statistics also works.
+        // Attaching listener to add visit count, then if the action is cached, 
+        // visit statistics also works.
         // This code must be added if user want to use itself custom route.
-        if ('article' == $matches['controller'] and 'detail' == $matches['action']) {
+        if ('article' == $matches['controller'] 
+            and 'detail' == $matches['action']
+        ) {
             $events = Pi::engine()->application()->getEventManager();
             $obj    = new \Module\Article\Statistics;
-            $events->attach(\Zend\Mvc\MvcEvent::EVENT_DISPATCH, array($obj, 'runBeforePageCache'), 1100);
+            $events->attach(
+                \Zend\Mvc\MvcEvent::EVENT_DISPATCH, 
+                array($obj, 'runBeforePageCache'), 
+                1100
+            );
         }
 
-        return new RouteMatch(array_merge($this->defaults, $matches), $pathLength);
+        return new RouteMatch(
+            array_merge($this->defaults, $matches), 
+            $pathLength
+        );
     }
 
     /**
-     * Assembling url by passed parameters.
+     * Assemble url by passed parameters.
      * 
      * @param array $params
      * @param array $options
@@ -177,17 +191,31 @@ class Article extends Standard
         unset($mergedParams['action']);
         unset($mergedParams['module']);
         
-        if (isset($mergedParams['time']) and is_numeric($mergedParams['time'])) {
-            if (isset($mergedParams['slug']) and !empty($mergedParams['slug']) and !is_numeric($mergedParams['slug'])) {
-                $url .= $mergedParams['time'] . $this->structureDelimiter . urlencode($mergedParams['slug']);
+        if (isset($mergedParams['time']) 
+            and is_numeric($mergedParams['time'])
+        ) {
+            if (isset($mergedParams['slug']) 
+                and !empty($mergedParams['slug']) 
+                and !is_numeric($mergedParams['slug'])
+            ) {
+                $url .= $mergedParams['time'] 
+                     . $this->structureDelimiter 
+                     . urlencode($mergedParams['slug']);
                 unset($mergedParams['slug']);
                 unset($mergedParams['id']);
-            } elseif (isset($mergedParams['id']) and !empty($mergedParams['id']) and is_numeric($mergedParams['id'])) {
-                $url .= $mergedParams['time'] . $this->structureDelimiter . $mergedParams['id'];
+            } elseif (isset($mergedParams['id']) 
+                      and !empty($mergedParams['id']) 
+                      and is_numeric($mergedParams['id'])
+            ) {
+                $url .= $mergedParams['time'] 
+                     . $this->structureDelimiter 
+                     . $mergedParams['id'];
                 unset($mergedParams['id']);
             }
             unset($mergedParams['time']);
-        } elseif (isset($mergedParams['list']) and 'all' == $mergedParams['list']) {
+        } elseif (isset($mergedParams['list']) 
+                  and 'all' == $mergedParams['list']
+        ) {
             if (isset ($mergedParams['topic'])) {
                 $url .= 'topic';
                 $url .= $this->structureDelimiter . 'list';
@@ -198,10 +226,14 @@ class Article extends Standard
             }
             unset($mergedParams['list']);
         } elseif (isset($mergedParams['category'])) {
-            $url .= 'list' . $this->keyValueDelimiter . urlencode($mergedParams['category']);
+            $url .= 'list' 
+                 . $this->keyValueDelimiter 
+                 . urlencode($mergedParams['category']);
             unset($mergedParams['category']);
         } elseif (isset($mergedParams['tag'])) {
-            $url .= 'tag' . $this->keyValueDelimiter . urlencode($mergedParams['tag']);
+            $url .= 'tag' 
+                 . $this->keyValueDelimiter 
+                 . urlencode($mergedParams['tag']);
             unset($mergedParams['tag']);
         } elseif (isset($mergedParams['topic'])) {
             $url .= 'topic';
@@ -217,12 +249,17 @@ class Article extends Standard
         $mergedParams = array_filter($mergedParams);
         if (!empty($mergedParams)) {
             foreach ($mergedParams as $key => $value) {
-                $parameter .= $key . self::KEY_VALUE_DELIMITER . urlencode($value) . self::COMBINE_DELIMITER;
+                $parameter .= $key 
+                           . self::KEY_VALUE_DELIMITER 
+                           . urlencode($value) 
+                           . self::COMBINE_DELIMITER;
             }
             $parameter = rtrim($parameter, self::COMBINE_DELIMITER);
             $url .= self::URL_DELIMITER . $parameter;
         }
 
-        return $this->prefix . $this->structureDelimiter . trim($url, $this->structureDelimiter);
+        return $this->prefix 
+            . $this->structureDelimiter 
+            . trim($url, $this->structureDelimiter);
     }
 }

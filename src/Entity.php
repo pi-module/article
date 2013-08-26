@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module article api
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
@@ -21,22 +12,24 @@ namespace Module\Article;
 use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
-use Module\Article\Model\Asset;
 use Module\Article\Upload;
 use Module\Article\Cache;
 use Module\Article\Compiled;
 use Module\Article\Statistics;
 use Module\Article\Service;
+use Module\Article\Model\Statistics as ModelStatistics;
 
 /**
- * Public APIs for article module itself 
+ * Article service APIs
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Entity
 {
     protected static $module = 'article';
 
     /**
-     * Getting recently visited articles.
+     * Get recently visited articles
      * 
      * @param int     $dateFrom
      * @param int     $dateTo
@@ -45,8 +38,13 @@ class Entity
      * @param string  $module
      * @return array 
      */
-    public static function getVisitsInPeriod($dateFrom, $dateTo, $limit = null, $category = null, $module = null)
-    {
+    public static function getVisitsInPeriod(
+        $dateFrom, 
+        $dateTo, 
+        $limit = null, 
+        $category = null, 
+        $module = null
+    ) {
         $result = $where = array();
         $module = $module ?: Pi::service('module')->current();
 
@@ -73,7 +71,12 @@ class Entity
         $where['active'] = 1;
 
         $select = $modelVisit->select()
-            ->columns(array('article', 'total' => new Expression('count(article)')))
+            ->columns(
+                array(
+                    'article',
+                    'total' => new Expression('count(article)')
+                )
+            )
             ->join(
                 array('a' => $modelArticle->getTable()),
                 sprintf('%s.article = a.id', $modelVisit->getTable()),
@@ -94,7 +97,14 @@ class Entity
 
         $articleIds = array_keys($result);
         if ($articleIds) {
-            $resultsetArticle = self::getAvailableArticlePage(array('id' => $articleIds), 1, $limit, null, '', $module);
+            $resultsetArticle = self::getAvailableArticlePage(
+                array('id' => $articleIds), 
+                1, 
+                $limit, 
+                null, 
+                '', 
+                $module
+            );
 
             foreach ($result as $key => &$row) {
                 if (isset($resultsetArticle[$key])) {
@@ -107,7 +117,7 @@ class Entity
     }
 
     /**
-     * Getting recently visited articles.
+     * Get recently visited articles
      * 
      * @param int     $days
      * @param int     $limit
@@ -115,25 +125,38 @@ class Entity
      * @param string  $module
      * @return array 
      */
-    public static function getVisitsRecently($days, $limit = null, $category = null, $module = null)
-    {
+    public static function getVisitsRecently(
+        $days,
+        $limit = null,
+        $category = null,
+        $module = null
+    ) {
         $dateTo   = time();
         $dateFrom = $dateTo - 24 * 3600 * $days;
 
-        return self::getVisitsInPeriod($dateFrom, $dateTo, $limit, $category, $module);
+        return self::getVisitsInPeriod(
+            $dateFrom, 
+            $dateTo, 
+            $limit, 
+            $category, 
+            $module
+        );
     }
 
     /**
-     * Getting total visits of articles.
+     * Get total visits of articles.
      * 
      * @param int     $limit
      * @param int     $category
      * @param string  $module
      * @return array 
      */
-    public static function getTotalVisits($limit = null, $category = null, $module = null)
-    {
-        $result = $where = $columns = array();
+    public static function getTotalVisits(
+        $limit = null, 
+        $category = null, 
+        $module = null
+    ) {
+        $where = $columns = array();
         $module = $module ?: self::$module;
 
         $modelCategory  = Pi::model('category', $module);
@@ -161,19 +184,33 @@ class Entity
             'time_publish',
         );
 
-        $result = self::getAvailableArticlePage($where, 1, $limit, $columns, null, $module);
+        $result = self::getAvailableArticlePage(
+            $where, 
+            1, 
+            $limit, 
+            $columns, 
+            null, 
+            $module
+        );
 
         return $result;
     }
 
-    public static function getLatest($limit = null, $category = null, $channel = null, $module = null)
-    {
-        $result = $where = $columns = array();
+    /**
+     * Get latest articles
+     * 
+     * @param int    $limit
+     * @param int    $category
+     * @param string $module
+     * @return array
+     */
+    public static function getLatest(
+        $limit = null, 
+        $category = null, 
+        $module = null
+    ) {
+        $where = $columns = array();
         $module = $module ?: self::$module;
-
-        if ($channel) {
-            $where['channel'] = (int) $channel;
-        }
 
         $modelCategory  = Pi::model('category', $module);
         if ($category && $category > 1) {
@@ -197,13 +234,20 @@ class Entity
             'time_publish',
         );
 
-        $result = self::getAvailableArticlePage($where, 1, $limit, $columns, null, $module);
+        $result = self::getAvailableArticlePage(
+            $where, 
+            1, 
+            $limit, 
+            $columns, 
+            null,
+            $module
+        );
 
         return $result;
     }
 
     /**
-     * Getting published article details
+     * Get published article details
      * 
      * @param array   $where
      * @param int     $page
@@ -213,8 +257,14 @@ class Entity
      * @param string  $module
      * @return array 
      */
-    public static function getArticlePage($where, $page, $limit, $columns = null, $order = null, $module = null)
-    {
+    public static function getArticlePage(
+        $where, 
+        $page, 
+        $limit, 
+        $columns = null, 
+        $order = null, 
+        $module = null
+    ) {
         $offset = ($limit && $page) ? $limit * ($page - 1) : null;
 
         $module = $module ?: Pi::service('module')->current();
@@ -224,9 +274,37 @@ class Entity
 
         $modelArticle  = Pi::model('article', $module);
         $modelUser     = Pi::model('user');
-        $modelAuthor   = Pi::model('author', $module);
+        
+        // Generate columns of extended table and statistics table
+        $extendedColumns = Pi::service('registry')
+            ->handler('extended', $module)
+            ->read();
+        $statisColumns = ModelStatistics::getAvailableColumns();
+        if (!empty($columns)) {
+            // Get needed columns of extended table
+            foreach ($extendedColumns as $key => $col) {
+                if (!in_array($col, $columns)) {
+                    unset($extendedColumns[$key]);
+                }
+            }
+            // Get needed columns of statistics table
+            foreach ($statisColumns as $key => $col) {
+                if (!in_array($col, $columns)) {
+                    unset($statisColumns[$key]);
+                }
+            }
+        }
+        // Remove fields not belong to article table
+        $columns = array_diff($columns, $extendedColumns);
+        $columns = array_diff($columns, $statisColumns);
 
-        $resultset = $modelArticle->getSearchRows($where, $limit, $offset, $columns, $order);
+        $resultset = $modelArticle->getSearchRows(
+            $where, 
+            $limit, 
+            $offset, 
+            $columns, 
+            $order
+        );
 
         if ($resultset) {
             foreach ($resultset as $row) {
@@ -244,40 +322,60 @@ class Entity
             $userIds   = array_unique($userIds);
             
             // Getting statistics data
-            $modelStatis = Pi::model('statistics', $module);
-            $rowStatis   = $modelStatis->select(array('article' => $articleIds));
-            $statis      = array();
-            foreach ($rowStatis as $item) {
-                $temp = $item->toArray();
-                unset($temp['id']);
-                unset($temp['article']);
-                $statis[$item->article] = $temp;
+            if (!empty($statisColumns)) {
+                $statisColumns[] = 'id';
+                $statisColumns[] = 'article';
+                $modelStatis = Pi::model('statistics', $module);
+                $select      = $modelStatis
+                    ->select()
+                    ->where(array('article' => $articleIds))
+                    ->columns($statisColumns);
+                $rowStatis   = $modelStatis->selectWith($select);
+                $statis      = array();
+                foreach ($rowStatis as $item) {
+                    $temp = $item->toArray();
+                    unset($temp['id']);
+                    unset($temp['article']);
+                    $statis[$item->article] = $temp;
+                }
             }
             
             // Getting extended data
-            $modelExtended = Pi::model('extended', $module);
-            $rowExtended   = $modelExtended->select(array('article' => $articleIds));
-            $extended      = array();
-            foreach ($rowExtended as $item) {
-                $temp = $item->toArray();
-                unset($temp['id']);
-                unset($temp['article']);
-                $extended[$item->article] = $temp;
+            if (!empty($extendedColumns)) {
+                $extendedColumns[] = 'id';
+                $extendedColumns[] = 'article';
+                $modelExtended = Pi::model('extended', $module);
+                $select        = $modelExtended
+                    ->select()
+                    ->where(array('article' => $articleIds))
+                    ->columns($extendedColumns);
+                $rowExtended   = $modelExtended->selectWith($select);
+                $extended      = array();
+                foreach ($rowExtended as $item) {
+                    $temp = $item->toArray();
+                    unset($temp['id']);
+                    unset($temp['article']);
+                    $extended[$item->article] = $temp;
+                }
             }
 
-            $categories = Cache::getCategoryList();
+            $categories = Service::getCategoryList();
 
-            if (!empty($authorIds) && (empty($columns) || in_array('author', $columns))) {
-                $resultsetAuthor = $modelAuthor->find($authorIds);
+            if (!empty($authorIds) 
+                && (empty($columns) || in_array('author', $columns))
+            ) {
+                $resultsetAuthor = Service::getAuthorList($authorIds);
                 foreach ($resultsetAuthor as $row) {
-                    $authors[$row->id] = array(
-                        'name' => $row->name,
+                    $authors[$row['id']] = array(
+                        'name' => $row['name'],
                     );
                 }
                 unset($resultsetAuthor);
             }
 
-            if (!empty($userIds) && (empty($columns) || in_array('uid', $columns))) {
+            if (!empty($userIds) 
+                && (empty($columns) || in_array('uid', $columns))
+            ) {
                 $resultsetUser = $modelUser->find($userIds);
                 foreach ($resultsetUser as $row) {
                     $users[$row->id] = array(
@@ -288,8 +386,11 @@ class Entity
             }
 
             if (!empty($articleIds)) {
-                if ((empty($columns) || in_array('tag', $columns)) && $config['enable_tag']) {
-                    $tags = Pi::service('api')->tag->multiple($module, $articleIds);
+                if ((empty($columns) 
+                    || in_array('tag', $columns)) && $config['enable_tag']
+                ) {
+                    $tags = Pi::service('api')
+                        ->tag->multiple($module, $articleIds);
                 }
             }
 
@@ -319,7 +420,8 @@ class Entity
                     }
                 }
 
-                if ((empty($columns) || in_array('tag', $columns)) && $config['enable_tag']) {
+                if ((empty($columns) 
+                    || in_array('tag', $columns)) && $config['enable_tag']) {
                     if (!empty($tags[$row['id']])) {
                         $row['tag'] = $tags[$row['id']];
                     }
@@ -328,11 +430,11 @@ class Entity
                 if (empty($columns) || in_array('subject', $columns)) {
                     $route      = $module . '-' . Service::getRouteName();
                     $row['url'] = Pi::engine()->application()
-                                              ->getRouter()
-                                              ->assemble(array(
-                                                  'time'       => date('Ymd', $row['time_publish']),
-                                                  'id'         => $row['id'],
-                                              ), array('name' => $route));
+                        ->getRouter()
+                        ->assemble(array(
+                            'time'   => date('Ymd', $row['time_publish']),
+                            'id'     => $row['id'],
+                        ), array('name' => $route));
                 }
                 
                 if (isset($statis[$row['id']])) {
@@ -348,7 +450,7 @@ class Entity
     }
 
     /**
-     * Getting available articles which are published and active.
+     * Get available articles which are published and active
      * 
      * @param array   $where
      * @param int     $page
@@ -358,8 +460,14 @@ class Entity
      * @param string  $module
      * @return array 
      */
-    public static function getAvailableArticlePage($where, $page, $limit, $columns = null, $order = null, $module = null)
-    {
+    public static function getAvailableArticlePage(
+        $where, 
+        $page, 
+        $limit, 
+        $columns = null, 
+        $order = null,
+        $module = null
+    ) {
         $defaultWhere = array(
             'time_publish <= ?' => time(),
             'status'            => Article::FIELD_STATUS_PUBLISHED,
@@ -371,14 +479,13 @@ class Entity
     }
 
     /**
-     * Getting published article details.
+     * Get published article details
      * 
      * @param int  $id  Article ID
      * @return array 
      */
     public static function getEntity($id)
     {
-        $result = array();
         $module = Pi::service('module')->current();
         $config = Pi::service('module')->config('', $module);
 
@@ -388,11 +495,11 @@ class Entity
         }
         $subject = $subtitle = $content = '';
         if ($row->markup) {
-            $subject    = Pi::service('markup')->render($row->subject, 'html', $row->markup);
-            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html', $row->markup);
+            $subject  = Pi::service('markup')->render($row->subject, 'html', $row->markup);
+            $subtitle = Pi::service('markup')->render($row->subtitle, 'html', $row->markup);
         } else {
-            $subject    = Pi::service('markup')->render($row->subject, 'html');
-            $subtitle   = Pi::service('markup')->render($row->subtitle, 'html');
+            $subject  = Pi::service('markup')->render($row->subject, 'html');
+            $subtitle = Pi::service('markup')->render($row->subtitle, 'html');
         }
         $content = Compiled::getContent($row->id, 'html');
 
@@ -415,40 +522,55 @@ class Entity
 
         // Get author
         if ($row->author) {
-            $author = Pi::model('author', $module)->find($row->author);
+            $author = Service::getAuthorList((array) $row->author);
 
             if ($author) {
-                $result['author'] = $author->toArray();
+                $result['author'] = array_shift($author);
                 if (empty($result['author']['photo'])) {
-                    $result['author']['photo'] = Pi::service('asset')->getModuleAsset($config['default_author_photo'], $module);
+                    $result['author']['photo'] = 
+                        Pi::service('asset')->getModuleAsset(
+                            $config['default_author_photo'], 
+                            $module
+                        );
                 }
             }
         }
 
         // Get attachments
-        /*$resultsetAsset = Pi::model('asset', $module)->select(array(
+        $resultsetAsset = Pi::model('asset', $module)->select(array(
             'article'   => $id,
-            'type'      => Asset::FIELD_TYPE_ATTACHMENT,
+            'type'      => 'attachment',
         ));
+        $mediaIds = array(0);
+        foreach ($resultsetAsset as $asset) {
+            $mediaIds[$asset->media] = $asset->media;
+        }
+        
+        $resultsetMedia = Pi::model('media', $module)->select(
+            array('id' => $mediaIds)
+        );
 
-        foreach ($resultsetAsset as $attachment) {
+        foreach ($resultsetMedia as $media) {
             $result['attachment'][] = array(
-                'original_name' => $attachment->original_name,
-                'extension'     => $attachment->extension,
-                'size'          => $attachment->size,
-                'url'           => Pi::engine()->application()->getRouter()->assemble(
-                    array(
-                        'module'     => $this->getModule(),
-                        'controller' => 'download',
-                        'action'     => 'attachment',
-                        'name'       => $attachment->name,
+                'original_name' => $media->title,
+                'extension'     => $media->type,
+                'size'          => $media->size,
+                'url'           => Pi::engine()
+                    ->application()
+                    ->getRouter()
+                    ->assemble(
+                        array(
+                            'module'     => $module,
+                            'controller' => 'media',
+                            'action'     => 'download',
+                            'id'         => $media->id,
+                        ),
+                        array(
+                            'name'       => 'default',
+                        )
                     ),
-                    array(
-                        'name'       => 'default',
-                    )
-                ),
             );
-        }*/
+        }
 
         // Get tag
         if ($config['enable_tag']) {
@@ -464,7 +586,14 @@ class Entity
             $where   = array('id' => $relatedIds);
             $columns = array('id', 'subject');
 
-            $resultsetRelated = self::getArticlePage($where, 1, null, $columns, null, $module);
+            $resultsetRelated = self::getArticlePage(
+                $where, 
+                1, 
+                null, 
+                $columns, 
+                null, 
+                $module
+            );
 
             foreach ($resultsetRelated as $key => $val) {
                 if (array_key_exists($key, $related)) {

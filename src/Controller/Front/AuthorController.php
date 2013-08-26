@@ -173,6 +173,13 @@ class AuthorController extends ActionController
                     __('Can not save data!')
                 );
             }
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('author', $module)
+                ->clear($module);
+            
             $this->redirect()->toRoute('', array('action' => 'list'));
         }
 
@@ -214,6 +221,12 @@ class AuthorController extends ActionController
             
             $data = $form->getData();
             $id   = $this->saveAuthor($data);
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('author', $module)
+                ->clear($module);
 
             return $this->redirect()->toRoute('', array('action' => 'list'));
         }
@@ -266,6 +279,12 @@ class AuthorController extends ActionController
 
         // Delete author
         $modelAuthor->delete(array('id' => $ids));
+        
+        // Clear cache
+        $module = $this->getModule();
+        Pi::service('registry')
+            ->handler('author', $module)
+            ->clear($module);
 
         // Go to list page
         return $this->redirect()->toRoute('', array('action' => 'list'));

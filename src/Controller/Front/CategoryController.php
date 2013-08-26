@@ -22,7 +22,6 @@ use Module\Article\Model\Category;
 use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
-use Module\Article\Cache;
 use Module\Article\Model\Article;
 use Module\Article\Entity;
 use Pi\File\Transfer\Upload as UploadHandler;
@@ -184,7 +183,7 @@ class CategoryController extends ActionController
         $route  = '.' . Service::getRouteName();
 
         // Get category info
-        $categories = Cache::getCategoryList();
+        $categories = Service::getCategoryList();
         foreach ($categories as &$row) {
             $row['url'] = $this->url($route, array(
                 'category' => $row['slug'] ?: $row['id'],
@@ -300,6 +299,13 @@ class CategoryController extends ActionController
                     __('Can not save data!')
                 );
             }
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('category', $module)
+                ->clear($module);
+            
             return $this->redirect()->toRoute(
                 '',
                 array('action' => 'list-category')
@@ -344,6 +350,12 @@ class CategoryController extends ActionController
             if (empty($id)) {
                 return ;
             }
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('category', $module)
+                ->clear($module);
 
             return $this->redirect()->toRoute(
                 '',
@@ -374,8 +386,6 @@ class CategoryController extends ActionController
     
     /**
      * Delete a category
-     * 
-     * @throws \Exception 
      */
     public function deleteAction()
     {
@@ -428,6 +438,12 @@ class CategoryController extends ActionController
 
             // Remove node
             $categoryModel->remove($id);
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('category', $module)
+                ->clear($module);
 
             // Go to list page
             $this->redirect()->toRoute('', array('action' => 'list-category'));
@@ -525,6 +541,12 @@ class CategoryController extends ActionController
 
             // remove category
             $categoryModel->remove($data['from']);
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('category', $module)
+                ->clear($module);
 
             // Go to list page
             return $this->redirect()->toRoute(
@@ -588,6 +610,12 @@ class CategoryController extends ActionController
 
             // Move category
             $categoryModel->move($data['from'], $data['to']);
+            
+            // Clear cache
+            $module = $this->getModule();
+            Pi::service('registry')
+                ->handler('category', $module)
+                ->clear($module);
 
             // Go to list page
             return $this->redirect()->toRoute(
