@@ -233,6 +233,8 @@ class MediaController extends ActionController
             'types'         => $types,
             'form'          => $form,
             'imageTypes'    => $imageTypes,
+            'defaultLogo'   => Pi::service('asset')
+                ->getModuleAsset('image/default-media-thumb.png', $module),
         ));
     }
     

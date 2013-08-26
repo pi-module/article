@@ -20,11 +20,15 @@ $this->Backbone();
             </tr>
             <?php foreach ($topics as $topic) { ?>
             <tr>
-                <td><?php if ($topic['image']) { ?>
-                    <img src="<?php echo Pi::url($topic['image']) ?>"
-                         alt="<?php echo $this->escape($topic['title']); ?>" 
-                         style="width: 40px; height: 30px">
-                <?php } ?>
+                <td>
+                <?php if ($topic['image']) {
+                    $image = Pi::url($topic['image']);
+                } else {
+                    $image = $defaultLogo;
+                } ?>
+                <img src="<?php echo $this->escape($image) ?>"
+                     alt="<?php echo $this->escape($topic['title']); ?>" 
+                     style="width: 40px">
                 </td>
                 <td><a href="<?php echo $this->url($route, array(
                     'controller' => 'topic',

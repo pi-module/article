@@ -67,9 +67,14 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
                         <input type="checkbox" value="<?php echo $this->escape($media['id']) ?>" class="check-one">
                     </td>
                     <td><?php echo $this->escape($media['id']) ?></td>
-                    <td><?php if (in_array($media['type'], $imageTypes)) { ?>
-                        <img src="<?php echo Pi::url($media['url']) ?>" style="width: 40px;" />
-                    <?php } ?>
+                    <td><?php 
+                        if (in_array($media['type'], $imageTypes)) {
+                            $image = Pi::url($media['url']);
+                        } else {
+                            $image = $defaultLogo;
+                        }
+                    ?>
+                        <img src="<?php echo $this->escape($image) ?>" style="width: 40px;" />
                     </td>
                     <td>
                         <a class="media-list-title" href="<?php echo $this->escape($media['previewUrl']) ?>" target="_blank" data-placement="bottom" data-toggle="tooltip" data-original-title="<?php echo $this->escape($media['title']) ?>"><?php echo mb_substr($media['title'], 0, 18, 'UTF-8') ?></a>

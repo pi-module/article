@@ -322,6 +322,7 @@ class Entity
             $userIds   = array_unique($userIds);
             
             // Getting statistics data
+            $templateStatis = array();
             if (!empty($statisColumns)) {
                 $statisColumns[] = 'id';
                 $statisColumns[] = 'article';
@@ -347,6 +348,7 @@ class Entity
             }
             
             // Getting extended data
+            $templateExtended = array();
             if (!empty($extendedColumns)) {
                 $extendedColumns[] = 'id';
                 $extendedColumns[] = 'article';

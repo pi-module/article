@@ -468,6 +468,11 @@ class CategoryController extends ActionController
 
         $this->view()->assign('categories', $rowset);
         $this->view()->assign('title', __('Category List'));
+        $this->view()->assign(
+            'defaultLogo',
+            Pi::service('asset')
+                ->getModuleAsset('image/default-category-thumb.png', $module)
+        );
     }
 
     /**

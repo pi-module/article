@@ -807,6 +807,8 @@ class TopicController extends ActionController
             'topics'  => $rowset,
             'action'  => 'list-topic',
             'route'   => '.' . Service::getRouteName(),
+            'defaultLogo' => Pi::service('asset')
+                ->getModuleAsset('image/default-topic-thumb.png', $module),
         ));
     }
 
