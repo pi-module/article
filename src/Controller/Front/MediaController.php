@@ -467,9 +467,18 @@ class MediaController extends ActionController
                 ->setRename($rename)
                 ->setExtension($allowedExtension)
                 ->setSize($mediaSize);
-
+        
+        // Get raw file name
+        if (empty($rawInfo)) {
+            $content = $this->request->getContent();
+            preg_match('/filename="(.+)"/', $content, $matches);
+            $rawName = $matches[1];
+        } else {
+            $rawName = null;
+        }
+        
         // Checking whether uploaded file is valid
-        if (!$upload->isValid()) {
+        if (!$upload->isValid($rawName)) {
             $return['message'] = implode(', ', $upload->getMessages());
             echo json_encode($return);
             exit ;
