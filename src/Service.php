@@ -13,7 +13,6 @@ use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
 use Module\Article\Upload;
-use Module\Article\Cache;
 use Pi\Mvc\Controller\ActionController;
 use Module\Article\Controller\Admin\ConfigController as Config;
 use Module\Article\Form\DraftEditForm;
@@ -162,7 +161,7 @@ class Service
             $authorIds = array_unique($authorIds);
             $userIds   = array_unique($userIds);
 
-            $categories = Cache::getCategoryList();
+            $categories = self::getCategoryList();
 
             if (!empty($authorIds)) {
                 $resultsetAuthor = $modelAuthor->find($authorIds);
@@ -848,5 +847,19 @@ class Service
         $message = $message ?: __('Operating error!');
         $handler->view()->assign('message', $message);
         $handler->view()->setTemplate('operation-error');
+    }
+    
+    /**
+     * Read category data from cache
+     * 
+     * @param array $where
+     * @return array 
+     */
+    public static function getCategoryList($where = array())
+    {
+        $module = Pi::service('module')->current();
+        $rows   = Pi::service('registry')->handler('category', $module)->read();
+        
+        return $rows;
     }
 }

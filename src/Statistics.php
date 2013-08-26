@@ -13,6 +13,7 @@ use Pi;
 use Zend\Mvc\MvcEvent;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
+use Module\Article\Service;
 
 /**
  * Statistics service API
@@ -156,7 +157,7 @@ class Statistics
             $where['time_submit <= ?'] = $dateTo;
         }
 
-        $result = Cache::getCategoryList();
+        $result = Service::getCategoryList();
 
         foreach ($result as &$val) {
             $val['total'] = 0;

@@ -18,7 +18,6 @@ use Module\Article\Upload;
 use Module\Article\Form\SimpleSearchForm;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
-use Module\Article\Cache;
 use Module\Article\Entity;
 
 /**
@@ -493,7 +492,7 @@ class ArticleController extends ActionController
             'published' => Article::FIELD_STATUS_PUBLISHED,
         );
 
-        $cacheCategories = Cache::getCategoryList();
+        $cacheCategories = Service::getCategoryList();
         $this->view()->assign(array(
             'title'      => __('Published'),
             'data'       => $data,

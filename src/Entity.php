@@ -324,7 +324,7 @@ class Entity
                 $extended[$item->article] = $temp;
             }
 
-            $categories = Cache::getCategoryList();
+            $categories = Service::getCategoryList();
 
             if (!empty($authorIds) 
                 && (empty($columns) || in_array('author', $columns))
