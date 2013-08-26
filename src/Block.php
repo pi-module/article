@@ -77,17 +77,18 @@ class Block
             
             // Fetching sub-category
             $subCount    = 0;
-            foreach ($category['child'] as $child) {
+            $child = isset($category['child']) ? $category['child'] : array();
+            foreach ($child as $item) {
                 if ($subCount > $maxSubCount) {
                     break;
                 }
-                $allItems[$id]['child'][$child['id']] = array(
-                    'title'    => $child['title'],
+                $allItems[$id]['child'][$item['id']] = array(
+                    'title'    => $item['title'],
                     'url'      => Pi::engine()->application()
                         ->getRouter()
                         ->assemble(
                             array(
-                                'category'  => $child['slug'] ?: $child['id'],
+                                'category'  => $item['slug'] ?: $item['id'],
                             ), 
                             array(
                                 'name' => $route
@@ -96,7 +97,7 @@ class Block
                 );
                 $subCount++;
             }
-            for ($i = count($allItems[$id]['child']); $i < $maxSubCount; $i++) {
+            for ($i = $subCount; $i < $maxSubCount; $i++) {
                 $allItems[$id]['child'][] = array(
                     'title' => $options['default-category'] ?: __('None'),
                     'url'   => $defaultUrl,
@@ -431,9 +432,11 @@ class Block
             $images = array();
             $rowset = Pi::model('media', $module)->select(array('id' => $imageIds));
             foreach ($rowset as $row) {
+                $id       = $row['id'];
+                $link     = isset($imageLinks[$id]) ? $imageLinks[$id] : '';
                 $images[] = array(
                     'url'         => Pi::url($row['url']),
-                    'link'        => $imageLinks[$row['id']],
+                    'link'        => $link,
                     'title'       => $row['title'],
                     'description' => $row['description'],
                 );

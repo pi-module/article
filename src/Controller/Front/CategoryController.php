@@ -177,7 +177,7 @@ class CategoryController extends ActionController
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_limit_front'] ?: 40;
+        $limit  = (int) $config['page_limit_all'] ?: 40;
         $where  = array();
         
         $route  = '.' . Service::getRouteName();
@@ -468,6 +468,11 @@ class CategoryController extends ActionController
 
         $this->view()->assign('categories', $rowset);
         $this->view()->assign('title', __('Category List'));
+        $this->view()->assign(
+            'defaultLogo',
+            Pi::service('asset')
+                ->getModuleAsset('image/default-category-thumb.png', $module)
+        );
     }
 
     /**

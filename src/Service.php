@@ -857,6 +857,7 @@ class Service
      */
     public static function getCategoryList($where = array())
     {
+        $isTree = false;
         if (isset($where['is-tree'])) {
             $isTree = $where['is-tree'];
             unset($where['is-tree']);

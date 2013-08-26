@@ -239,6 +239,7 @@ class Statistics
 
         $result = $modelArticle->selectWith($select)->toArray();
 
+        $userIds = array();
         foreach ($result as $row) {
             if (!empty($row['uid'])) {
                 $userIds[] = $row['uid'];

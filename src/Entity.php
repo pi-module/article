@@ -293,10 +293,10 @@ class Entity
                     unset($statisColumns[$key]);
                 }
             }
+            // Remove fields not belong to article table
+            $columns = array_diff($columns, $extendedColumns);
+            $columns = array_diff($columns, $statisColumns);
         }
-        // Remove fields not belong to article table
-        $columns = array_diff($columns, $extendedColumns);
-        $columns = array_diff($columns, $statisColumns);
 
         $resultset = $modelArticle->getSearchRows(
             $where, 
@@ -322,6 +322,7 @@ class Entity
             $userIds   = array_unique($userIds);
             
             // Getting statistics data
+            $templateStatis = array();
             if (!empty($statisColumns)) {
                 $statisColumns[] = 'id';
                 $statisColumns[] = 'article';
@@ -338,9 +339,16 @@ class Entity
                     unset($temp['article']);
                     $statis[$item->article] = $temp;
                 }
+                foreach ($statisColumns as $col) {
+                    if (in_array($col, array('id', 'article'))) {
+                        continue;
+                    }
+                    $templateStatis[$col] = null;
+                }
             }
             
             // Getting extended data
+            $templateExtended = array();
             if (!empty($extendedColumns)) {
                 $extendedColumns[] = 'id';
                 $extendedColumns[] = 'article';
@@ -356,6 +364,12 @@ class Entity
                     unset($temp['id']);
                     unset($temp['article']);
                     $extended[$item->article] = $temp;
+                }
+                foreach ($extendedColumns as $col) {
+                    if (in_array($col, array('id', 'article'))) {
+                        continue;
+                    }
+                    $templateExtended[$col] = null;
                 }
             }
 
@@ -437,12 +451,14 @@ class Entity
                         ), array('name' => $route));
                 }
                 
-                if (isset($statis[$row['id']])) {
-                    $row = array_merge($row, $statis[$row['id']]);
+                if (!isset($statis[$row['id']])) {
+                    $statis[$row['id']] = $templateStatis;
                 }
-                if (isset($extended[$row['id']])) {
-                    $row = array_merge($row, $extended[$row['id']]);
+                $row = array_merge($row, $statis[$row['id']]);
+                if (!isset($extended[$row['id']])) {
+                    $extended[$row['id']] = $templateExtended;
                 }
+                $row = array_merge($row, $extended[$row['id']]);
             }
         }
 
@@ -578,13 +594,13 @@ class Entity
         }
 
         // Get related articles
-        $relatedIds = $related = array();  
+        $relatedIds = $related = array();
         $relatedIds = Pi::model('related', $module)->getRelated($id);
 
         if ($relatedIds) {
             $related = array_flip($relatedIds);
             $where   = array('id' => $relatedIds);
-            $columns = array('id', 'subject');
+            $columns = array('id', 'subject', 'time_publish');
 
             $resultsetRelated = self::getArticlePage(
                 $where, 

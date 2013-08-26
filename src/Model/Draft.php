@@ -74,7 +74,7 @@ class Draft extends Model
             'id', 'article', 'subject', 'subtitle', 'image', 'author', 
             'uid', 'source', 'content', 'category', 'related', 'time_publish', 
             'time_update', 'time_submit', 'time_save', 'slug', 'seo_title',
-            'seo_keywords', 'seo_description'
+            'seo_keywords', 'seo_description', 'status',
         );
 
         $module = $module ?: Pi::service('module')->current();
@@ -121,7 +121,7 @@ class Draft extends Model
     {
         return array(
             'id', 'subject', 'subtitle', 'category', 'image', 'uid', 
-            'author', 'slug', 'source', 'time_save'
+            'author', 'slug', 'source', 'time_save', 'time_update'
         );
     }
 
@@ -196,7 +196,7 @@ class Draft extends Model
         foreach ($rows as $row) {
             $details = json_decode($row['detail'], true);
             $result[$row['id']] = array_merge($row, $details);
-            foreach ($result[$row['id']] as $key) {
+            foreach (array_keys($result[$row['id']]) as $key) {
                 if (!in_array($key, $neededColumns)) {
                     unset($result[$row['id']][$key]);
                 }
