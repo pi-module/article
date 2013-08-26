@@ -20,6 +20,18 @@ use Pi\Application\Model\Model;
 class Statistics extends Model
 {
     /**
+     * Get avaliable columns
+     * 
+     * @return array 
+     */
+    public static function getAvailableColumns()
+    {
+        $columns = array('visits');
+        
+        return $columns;
+    }
+    
+    /**
      * Increase visit count of a article.
      *
      * @param int  $id  Article ID

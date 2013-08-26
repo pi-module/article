@@ -13,11 +13,15 @@ use Pi\Application\Registry\AbstractRegistry;
 use Pi;
 
 /**
- * Category registry class
+ * Extended registry class
+ * 
+ * Feature list:
+ * 
+ * 1. Read table fields
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
-class Category extends AbstractRegistry
+class Extended extends AbstractRegistry
 {
     protected $module = 'article';
 
@@ -30,15 +34,9 @@ class Category extends AbstractRegistry
     protected function loadDynamic($options = array())
     {
         $module = $options['module'];
-        $model  = Pi::model('category', $module);
+        $model  = Pi::model('extended', $module);
         
-        if ($options['isTree']) {
-            $root   = $model->find('root', 'name');
-            $rowset = $model->enumerate($root->id);
-            $rows   = array_shift($rowset);
-        } else {
-            $rows   = $model->getList();
-        }
+        $rows   = $model->getValidColumns();
 
         return $rows;
     }
@@ -48,10 +46,10 @@ class Category extends AbstractRegistry
      * 
      * @return array 
      */
-    public function read($where = array(), $isTree = false)
+    public function read()
     {
         $module  = Pi::service('module')->current();
-        $options = compact('module', 'where', 'isTree');
+        $options = compact('module');
         
         return $this->loadData($options);
     }
@@ -59,11 +57,11 @@ class Category extends AbstractRegistry
     /**
      * Create a cache
      */
-    public function create($where = array(), $isTree = false)
+    public function create()
     {
         $module  = Pi::service('module')->current();
         $this->clear($module);
-        $this->read($where, $isTree);
+        $this->read();
     }
     
     /**

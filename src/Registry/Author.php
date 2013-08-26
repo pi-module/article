@@ -13,11 +13,11 @@ use Pi\Application\Registry\AbstractRegistry;
 use Pi;
 
 /**
- * Category registry class
+ * Author registry class
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
-class Category extends AbstractRegistry
+class Author extends AbstractRegistry
 {
     protected $module = 'article';
 
@@ -30,15 +30,9 @@ class Category extends AbstractRegistry
     protected function loadDynamic($options = array())
     {
         $module = $options['module'];
-        $model  = Pi::model('category', $module);
+        $model  = Pi::model('author', $module);
         
-        if ($options['isTree']) {
-            $root   = $model->find('root', 'name');
-            $rowset = $model->enumerate($root->id);
-            $rows   = array_shift($rowset);
-        } else {
-            $rows   = $model->getList();
-        }
+        $rows   = $model->select(array())->toArray();
 
         return $rows;
     }
@@ -48,10 +42,10 @@ class Category extends AbstractRegistry
      * 
      * @return array 
      */
-    public function read($where = array(), $isTree = false)
+    public function read()
     {
         $module  = Pi::service('module')->current();
-        $options = compact('module', 'where', 'isTree');
+        $options = compact('module');
         
         return $this->loadData($options);
     }
@@ -59,11 +53,11 @@ class Category extends AbstractRegistry
     /**
      * Create a cache
      */
-    public function create($where = array(), $isTree = false)
+    public function create()
     {
         $module  = Pi::service('module')->current();
         $this->clear($module);
-        $this->read($where, $isTree);
+        $this->read();
     }
     
     /**

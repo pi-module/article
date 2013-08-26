@@ -17,6 +17,7 @@ use Module\Article\Cache;
 use Module\Article\Compiled;
 use Module\Article\Statistics;
 use Module\Article\Service;
+use Module\Article\Model\Statistics as ModelStatistics;
 
 /**
  * Article service APIs
@@ -273,7 +274,29 @@ class Entity
 
         $modelArticle  = Pi::model('article', $module);
         $modelUser     = Pi::model('user');
-        $modelAuthor   = Pi::model('author', $module);
+        
+        // Generate columns of extended table and statistics table
+        $extendedColumns = Pi::service('registry')
+            ->handler('extended', $module)
+            ->read();
+        $statisColumns = ModelStatistics::getAvailableColumns();
+        if (!empty($columns)) {
+            // Get needed columns of extended table
+            foreach ($extendedColumns as $key => $col) {
+                if (!in_array($col, $columns)) {
+                    unset($extendedColumns[$key]);
+                }
+            }
+            // Get needed columns of statistics table
+            foreach ($statisColumns as $key => $col) {
+                if (!in_array($col, $columns)) {
+                    unset($statisColumns[$key]);
+                }
+            }
+        }
+        // Remove fields not belong to article table
+        $columns = array_diff($columns, $extendedColumns);
+        $columns = array_diff($columns, $statisColumns);
 
         $resultset = $modelArticle->getSearchRows(
             $where, 
@@ -299,29 +322,41 @@ class Entity
             $userIds   = array_unique($userIds);
             
             // Getting statistics data
-            $modelStatis = Pi::model('statistics', $module);
-            $rowStatis   = $modelStatis->select(
-                array('article' => $articleIds)
-            );
-            $statis      = array();
-            foreach ($rowStatis as $item) {
-                $temp = $item->toArray();
-                unset($temp['id']);
-                unset($temp['article']);
-                $statis[$item->article] = $temp;
+            if (!empty($statisColumns)) {
+                $statisColumns[] = 'id';
+                $statisColumns[] = 'article';
+                $modelStatis = Pi::model('statistics', $module);
+                $select      = $modelStatis
+                    ->select()
+                    ->where(array('article' => $articleIds))
+                    ->columns($statisColumns);
+                $rowStatis   = $modelStatis->selectWith($select);
+                $statis      = array();
+                foreach ($rowStatis as $item) {
+                    $temp = $item->toArray();
+                    unset($temp['id']);
+                    unset($temp['article']);
+                    $statis[$item->article] = $temp;
+                }
             }
             
             // Getting extended data
-            $modelExtended = Pi::model('extended', $module);
-            $rowExtended   = $modelExtended->select(
-                array('article' => $articleIds)
-            );
-            $extended      = array();
-            foreach ($rowExtended as $item) {
-                $temp = $item->toArray();
-                unset($temp['id']);
-                unset($temp['article']);
-                $extended[$item->article] = $temp;
+            if (!empty($extendedColumns)) {
+                $extendedColumns[] = 'id';
+                $extendedColumns[] = 'article';
+                $modelExtended = Pi::model('extended', $module);
+                $select        = $modelExtended
+                    ->select()
+                    ->where(array('article' => $articleIds))
+                    ->columns($extendedColumns);
+                $rowExtended   = $modelExtended->selectWith($select);
+                $extended      = array();
+                foreach ($rowExtended as $item) {
+                    $temp = $item->toArray();
+                    unset($temp['id']);
+                    unset($temp['article']);
+                    $extended[$item->article] = $temp;
+                }
             }
 
             $categories = Service::getCategoryList();
@@ -329,10 +364,10 @@ class Entity
             if (!empty($authorIds) 
                 && (empty($columns) || in_array('author', $columns))
             ) {
-                $resultsetAuthor = $modelAuthor->find($authorIds);
+                $resultsetAuthor = Service::getAuthorList($authorIds);
                 foreach ($resultsetAuthor as $row) {
-                    $authors[$row->id] = array(
-                        'name' => $row->name,
+                    $authors[$row['id']] = array(
+                        'name' => $row['name'],
                     );
                 }
                 unset($resultsetAuthor);
@@ -487,10 +522,10 @@ class Entity
 
         // Get author
         if ($row->author) {
-            $author = Pi::model('author', $module)->find($row->author);
+            $author = Service::getAuthorList((array) $row->author);
 
             if ($author) {
-                $result['author'] = $author->toArray();
+                $result['author'] = array_shift($author);
                 if (empty($result['author']['photo'])) {
                     $result['author']['photo'] = 
                         Pi::service('asset')->getModuleAsset(

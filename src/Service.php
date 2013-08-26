@@ -857,8 +857,36 @@ class Service
      */
     public static function getCategoryList($where = array())
     {
+        if (isset($where['is-tree'])) {
+            $isTree = $where['is-tree'];
+            unset($where['is-tree']);
+        }
         $module = Pi::service('module')->current();
-        $rows   = Pi::service('registry')->handler('category', $module)->read();
+        $rows   = Pi::service('registry')
+            ->handler('category', $module)
+            ->read($where, $isTree);
+        
+        return $rows;
+    }
+    
+    /**
+     * Read author data from cache by ID
+     * 
+     * @param array  $ids
+     * @return array 
+     */
+    public static function getAuthorList($ids = array())
+    {
+        $module = Pi::service('module')->current();
+        $rows   = Pi::service('registry')->handler('author', $module)->read();
+        
+        if (!empty($ids)) {
+            foreach ($rows as $key => $row) {
+                if (!in_array($row['id'], $ids)) {
+                    unset($rows[$key]);
+                }
+            }
+        }
         
         return $rows;
     }

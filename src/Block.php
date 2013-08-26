@@ -51,10 +51,7 @@ class Block
                 )
             );
         
-        $model       = Pi::model('category', $module);
-        $root        = $model->find('root', 'name');
-        $rowset      = $model->enumerate($root->id);
-        $categories  = array_shift($rowset);
+        $categories  = Service::getCategoryList(array('is-tree' => true));
         
         $allItems    = array();
         $topCount    = 0;
