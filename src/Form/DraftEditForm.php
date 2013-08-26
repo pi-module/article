@@ -1,30 +1,22 @@
 <?php
 /**
- * Article module DraftEditForm form
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Form;
 
 use Pi;
 use Pi\Form\Form as BaseForm;
-use Module\Article\Model\Article;
 use Module\Article\Controller\Admin\ConfigController as Config;
 
 /**
- * Class for initializing form element 
+ * Draft edit form class
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class DraftEditForm extends BaseForm
 {
@@ -41,7 +33,7 @@ class DraftEditForm extends BaseForm
     protected $items = array();
     
     /**
-     * Initializing object
+     * Initialize object
      * 
      * @param string  $name     Form name
      * @param array   $options  Optional parameters
@@ -52,7 +44,8 @@ class DraftEditForm extends BaseForm
             $this->mode = $options['mode'];
         }
         if (Config::FORM_MODE_CUSTOM == $this->mode) {
-            $this->items = isset($options['elements']) ? $options['elements'] : array();
+            $this->items = isset($options['elements']) 
+                ? $options['elements'] : array();
         } elseif (!empty($options['elements'])) {
             $this->items = $options['elements'];
         } else {
@@ -62,7 +55,7 @@ class DraftEditForm extends BaseForm
     }
     
     /**
-     * Getting defined form element
+     * Get defined form element
      * !!! The value of each field must be the name of each form
      * 
      * @return array 
@@ -93,12 +86,13 @@ class DraftEditForm extends BaseForm
     }
     
     /**
-     * Getting default elements for displaying
+     * Get default elements for displaying
      * 
      * @return array 
      */
-    public static function getDefaultElements($mode = Config::FORM_MODE_EXTENDED)
-    {
+    public static function getDefaultElements(
+        $mode = Config::FORM_MODE_EXTENDED
+    ) {
         $normal = array(
             'subject',
             'subtitle',
@@ -123,7 +117,7 @@ class DraftEditForm extends BaseForm
     }
     
     /**
-     * Initializing form element 
+     * Initialize form element 
      */
     public function init()
     {
@@ -139,7 +133,10 @@ class DraftEditForm extends BaseForm
         if (in_array('content', $this->items)) {
             $editorConfig = Pi::config()->load("module.{$module}.ckeditor.php");
             $editor       = $this->get('content');
-            $editor->setOptions(array_merge($editor->getOptions(), $editorConfig));
+            $editor->setOptions(array_merge(
+                $editor->getOptions(),
+                $editorConfig
+            ));
         }
 
         // Initializing needed form
@@ -151,14 +148,6 @@ class DraftEditForm extends BaseForm
         $this->add($formParams['time_submit']);
         $this->add($formParams['article']);
         $this->add($formParams['jump']);
-        
-        // Initializing form for image upload
-        if (in_array('image', $this->items)) {
-            $this->add($formParams['x']);
-            $this->add($formParams['y']);
-            $this->add($formParams['w']);
-            $this->add($formParams['h']);
-        }
         
         $this->add(array(
             'name'       => 'security',
@@ -175,7 +164,7 @@ class DraftEditForm extends BaseForm
     }
     
     /**
-     * Getting form parameters
+     * Get form parameters
      * 
      * @return array 
      */
@@ -408,38 +397,6 @@ class DraftEditForm extends BaseForm
                     'id'        => 'jump',
                     'type'      => 'hidden',
                     'value'     => '',
-                ),
-            ),
-
-            'x'          => array(
-                'name'       => 'x',
-                'attributes' => array(
-                    'id'        => 'x',
-                    'type'      => 'hidden',
-                ),
-            ),
-
-            'y'          => array(
-                'name'       => 'y',
-                'attributes' => array(
-                    'id'        => 'y',
-                    'type'      => 'hidden',
-                ),
-            ),
-            
-            'w'          => array(
-                'name'       => 'w',
-                'attributes' => array(
-                    'id'        => 'w',
-                    'type'      => 'hidden',
-                ),
-            ),
-            
-            'h'          => array(
-                'name'       => 'h',
-                'attributes' => array(
-                    'id'        => 'h',
-                    'type'      => 'hidden',
                 ),
             ),
         );

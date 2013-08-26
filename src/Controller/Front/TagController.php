@@ -1,20 +1,10 @@
 <?php
 /**
- * Article module tag controller
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article\Controller\Front;
@@ -22,19 +12,18 @@ namespace Module\Article\Controller\Front;
 use Pi\Mvc\Controller\ActionController;
 use Pi;
 use Pi\Paginator\Paginator;
-use Module\Article\Model\Article;
-use Module\Article\Upload;
 use Module\Article\Service;
 use Module\Article\Entity;
-use Zend\View\Helper\Placeholder\Container\AbstractContainer;
 
 /**
- * Public class 
+ * Tag controller
+ * 
+ * @author Zongshu Lin <lin40553024@163.com> 
  */
 class TagController extends ActionController
 {
     /**
-     * Processing article list related with tag
+     * Process article list related with tag
      * 
      * @return ViewModel 
      */
@@ -58,14 +47,27 @@ class TagController extends ActionController
         $totalCount = (int) Pi::service('tag')->getCount($module, $tag);
 
         // Get article ids
-        $articleIds = Pi::service('tag')->getList($module, $tag, null, $limit, $offset);
+        $articleIds = Pi::service('tag')->getList(
+            $module, 
+            $tag, 
+            null, 
+            $limit, 
+            $offset
+        );
 
         if ($articleIds) {
             $where['id']    = $articleIds;
             $articles       = array_flip($articleIds);
             $columns        = array('id', 'subject', 'time_publish', 'category');
 
-            $resultsetArticle   = Entity::getAvailableArticlePage($where, 1, $limit, $columns, '', $module);
+            $resultsetArticle   = Entity::getAvailableArticlePage(
+                $where, 
+                1, 
+                $limit, 
+                $columns, 
+                '', 
+                $module
+            );
 
             foreach ($resultsetArticle as $key => $val) {
                 $articles[$key] = $val;

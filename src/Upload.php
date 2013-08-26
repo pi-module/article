@@ -1,25 +1,14 @@
 <?php
 /**
- * Article module upload renderer
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) http://www.eefocus.com
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Lijun Dong <lijun@eefocus.com>
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
 use Pi;
-use Zend\File\Transfer\Transfer;
 use Module\Article\Model\Asset;
 
 class Upload
@@ -221,81 +210,9 @@ class Upload
 
     public static function getThumbFromOriginal($fileName)
     {
-//        return preg_replace('/(.+)(\d+)(\.png)$/', '${1}${2}-thumb${3}', $fileName);
         $parts = pathinfo($fileName);
         return $parts['dirname'] . '/' . $parts['filename'] . '-thumb.' . $parts['extension'];
     }
-
-//    public static function moveTmpToAsset($file, $module, $type = Asset::FIELD_TYPE_ATTACHMENT)
-//    {
-//        $result = false;
-//
-//        $basename   = pathinfo($file, PATHINFO_BASENAME);
-//        $targetDir  = self::getTargetDir($type, $module, true);
-//        $targetName = $targetDir . '/' . $basename;
-//        $result     = rename(Pi::path($file), Pi::path($targetName));
-//
-//        return $result ? $targetName : false;
-//    }
-//
-//    public static function copyAssetToTmp($file, $module)
-//    {
-//        $result = false;
-//
-//        $basename  = pathinfo($file, PATHINFO_BASENAME);
-//        $targetDir  = self::getTargetDir('tmp', $module, true);
-//        $targetName = $targetDir . '/' . $basename;
-//        $result     = copy(Pi::path($file), Pi::path($targetName));
-//
-//        return $result ? $targetName : false;
-//    }
-//
-//    public static function saveTmpImage($uploadInfo, $module = null)
-//    {
-//        $targetDir   = self::getTargetDir('tmp', $module, true);
-//
-//        $ext         = strtolower(pathinfo($uploadInfo['name'], PATHINFO_EXTENSION));
-//        $tmpFileName = sprintf('%s/%s.%s', $targetDir, self::randomKey(), $ext);
-//
-//        $result = move_uploaded_file($uploadInfo['tmp_name'], Pi::path($tmpFileName));
-//
-//        $uploadInfo['tmp_name'] = $tmpFileName;
-//
-//        // Save info to session
-//        $session = self::getUploadSession($module);
-//        $session->$tmpFileName = $uploadInfo;
-//
-//        return $result ? $tmpFileName : false;
-//    }
-//
-//    public static function saveTmpFile($uploadInfo, $module = null)
-//    {
-//        $targetDir   = self::getTargetDir('tmp', $module, true);
-//
-//        $tmpFileName = $targetDir . '/' . self::randomKey();
-//        $ext         = strtolower(pathinfo($uploadInfo['name'], PATHINFO_EXTENSION));
-//        if ($ext) {
-//            $tmpFileName .= '.' . $ext;
-//        }
-//        $absolutePath = Pi::path($tmpFileName);
-//        $result = move_uploaded_file($uploadInfo['tmp_name'], $absolutePath);
-//
-//        return $result ? $tmpFileName : false;
-//    }
-//
-//    public static function getTmpFileName($fileName, $module = null)
-//    {
-//        $result    = '';
-//
-//        $targetDir = self::getTargetDir('tmp', $module, true);
-//        $result    = $targetDir . '/' . self::randomKey();
-//        $ext       = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-//        if ($ext) {
-//            $result .= '.' . $ext;
-//        }
-//
-//        return $result;
-//    }
 
     public static function getAssetFileName($originalName, $type, $module = null)
     {

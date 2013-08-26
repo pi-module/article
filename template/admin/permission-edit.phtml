@@ -4,17 +4,7 @@ $this->bootstrap('js/bootstrap.min.js');
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
-<?php if (isset($error)) { ?>
-<div class="alert alert-error">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($error) ?>
-</div>
-<?php } elseif (isset($message)) { ?>
-<div class="alert alert-success">
-    <button class="close" data-dismiss="alert" type="button">×</button>
-    <?php echo $this->escape($message) ?>
-</div>
-<?php } ?>
+<?php include 'message-box.phtml' ?>
 
 <?php 
     $form->setAttribute('class', 'form-horizontal');
@@ -117,7 +107,7 @@ $this->bootstrap('js/bootstrap.min.js');
     // Display delete button when hover category title 
     $('.all-categories').on({'mouseenter' : function() {
         $(this).find('button.close').css('visibility', 'visible');
-    }, 'mouseleave' : function(){
+    }, 'mouseleave' : function() {
         $(this).find('button.close').css('visibility', 'hidden');
     }}, ".label.label-info");
     

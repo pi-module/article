@@ -1,19 +1,10 @@
 <?php
 /**
- * Article module compiled api
+ * Pi Engine (http://pialog.org)
  *
- * You may not change or alter any portion of this comment or credits
- * of supporting developers from this source code or any supporting source code
- * which is considered copyrighted (c) material of the original comment or credit authors.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *
- * @copyright       Copyright (c) Pi Engine http://www.xoopsengine.org
- * @license         http://www.xoopsengine.org/license New BSD License
- * @author          Zongshu Lin <zongshu@eefocus.com>
- * @since           1.0
- * @package         Module\Article
+ * @link         http://code.pialog.org for the Pi Engine source repository
+ * @copyright    Copyright (c) Pi Engine http://pialog.org
+ * @license      http://pialog.org/license.txt New BSD License
  */
 
 namespace Module\Article;
@@ -21,19 +12,30 @@ namespace Module\Article;
 use Pi;
 
 /**
- * Public APIs for article module itself 
+ * Compiled service APIs
+ * 
+ * @author Zongshu Lin <lin40553024@163.com>
  */
 class Compiled
 {
     protected static $module = 'article';
 
+    /**
+     * Compiled content
+     * 
+     * @param string  $srcType
+     * @param string  $content
+     * @param string  $destType
+     * @return string
+     */
     public static function compiled($srcType, $content, $destType)
     {
+        $content = Pi::service('markup')->render($content, $destType, $srcType);
         return $content;
     }
     
     /**
-     * Getting compiled article content, if it is not exists, reading content
+     * Get compiled article content, if it is not exists, reading content
      * from article table and compiling it.
      * 
      * @param int     $article  Article ID
@@ -60,8 +62,12 @@ class Compiled
             return false;
         }
         
-        // Compiling article content and saving into compiled table
-        $compiledContent = self::compiled($rowArticle->markup, $rowArticle->content, $type);
+        // Compiled article content and saving into compiled table
+        $compiledContent = self::compiled(
+            $rowArticle->markup, 
+            $rowArticle->content, 
+            $type
+        );
         $data            = array(
             'name'       => $name,
             'article'    => $rowArticle->id,

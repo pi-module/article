@@ -20,7 +20,6 @@ use Module\Article\Service;
 use Zend\Db\Sql\Expression;
 use Module\Article\Media;
 use Pi\File\Transfer\Upload as UploadHandler;
-use Pi\File\Transfer\Download;
 use ZipArchive;
 
 /**

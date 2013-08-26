@@ -44,31 +44,31 @@ $this->Backbone();
 
 <script>
 (function($) {
-   var page = {
-       url: "<?php echo $this->url('', array('controller' => 'permission', 'action' => '')) ?>".replace(/\/$/,""),
-       el : $("#jsList"),
-       $  : function(selector) {
-           return this.el.find(selector);
-       },
-       init: function() {
-           _.bindAll(this);
-           this.$(".one-action").click(this.oneAction);
-       },
-       oneAction: function(e) {
-           var el     = $(e.target),
-               id     = el.attr("data-id"),
-               val    = el.attr("data-value"),
-               status = el.attr("data-status");
-          if (status) {
-               location.href = this.url + val + "?id=" + id + "&status=" + status + "&from=" + this.encodeUrl();
-          } else {
-               location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
-          }
-       },
-       encodeUrl: function() {
-           return encodeURIComponent(location.href);
-       }
-   }
-   page.init();
+    var page = {
+        url: "<?php echo $this->url('', array('controller' => 'permission', 'action' => '')) ?>".replace(/\/$/,""),
+        el : $("#jsList"),
+        $  : function(selector) {
+            return this.el.find(selector);
+        },
+        init: function() {
+            _.bindAll(this);
+            this.$(".one-action").click(this.oneAction);
+        },
+        oneAction: function(e) {
+            var el     = $(e.target),
+                id     = el.attr("data-id"),
+                val    = el.attr("data-value"),
+                status = el.attr("data-status");
+           if (status) {
+                location.href = this.url + val + "?id=" + id + "&status=" + status + "&from=" + this.encodeUrl();
+           } else {
+                location.href = this.url + val + "?id=" + id + "&from=" + this.encodeUrl();
+           }
+        },
+        encodeUrl: function() {
+            return encodeURIComponent(location.href);
+        }
+    }
+    page.init();
 })(jQuery)
 </script>
