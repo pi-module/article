@@ -692,6 +692,24 @@ class DraftController extends ActionController
     }
     
     /**
+     * Get a empty template of a draft
+     * 
+     * @return array 
+     */
+    protected function getDraftEmptyTemplate()
+    {
+        $columns = Draft::getAvailableFields();
+        
+        $template = array();
+        foreach ($columns as $column) {
+            $template[$column] = null;
+        }
+        
+        return $template;
+    }
+
+
+    /**
      * Save article to draft.
      * 
      * @return ViewModel 
@@ -866,6 +884,7 @@ class DraftController extends ActionController
             'approve'  => $approve,
             'delete'   => $delete,
             'status'   => Draft::FIELD_STATUS_DRAFT,
+            'draft'    => $this->getDraftEmptyTemplate(),
         ));
         $this->view()->setTemplate('draft-edit');
     }
@@ -941,7 +960,7 @@ class DraftController extends ActionController
         $data                 = (array) $row;
         $data['category']     = $data['category'] ?: $this->config('default_category');
         $data['related']      = $data['related'] ? implode(self::TAG_DELIMITER, $data['related']) : '';
-        $data['tag']          = $data['tag'] ? implode(self::TAG_DELIMITER, $data['tag']) : '';
+        $data['tag']          = isset($data['tag']) ? implode(self::TAG_DELIMITER, $data['tag']) : '';
         $data['time_publish'] = $data['time_publish'] ? date('Y-m-d H:i:s', $data['time_publish']) : '';
         $data['time_update']  = $data['time_update'] ? date('Y-m-d H:i:s', $data['time_update']) : '';
 

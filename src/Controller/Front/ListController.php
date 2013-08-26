@@ -37,7 +37,7 @@ class ListController extends ActionController
         );
         
         //@todo Get limit from module config
-        $limit  = (int) $this->config('page_limit_front');
+        $limit  = (int) $this->config('page_limit_all');
         $limit  = $limit ?: 40;
         $offset = $limit * ($page - 1);
 

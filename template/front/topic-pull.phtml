@@ -115,15 +115,19 @@ $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
                     </td>
                     <td><?php echo $this->escape($article['category_title']) ?></td>
                     <td><?php echo isset($relation[$article['id']]) 
-                        ? $this->escape($relation[$article['id']]) : '' ?>
+                        ? $this->escape($relation[$article['id']]) 
+                        : '<span class="muted">' . __('No topics') . '</span>'
+                    ?>
                     </td>
                     <td><?php echo !empty($article['tag']) 
-                        ? $this->escape(join($article['tag'], ',')) : '&nbsp;'; ?>
+                        ? $this->escape(join($article['tag'], ','))
+                        : '<span class="muted">' . __('No tags') . '</span>'
+                    ?>
                     </td>
                     <td><?php echo !empty($article['user_name']) 
                         ? $this->escape($article['user_name']) : '&nbsp;'; ?>
                     </td>
-                    <td><?php echo $this->escape($article['visits']) ?></td>
+                    <td><?php echo $article['visits'] ? $this->escape($article['visits']) : 0 ?></td>
                     <td><?php echo date('Y-m-d', $article['time_publish']) ?></td>
                 </tr>
                 <?php } ?>

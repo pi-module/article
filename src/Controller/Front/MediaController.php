@@ -186,7 +186,7 @@ class MediaController extends ActionController
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_limit_front'] ?: 40;
+        $limit  = (int) $config['page_limit_all'] ?: 40;
         $types  = array();
         foreach (explode(',', $config['media_extension']) as $item) {
             $types[$item] = strtolower(trim($item));
@@ -233,6 +233,8 @@ class MediaController extends ActionController
             'types'         => $types,
             'form'          => $form,
             'imageTypes'    => $imageTypes,
+            'defaultLogo'   => Pi::service('asset')
+                ->getModuleAsset('image/default-media-thumb.png', $module),
         ));
     }
     
@@ -465,9 +467,18 @@ class MediaController extends ActionController
                 ->setRename($rename)
                 ->setExtension($allowedExtension)
                 ->setSize($mediaSize);
-
+        
+        // Get raw file name
+        if (empty($rawInfo)) {
+            $content = $this->request->getContent();
+            preg_match('/filename="(.+)"/', $content, $matches);
+            $rawName = $matches[1];
+        } else {
+            $rawName = null;
+        }
+        
         // Checking whether uploaded file is valid
-        if (!$upload->isValid()) {
+        if (!$upload->isValid($rawName)) {
             $return['message'] = implode(', ', $upload->getMessages());
             echo json_encode($return);
             exit ;
@@ -505,8 +516,11 @@ class MediaController extends ActionController
             if ($rowMedia->url && $rowMedia->url != $fileName) {
                 unlink(Pi::path($rowMedia->url));
             }
-
-            $rowMedia->url = $fileName;
+            
+            $rowMedia->url  = $fileName;
+            $rowMedia->type = $ext;
+            $rowMedia->size = filesize(Pi::path($fileName));
+            $rowMedia->meta = json_encode($imageSize);
             $rowMedia->save();
         } else {
             // Or save info to session

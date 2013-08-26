@@ -40,10 +40,14 @@ $this->jQuery();
                 ));
             ?>
             <tr>
-                <td><?php if ($category['image']) { ?>
-                    <img src="<?php echo Pi::url($category['image']) ?>" 
-                         alt="<?php echo $this->escape($category['title']) ?>">
-                <?php } ?>
+                <td><?php 
+                    if ($category['image']) {
+                        $image = Pi::url($category['image']);
+                    } else {
+                        $image = $defaultLogo;
+                    }
+                ?>
+                    <img src="<?php echo $this->escape($image) ?>" alt="<?php echo $this->escape($category['title']) ?>">
                 </td>
                 <td><?php echo $this->escape(str_repeat('- ', $category['depth']) . $category['title']) ?>
                     <div class="row-actions">

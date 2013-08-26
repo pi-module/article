@@ -337,11 +337,11 @@ class TopicController extends ActionController
         $topic      = Service::getParam($this, 'topic', '');
         $page       = Service::getParam($this, 'p', 1);
         $page       = $page > 0 ? $page : 1;
-        $offset     = ($page - 1) * $limit;
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
         $limit  = (int) $config['page_limit_management'] ?: 20;
+        $offset = ($page - 1) * $limit;
         $where  = array();
         
         if (!empty($topic)) {
@@ -472,7 +472,7 @@ class TopicController extends ActionController
             if (isset($relation[$row['article']])) {
                 $relation[$row['article']] .= ',' . $topics[$row['topic']];
             } else {
-                $relation[$row['article']] .= $topics[$row['topic']];
+                $relation[$row['article']] = $topics[$row['topic']];
             }
         }
 
@@ -807,6 +807,8 @@ class TopicController extends ActionController
             'topics'  => $rowset,
             'action'  => 'list-topic',
             'route'   => '.' . Service::getRouteName(),
+            'defaultLogo' => Pi::service('asset')
+                ->getModuleAsset('image/default-topic-thumb.png', $module),
         ));
     }
 
