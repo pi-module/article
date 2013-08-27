@@ -345,6 +345,7 @@ class ArticleController extends ActionController
             'time_publish'    => $row->time_publish,
             'time_update'     => $row->time_update,
             'image'           => $row->image,
+            'user_update'     => $row->user_update,
         );
         
         // Get extended fields

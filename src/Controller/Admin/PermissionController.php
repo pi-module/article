@@ -216,13 +216,17 @@ class PermissionController extends ActionController
         $model  = $this->getModel('user_level');
         $rowset = $model->select(array('uid' => $uid));
         foreach ($rowset as $row) {
-            // All category have been added to user
-            if (empty($category)) {
-                return false;
-            }
             // Skip if checking itself row
             if ($ownId and $ownId == $row->id) {
                 continue;
+            }
+            // Category already exists, then all category can not be insert
+            if (empty($category)) {
+                return false;
+            }
+            // All category have been added to user
+            if (empty($row->category)) {
+                return false;
             }
             // Checking whether category is exists
             $existCategory = explode(',', $row->category);
