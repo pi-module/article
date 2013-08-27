@@ -162,13 +162,13 @@
                 } ?>
                 <?php if (in_array('author', $elements)) { ?>
                 <strong><?php _e('Author:') ?></strong>
-                <input type="text" class="author span2" value="
-                    <?php echo isset($author['name']) ? $author['name'] : '' ?>">
+                <input type="text" class="author span2" 
+                    value="<?php echo isset($author['name']) ? $author['name'] . '[' . $author['id'] . ']' : '' ?>">
                 <?php } ?>
                 <?php if (!empty($user['name'])) { ?>
                 <strong><?php _e('Submitter:') ?></strong>
-                <input type="text" class="submitter span2" value="
-                    <?php echo $this->escape($user['name']) ?>">
+                <input type="text" class="submitter span2" 
+                    value="<?php echo $this->escape($user['name']) ?>">
                 <?php } ?>
             </div>
             <?php 
@@ -786,7 +786,7 @@ var BasicInputView = Backbone.View.extend({
     },
     typeahead: function (el, url, name) {
         el.typeahead({
-            source      : function (query,process) {
+            source      : function (query, process) {
                 var self = this;
                 return $.getJSON(url + encodeURIComponent(query), function (resp) {
                     self.data = resp.data;

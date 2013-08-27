@@ -401,9 +401,8 @@ class Service
 
         $where['article < ?'] = 1;
         if ('my' == $from) {
-            $where['uid'] = Pi::registry('user')->id;
+            $where['uid'] = Pi::registry('user')->id ?: 0;
         }
-        $where      = array_filter($where);
         $modelDraft = Pi::model('draft', $module);
         $select     = $modelDraft->select()
             ->columns(array(
@@ -433,12 +432,11 @@ class Service
         $modelArticle = Pi::model('article', $module);
         $where        = array(
             'status'   => Article::FIELD_STATUS_PUBLISHED,
-            'category' => $publishCategories,
+            'category' => !empty($publishCategories) ? $publishCategories : 0,
         );
         if ('my' == $from) {
-            $where['uid'] = Pi::registry('user')->id;
+            $where['uid'] = Pi::registry('user')->id ?: 0;
         }
-        $where = array_filter($where);
         $select = $modelArticle->select()
             ->columns(array('total' => new Expression('count(id)')))
             ->where($where);

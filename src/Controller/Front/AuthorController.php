@@ -541,7 +541,7 @@ class AuthorController extends ActionController
         foreach ($result as $val) {
             $resultset[] = array(
                 'id'    => $val['id'],
-                'name'  => $val['name'],
+                'name'  => $val['name'] . '[' . $val['id'] . ']',
                 'photo' => $val['photo'],
             );
         }

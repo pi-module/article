@@ -420,6 +420,12 @@ class ArticleController extends ActionController
             $categories[$key] = true;
         }
         $where['category'] = array_keys($categories);
+        
+        // Select article of mine
+        if ('my' == $from) {
+            $user   = Pi::service('user')->getUser();
+            $where['uid'] = $user->account->id ?: 0;
+        }
 
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
