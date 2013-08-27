@@ -302,8 +302,8 @@
                             if ($draft['time_save']) {
                                 echo __('Last edited at ') 
                                 . date('Y-m-d H:i', $draft['time_save'])
-                                . __('by ')
-                                . $user['name']; 
+                                . __(' by ')
+                                . (isset($userUpdate) ? $userUpdate['name'] : $user['name']); 
                             }
                         ?> 
                     </p>
