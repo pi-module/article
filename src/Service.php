@@ -731,7 +731,7 @@ class Service
         $levelIds   = array(0);
         $levelCategory = array();
         foreach ($userLevels as $level) {
-            $userCategories = explode(',', $level['category']);
+            $userCategories = array_filter(explode(',', $level['category']));
             $userCategories = $userCategories ?: array_keys($categories);
             $needCategories = empty($category) 
                 ? $userCategories 

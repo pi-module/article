@@ -995,6 +995,17 @@ class DraftController extends ActionController
                 ));
             }
         }
+        
+        // Get update user info
+        if ($data['user_update']) {
+            $userUpdate = Pi::model('user')->find($data['user_update']);
+            if ($userUpdate) {
+                $this->view()->assign('userUpdate', array(
+                    'id'   => $userUpdate->id,
+                    'name' => $userUpdate->identity,
+                ));
+            }
+        }
 
         // Get related articles
         if (in_array('related', $elements)) {

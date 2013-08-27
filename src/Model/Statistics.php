@@ -54,4 +54,53 @@ class Statistics extends Model
 
         return $result;
     }
+    
+    /**
+     * Get list
+     * 
+     * @param array       $where
+     * @param int|null    $offset
+     * @param int|null    $limit
+     * @param array|null  $columns
+     * @param string|null $order
+     * @return array 
+     */
+    public function getList(
+        $where = array(),
+        $offset = null,
+        $limit = null,
+        $columns = null,
+        $order = null
+    ) {
+        if (!empty($limit)) {
+            $offset = $offset ?: 0;
+        }
+        
+        $select = $this->select()->where($where);
+        
+        if ($offset !== null) {
+            $select->offset($offset);
+        }
+        
+        if (!empty($limit)) {
+            $select->limit($limit);
+        }
+        
+        $columns = $columns ?: self::getAvailableColumns();
+        if (!in_array('article', $columns)) {
+            $columns[] = 'article';
+        }
+        $select->columns($columns);
+        
+        $order = $order ?: 'id DESC';
+        $select->order($order);
+        
+        $resultSet = $this->selectWith($select);
+        $rows      = array();
+        foreach ($resultSet as $set) {
+            $rows[$set->article] = $set->toArray();
+        }
+        
+        return $rows;
+    }
 }
