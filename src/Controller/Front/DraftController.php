@@ -603,6 +603,9 @@ class DraftController extends ActionController
 
             $modelDraft->updateRow($data, array('id' => $id));
         }
+        
+        // Added current logged user as submitter if there is no submitter
+        $data['uid'] = $data['uid'] ?: Pi::registry('user')->id;
 
         // Save image
         $session    = Upload::getUploadSession($module, 'feature');
@@ -739,6 +742,7 @@ class DraftController extends ActionController
         }
         
         $data = $form->getData();
+        $data['user_update'] = Pi::registry('user')->id;
         $id   = $this->saveDraft($data);
         if (!$id) {
             return array(
