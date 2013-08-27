@@ -10,6 +10,7 @@
 namespace Module\Article\Controller\Front;
 
 use Pi\Mvc\Controller\ActionController;
+use Module\Article\Service;
 use Pi;
 
 /**

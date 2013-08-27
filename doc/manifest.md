@@ -573,7 +573,7 @@ Reference here: [Media APIs](https://github.com/pi-engine/pi/wiki/Service.media)
   |Title|title|varchar|255|' '|Not null|
   |Image|image|varchar|255|' '|Not null|
   |Slug|slug|varchar|64|NULL| |
-  |Theme|theme|varchar|64|' '|Not null|
+  |Template|template|varchar|64|' '|Not null|
   |Description|description|varchar|255|' '|Not null|
   |Active|active|tinyint|1|1|Not null|
 
@@ -622,6 +622,35 @@ Reference here: [Media APIs](https://github.com/pi-engine/pi/wiki/Service.media)
   |Category IDs|category|varchar|255|' '|Not null|
   |Level ID|level|unsigned int|10|0|Not null|
 
+* my_article_asset
+  * Saving relationship between article and media
+ 
+  |Description|Field |Type|Length|Default value|More|
+  |:--:|:--:|:----:|:-----------:|:---------:|:--:|
+  |Unique ID|id|unsigned int|10|NULL|Unique, not null, auto_increment|
+  |Media ID|media|unsigned int|10|0|Not null|
+  |Article ID|article|unsigned int|10|0|Not null|
+  |Type|type|enum('attachment', 'image')| |attachment|Not null|
+
+  * **Unique key**
+      * media-article
+  * **Key**
+      * article, type
+      * media
+
+* my_article_asset_draft
+  * Saving relationship between media and draft
+ 
+  |Description|Field |Type|Length|Default value|More|
+  |:--:|:--:|:----:|:-----------:|:---------:|:--:|
+  |Unique ID|id|unsigned int|10|NULL|Unique, not null, auto_increment|
+  |Media ID|media|unsigned int|10|0|Not null|
+  |Draft ID|draft|varchar|255|0|Not null|
+  |Type|type|enum('attachment', 'image')| |attachment|Not null|
+
+  * **Key**
+      * draft, type
+
 # 7. System Component
 * Comment
 * Message
@@ -630,6 +659,7 @@ Reference here: [Media APIs](https://github.com/pi-engine/pi/wiki/Service.media)
 * Timeline
 * Activity
 * Media
+
 # 8. Configuration
 
 ## Autosave
