@@ -580,6 +580,9 @@ class DraftController extends ActionController
                 explode(self::TAG_DELIMITER, $data['tag'])
             );
         }
+        
+        // Added current logged user as submitter if there is no submitter
+        $data['uid'] = $data['uid'] ?: Pi::registry('user')->id;
 
         if (empty($id)) {
             $data['uid']    = Pi::registry('user')->id;
@@ -604,9 +607,6 @@ class DraftController extends ActionController
             $modelDraft->updateRow($data, array('id' => $id));
         }
         
-        // Added current logged user as submitter if there is no submitter
-        $data['uid'] = $data['uid'] ?: Pi::registry('user')->id;
-
         // Save image
         $session    = Upload::getUploadSession($module, 'feature');
         if (isset($session->$id) || ($fakeId && isset($session->$fakeId))) {

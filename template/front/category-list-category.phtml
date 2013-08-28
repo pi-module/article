@@ -43,11 +43,15 @@ $this->jQuery();
                 <td><?php 
                     if ($category['image']) {
                         $image = Pi::url($category['image']);
+                ?>
+                        <img src="<?php echo $this->escape($image) ?>" alt="<?php echo $this->escape($category['title']) ?>">
+                <?php
                     } else {
-                        $image = $defaultLogo;
+                ?>
+                        <div class="list-image"><i class="icon-th-list"></i></div>
+                <?php
                     }
                 ?>
-                    <img src="<?php echo $this->escape($image) ?>" alt="<?php echo $this->escape($category['title']) ?>">
                 </td>
                 <td><?php echo $this->escape(str_repeat('- ', $category['depth']) . $category['title']) ?>
                     <div class="row-actions">

@@ -7,7 +7,6 @@ if ($details['seo']['description']) {
     $this->headMeta()->setName('description', $details['seo']['description']);
 }
 ?>
-<?php $this->bootstrap('js/bootstrap.min.js') ?>
 
 <style>
     .article-share {
@@ -239,13 +238,15 @@ if ($details['seo']['description']) {
         <?php } ?>
         <?php if ($details['author']) { ?>
         <div class="dashed"></div>
-        <div class="title mb10" style="margin: 15px 0px 15px 0px; color: #333333"><?php _e('Author introduction') ?></div>
+        <div class="title mb10" style="margin: 15px 0px 15px 0px; color: #333333">
+            <?php _e('Author introduction') ?>
+        </div>
         <div class="dashed"></div>
         <div class="media" style="margin-top: 10px">
             <a class="pull-left" href="#">
                 <img class="" src="<?php echo Pi::url($details['author']['photo']) ?>" 
                      alt="<?php echo $this->escape($details['author']['name']) ?>" 
-                     style="margin-right: 15px; width: <?php echo $this->escape($config['author_width']) ?>px; height: <?php echo $this->escape($config['author_height']) ?>px;"/>
+                     style="margin-right: 15px; width: <?php echo $this->escape($config['author_width']) ?>px; height: <?php echo $this->escape($config['author_height']) ?>px; border-radius: 5px">
             </a>
             <div class="media-body">
                 <div style="font-size: 16px"><?php echo $this->escape($details['author']['name']) ?></div>

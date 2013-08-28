@@ -46,6 +46,19 @@ This is the first version of article module, it provides user complete function 
   * Edit/Approve pending articles
   * Edit/Active/Deactivate/Delete published articles
   * Search articles by title or category
+* Article compose
+  * Basic items: Subject/Subtitle/Summary/Category/Author/Source/Content
+  * Extended items: Slug/SEO Title/SEO Keywords/SEO Description
+  * Basic function: 
+      * Edit publish time
+      * Save/Submit/Approve draft
+      * Preview draft
+      * Add feature image
+      * Batch add images and insert image into content
+      * Batch add attachment and insert attachment into content
+      * Search related articles by title
+      * Add related articles
+      * Segment content
 * Browse article
   * Browse article homepage
   * Homepage can be dress up
@@ -67,3 +80,25 @@ This is the first version of article module, it provides user complete function 
   * Normal
 
 ### Statistics result browse
+* Article count in a period group by category
+* Ten top articles in period
+* Max article count of submitter in period
+
+### Blocks
+* Top parent categories and their children list
+* Recommended articles with slideshow
+* Simple article search form
+* Newest published articles or topic articles
+* Hot published articles or topic articles
+* Custom recommended articles
+* Submitter statistics
+* Some blocks allowed to choose template, the provided templates are:
+  * Common article list
+  * Article list with summary
+  * Article list with feature
+  * Subfield list
+  * Article list with number rank
+
+### API for Other Module
+* Get compose URL - getComposeUrl()
+* Get list of a submitter - getListBySubmitter(...)
