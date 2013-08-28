@@ -43,9 +43,6 @@ var page = {
     $       : function(selector) {
        return this.form.find(selector);
     },
-    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="'
-                         + '<?php echo $defaultMediaImage ?>'
-                         + '" />',
     mediaFakeId : '<?php echo uniqid() ?>'
 };
 
@@ -117,7 +114,7 @@ var UploadView = Backbone.View.extend({
                 'action'     => 'remove'
             )
         ); ?>fake_id-'+ page.mediaFakeId).done(function() {
-            $("#media-image").html(page.mediaDefaultTemplate);
+            $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
             }

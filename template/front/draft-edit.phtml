@@ -627,9 +627,6 @@ var page = {
     status  : "<?php echo $this->escape($draft['status']) ?>",
     form    : $("form.row-fluid"),
     from    : "<?php echo isset($from) ? $this->escape($from) : '' ?>",
-    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' 
-                         + '<?php echo $this->escape($defaultMediaImage) ?>' 
-                         + '" />',
     mediaFakeId         : '<?php echo uniqid() ?>',
     featureFakeId       : '<?php echo uniqid() ?>',
     init    : function () {
@@ -1447,7 +1444,7 @@ var FeatureView = Backbone.View.extend({
                 'action'     => 'remove'
             )
         ); ?>fake_id-'+ page.mediaFakeId).done(function() {
-            $("#media-image").html(page.mediaDefaultTemplate);
+            $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
             }
