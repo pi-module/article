@@ -844,7 +844,7 @@ var BasicInputView = Backbone.View.extend({
         var tar = $(e.currentTarget).removeClass("error");
         $.getJSON("<?php echo $this->url(
             '',
-            array('controller' => 'ajax', 'action' => 'check.article.exists')
+            array('controller' => 'article', 'action' => 'check.article.exists')
         ); ?>", {
             subject : $.trim(tar.val()),
             id      : page.$("[name=article]").val()

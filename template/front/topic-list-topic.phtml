@@ -23,12 +23,15 @@ $this->Backbone();
                 <td>
                 <?php if ($topic['image']) {
                     $image = Pi::url($topic['image']);
+            ?>
+                    <img src="<?php echo $this->escape($image) ?>"
+                     alt="<?php echo $this->escape($topic['title']); ?>" style="width: 40px">
+            <?php
                 } else {
-                    $image = $defaultLogo;
+            ?>
+                    <div class="list-image"><i class="icon-book"></i></div>
+            <?php
                 } ?>
-                <img src="<?php echo $this->escape($image) ?>"
-                     alt="<?php echo $this->escape($topic['title']); ?>" 
-                     style="width: 40px">
                 </td>
                 <td><a href="<?php echo $this->url($route, array(
                     'controller' => 'topic',

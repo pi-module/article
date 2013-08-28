@@ -265,18 +265,24 @@ td {
     width: 100px;
     height: 75px;
 }
-.tag-list, .manufacturer-list, .part-list {
+.tag-list,
+.manufacturer-list,
+.part-list {
     position: relative;
     cursor: text;
     border: 1px solid #ccc;
     padding: 5px 4px;
     border-radius: 3px;
 }
-.tag-list > input, .manufacturer-list > input, .part-list > input {
+.tag-list > input,
+.manufacturer-list > input,
+.part-list > input {
     width: 98%;
     border: none;
 }
-.tag-list .label, .manufacturer-list .label, .part-list .label {
+.tag-list .label,
+.manufacturer-list .label,
+.part-list .label {
     display: inline-block;
     margin: 0 6px 2px 0;
     cursor: default;
@@ -285,11 +291,15 @@ td {
     line-height: 20px;
     padding: 0 6px;
 }
-.tag-list .icon-remove, .manufacturer-list .icon-remove, .part-list .icon-remove {
+.tag-list .icon-remove,
+.manufacturer-list .icon-remove,
+.part-list .icon-remove {
     margin-left: 8px;
     cursor: pointer;
 }
-.tag-list .typeahead, .manufacturer-list .typeahead, .part-list .typeahead {
+.tag-list .typeahead,
+.manufacturer-list .typeahead,
+.part-list .typeahead {
     width: 99%;
     overflow: auto;
 }
@@ -313,7 +323,8 @@ td {
 .article-related-list li:hover {
     background: #D8EEF6;
 }
-.article-related-list .icon-remove-sign, .a-related-modal li .icon-remove-sign {
+.article-related-list .icon-remove-sign,
+.a-related-modal li .icon-remove-sign {
     height: 20px;
     float: right;
     cursor: pointer;
@@ -323,7 +334,8 @@ td {
 div.a-related-modal {
     width: 650px;
 }
-.a-related-modal input[type='text'], .a-related-modal select {
+.a-related-modal input[type='text'],
+.a-related-modal select {
     width: 160px;
 }
 .a-related-modal .widget-header {
@@ -377,10 +389,13 @@ div.a-related-modal {
 .time-control-item .icon-sort-down {
     top: 10px;
 }
-.article-flow .save-time, .article-flow .cancel-time, .time-edit-wrap {
+.article-flow .save-time,
+.article-flow .cancel-time,
+.time-edit-wrap {
     display: none;
 }
-.editing .save-time, .editing .cancel-time {
+.editing .save-time,
+.editing .cancel-time {
     display: inline;
 }
 .editing .edit-time {
@@ -389,7 +404,8 @@ div.a-related-modal {
 .editing .time-edit-wrap {
     display: block;
 }
-.form-inline input.error, .form-inline select.error {
+.form-inline input.error,
+.form-inline select.error {
     border-color: #B94A48;
     box-shadow: 0 1px 1px rgba(200, 0, 0, .1) inset;
 }
@@ -410,17 +426,23 @@ div.a-related-modal {
 [name="subject"] {
     background: url(../image/scale.png) repeat-x 0 bottom;
 }
-#jsGallery .icon-caret-down, #jsGallery .icon-caret-up, #jsSeo .icon-caret-up, #jsSeo .icon-caret-down {
+#jsGallery .icon-caret-down,
+#jsGallery .icon-caret-up,
+#jsSeo .icon-caret-up,
+#jsSeo .icon-caret-down {
     float: right;
     color: #808080;
 }
-#jsGallery .icon-caret-down, #jsSeo  .icon-caret-down {
+#jsGallery .icon-caret-down,
+#jsSeo .icon-caret-down {
     display: none;
 }
-#jsGallery .active .icon-caret-down, #jsSeo  .active .icon-caret-down {
+#jsGallery .active .icon-caret-down,
+#jsSeo  .active .icon-caret-down {
     display: inline-block;
 }
-#jsGallery .active .icon-caret-up, #jsSeo  .active .icon-caret-up {
+#jsGallery .active .icon-caret-up,
+#jsSeo .active .icon-caret-up {
     display: none;
 }
 .modal.a-related-modal {
@@ -432,4 +454,16 @@ div.a-related-modal {
 }
 .a-related-modal .ellipsis {
     width: 210px;
+}
+.list-image {
+    border: 1px solid #cccccc;
+    border-radius: 3px 3px 3px 3px;
+    color: #a8a8a8;
+    display: block;
+    height: 40px;
+    line-height: 40px;
+    vertical-align: middle;
+    text-align: center;
+    width: 40px;
+    font-size: 30px;
 }
