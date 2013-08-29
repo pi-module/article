@@ -1,44 +1,23 @@
 <?php
-$this->Backbone();
+    $this->css(array(
+        $this->assetModule('script/article-admin.css'),
+    ));
+    $this->jQuery();
+    $this->Backbone();
 ?>
 <div>
     <div class="span3">
         <?php include 'config-nav.phtml' ?>
     </div>
     
-    <div id="jsList" class="span12">
-        <h2 class="page-header"><?php echo $this->escape($title); ?></h2>
+    <div class="span12">
+        <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
-        <?php if (isset($error)) { ?>
-        <div class="alert alert-error">
-            <button class="close" data-dismiss="alert" type="button">×</button>
-            <?php echo $this->escape($error) ?>
-        </div>
-        <?php } elseif (isset($message)) { ?>
-        <div class="alert alert-success">
-            <button class="close" data-dismiss="alert" type="button">×</button>
-            <?php echo $this->escape($message) ?>
-        </div>
-        <?php } ?>
+        <?php include 'message-box.phtml' ?>
 
-        <?php 
-            $form->setAttribute('class', 'form-horizontal');
-            echo $this->form()->openTag($form);
-            $this->formElementErrors()->setMessageOpenFormat('');
-            $this->formElementErrors()->setMessageCloseString('');
-            $this->formElementErrors()->setMessageSeparatorString('');
-        ?>
         <?php echo $this->form()->openTag($form) ?>
-        <div>
-        <?php $element = $form->get('mode'); ?>
-            <div><?php echo $this->formLabel($element) ?></div>
+        <div><?php $element = $form->get('mode'); ?>
             <div><?php echo $this->formElement($element) ?></div>
-            <?php if ($this->formElementErrors($element)) { ?>
-                <div class="alert alert-error" style="margin-top: 8px">
-                    <button class="close" data-dismiss="alert" type="button">×</button>
-                    <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-                </div>
-            <?php } ?>
         </div>
 
         <div id="article-config-form-elements" 
@@ -49,15 +28,9 @@ $this->Backbone();
             ?>>
             <h4 class="span12 page-header"><?php _e('Form Elements') ?></h4>
             <?php foreach ($items as $name => $item) { ?>
-                <div class="span4">
                 <?php $element = $form->get($name); ?>
+                <div class="span3 control-group<?php if ($this->formElementErrors($element)) echo ' error' ?>">
                     <div><?php echo $this->formElement($element) ?></div>
-                    <?php if ($this->formElementErrors($element)) { ?>
-                        <div class="alert alert-error" style="margin-top: 8px">
-                            <button class="close" data-dismiss="alert" type="button">×</button>
-                            <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-                        </div>
-                    <?php } ?>
                 </div>
             <?php } ?>
         </div>

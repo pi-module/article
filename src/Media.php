@@ -71,6 +71,7 @@ class Media
             $item['previewUrl'] = Pi::engine()->application()
                                               ->getRouter()
                                               ->assemble(array(
+                                                  'module'     => $module,
                                                   'controller' => 'media',
                                                   'action'     => 'detail',
                                                   'id'         => $row->id,

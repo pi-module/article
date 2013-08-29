@@ -30,11 +30,12 @@ class Level extends Select
             $module = $this->getOption('module') 
                 ?: Pi::service('module')->current();
             $model  = Pi::model('level', $module);
-            $rowset = $model->select(array());
-            $levels = array(0 => __('Null'));
+            $rowset = $model->select(array('active' => 1));
+            $levels = array();
             foreach ($rowset as $row) {
                 $levels[$row->id] = $row->title;
             }
+            $levels = empty($levels) ? array(0 => __('Null')) : $levels;
             $this->valueOptions = $levels;
         }
 
