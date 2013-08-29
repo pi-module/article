@@ -1,4 +1,25 @@
 /* List page */
+.tab-content >.active.table {
+    display: table;
+}
+.nav-list > .active > a {
+    cursor: text;
+}
+.row-actions {
+    visibility: hidden;
+}
+tr:hover .row-actions {
+    visibility: visible;
+}
+td {
+    word-break: break-all;
+}
+#pi-article .nav-pills > .active > a {
+    color: #333;
+    font-weight: bold;
+    background: none;
+    cursor: text;
+}
 #jsList  .table-striped tbody tr:nth-child(2n+1) th {
     background: #eee;
 }
@@ -36,26 +57,4 @@ div .well {
     float: none;
     margin-left: 3px;
     visibility: hidden;
-}
-
-.tab-content >.active.table {
-    display: table;
-}
-.nav-list > .active > a {
-    cursor: text;
-}
-.row-actions {
-    visibility: hidden;
-}
-tr:hover .row-actions {
-    visibility: visible;
-}
-td {
-    word-break: break-all;
-}
-#pi-article .nav-pills > .active > a {
-    color: #333;
-    font-weight: bold;
-    background: none;
-    cursor: text;
 }
