@@ -1,58 +1,38 @@
 <?php
-$this->jQuery();
-$this->bootstrap();
+    $this->jQuery();
+    $this->bootstrap();
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
 <?php include 'message-box.phtml' ?>
 
-<?php 
-    $form->setAttribute('class', 'form-horizontal');
-    echo $this->form()->openTag($form);
-    $this->formElementErrors()->setMessageOpenFormat('');
-    $this->formElementErrors()->setMessageCloseString('');
-    $this->formElementErrors()->setMessageSeparatorString('');
-?>
-
-<?php $this->form()->openTag($form) ?>
+<?php echo $this->form()->openTag($form) ?>
 <div class="span12">
-    <div class="control-group">
     <?php $element = $form->get('name') ?>
+    <div class="control-group<?php if ($this->formElementErrors($element)) echo ' error' ?>">
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
-        <div class="controls"><?php echo $this->formElement($element) ?></div>
-        <?php if ($this->formElementErrors($element)) { ?>
-            <div class="alert alert-error" style="margin-top: 8px">
-                <button class="close" data-dismiss="alert" type="button">×</button>
-                <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-            </div>
-        <?php } ?>
+        <div class="controls">
+            <?php echo $this->formElement($element) ?>
+            <span class="help-inline"><?php echo $this->formElementErrors($element) ?></span>
+        </div>
     </div>
 
-    <div class="control-group">
     <?php $element = $form->get('title') ?>
+    <div class="control-group<?php if ($this->formElementErrors($element)) echo ' error' ?>">
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
-        <div class="controls"><?php echo $this->formElement($element) ?></div>
-        <?php if ($this->formElementErrors($element)) { ?>
-            <div class="alert alert-error" style="margin-top: 8px">
-                <button class="close" data-dismiss="alert" type="button">×</button>
-                <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-            </div>
-        <?php } ?>
+        <div class="controls">
+            <?php echo $this->formElement($element) ?>
+            <span class="help-inline"><?php echo $this->formElementErrors($element) ?></span>
+        </div>
     </div>
     
-    <div class="control-group">
     <?php $element = $form->get('description') ?>
+    <div class="control-group">
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
-        <?php if ($this->formElementErrors($element)) { ?>
-            <div class="alert alert-error" style="margin-top: 8px">
-                <button class="close" data-dismiss="alert" type="button">×</button>
-                <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-            </div>
-        <?php } ?>
     </div>
 </div>
 

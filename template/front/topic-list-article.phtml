@@ -1,8 +1,8 @@
 <?php
-$this->bootstrap();
-$this->css($this->assetModule('script/article-ui.css'));
-$this->jQuery();
-$this->Backbone();
+    $this->bootstrap();
+    $this->css($this->assetModule('script/article-front-admin.css'));
+    $this->jQuery();
+    $this->Backbone();
 ?>
 <?php include 'topic-nav.phtml' ?>
 
@@ -12,9 +12,9 @@ $this->Backbone();
             <div class="clearfix">
                 <div class="pull-left form-inline">
                     <button class="remove-pull btn btn-primary" 
-                            data-content="<?php echo $this->url('', array('
-                                action' => 'remove-pull',
-                                'id'    => '')
+                            data-content="<?php echo $this->url('', array(
+                                'action' => 'remove-pull',
+                                'id'     => '')
                             ) ?>">
                                 <?php _e('Remove Pull') ?>
                     </button> 

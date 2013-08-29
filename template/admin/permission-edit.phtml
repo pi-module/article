@@ -1,32 +1,20 @@
 <?php
-$this->jQuery();
-$this->bootstrap('js/bootstrap.min.js');
+    $this->jQuery();
+    $this->bootstrap('js/bootstrap.min.js');
+    $this->css($this->assetModule('script/article-admin.css'));
+    $this->Backbone();
 ?>
 <h2 class="page-header"><?php echo $this->escape($title) ?></h2>
 
 <?php include 'message-box.phtml' ?>
 
-<?php 
-    $form->setAttribute('class', 'form-horizontal');
-    echo $this->form()->openTag($form);
-    $this->formElementErrors()->setMessageOpenFormat('');
-    $this->formElementErrors()->setMessageCloseString('');
-    $this->formElementErrors()->setMessageSeparatorString('');
-?>
-
-<?php $this->form()->openTag($form) ?>
+<?php echo $this->form()->openTag($form) ?>
 <div class="span12">
     <div class="control-group">
     <?php $element = $form->get('uid') ?>
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
-        <?php if ($this->formElementErrors($element)) { ?>
-            <div class="alert alert-error" style="margin-top: 8px">
-                <button class="close" data-dismiss="alert" type="button">×</button>
-                <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-            </div>
-        <?php } ?>
     </div>
 
     <div class="control-group">
@@ -40,31 +28,32 @@ $this->bootstrap('js/bootstrap.min.js');
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls">
             <div class="input-append">
-                <input name="select-category" class="span3" type="text" />
-                <input name="select-id" type="hidden" />
+                <input name="select-category" class="span3" type="text">
+                <input name="select-id" type="hidden">
                 <div class="btn-group">
                     <button class="btn dropdown-toggle" data-url="<?php echo $this->url('admin', array('action' => 'get-category')) ?>" data-toggle="dropdown">
                         <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" style='left: -220px'>
+                    <ul class="dropdown-menu">
                         <li><a><?php echo __('Please wait ...') ?></a></li>
                     </ul>
                 </div>
-                <a class="btn btn-small" style="margin-left: 5px; border-radius: 4px 4px 4px 4px; height: 24px; line-height: 24px">
-                    <i class="icon-plus"></i>
-                </a>
             </div>
+            <a class="article-add-category-button btn btn-small">
+                <i class="icon-plus"></i>
+            </a>
         </div>
     </div>
     
     <div class="span12">
-        <div class="user-level-category" style="float: left; width: 100%">
-            <div class="all-categories">
+        <div class="article-user-level-category">
+            <div class="article-all-categories">
                 <?php foreach ($categories as $categoryId => $category) { ?>
-                <div class="each-category">
-                    <div class="label label-info" data-id="<?php echo $categoryId ?>" data-name="<?php echo $category ?>" style="height: 20px; line-height: 20px; float: left; margin: 5px">
+                <div class="article-each-category">
+                    <div class="label label-info" data-id="<?php echo $this->escape($categoryId) ?>" 
+                         data-name="<?php echo $this->escape($category) ?>">
                         <?php echo $this->escape($category) ?>
-                        <button class="close" style="float: none; margin-left: 3px; visibility: hidden" data-dismiss="alert" type="button">×</button>
+                        <button class="close" data-dismiss="alert" type="button">×</button>
                     </div>
                 </div>
                 <?php } ?>
@@ -77,12 +66,6 @@ $this->bootstrap('js/bootstrap.min.js');
         <div class="control-label"><?php echo $this->formLabel($element) ?></div>
         <i class="icon-question-sign" data-placement="bottom" data-original-title="<?php echo $element->getAttribute('description') ?>"></i>
         <div class="controls"><?php echo $this->formElement($element) ?></div>
-        <?php if ($this->formElementErrors($element)) { ?>
-            <div class="alert alert-error" style="margin-top: 8px">
-                <button class="close" data-dismiss="alert" type="button">×</button>
-                <?php echo $this->formElementErrors($element, array('class' => 'alert alert-error')) ?>
-            </div>
-        <?php } ?>
     </div>
     
     <div><?php $element = $form->get('security') ?>
@@ -101,18 +84,33 @@ $this->bootstrap('js/bootstrap.min.js');
 
 <?php $this->form()->closeTag() ?>
 
+<script id="article-template-category" type="text/template">
+    <div class="article-each-category">
+        <div class="label label-info" data-id="<%= id %>" data-name="<%= title %>">
+            <%= title %>
+            <button class="close" data-dismiss="alert" type="button">×</button>
+        </div>
+    </div>
+</script>
+
 <script>
+    var page = {
+        categoryListTemplate : function(key, value) {
+            return '<li data-category="' + key + '"><a style="cursor: pointer">' + value + '</a></li>';
+        }
+    };
+    
     $('.icon-question-sign').tooltip();
     
     // Display delete button when hover category title 
-    $('.all-categories').on({'mouseenter' : function() {
+    $('.article-all-categories').on({'mouseenter' : function() {
         $(this).find('button.close').css('visibility', 'visible');
     }, 'mouseleave' : function() {
         $(this).find('button.close').css('visibility', 'hidden');
     }}, ".label.label-info");
     
     // Remove category when click close button
-    $('.all-categories').on('click', 'button.close', function() {
+    $('.article-all-categories').on('click', 'button.close', function() {
         var id    = $(this).parent().data('id');
         var value = $('input[name="category"]').val();
         var ids   = new Array;
@@ -143,7 +141,7 @@ $this->bootstrap('js/bootstrap.min.js');
                     if (result.status) {
                         var categories   = result.content;
                         for (var i in categories) {
-                            content += '<li data-category="' + i + '"><a style="cursor: pointer">' + categories[i] + '</a></li>';
+                            content += page.categoryListTemplate(i, categories[i]);
                         }
                     } else {
                         content = '<li><a>' + result.content + '</a></li>';
@@ -181,10 +179,6 @@ $this->bootstrap('js/bootstrap.min.js');
         url += 'category/' + val;
         var obj = $(this);
 
-        //if ((event.keyCode >= 48 && event.keyCode <= 57)
-        //    || (event.keyCode >= 65 && event.keyCode <= 90)
-        //    || event.keyCode == 173
-        //    || event.keyCode == 16) {
         if (val.length > 0) {
             $.get(url, function(result) {
                 result = $.parseJSON(result);
@@ -196,7 +190,7 @@ $this->bootstrap('js/bootstrap.min.js');
                             first   = categories[i];
                             firstId = i;
                         }
-                        content += '<li data-category="' + i + '"><a style="cursor: pointer">' + categories[i] + '</a></li>';
+                        content += page.categoryListTemplate(i, categories[i]);;
                     }
                     obj.parent().children().find('ul.dropdown-menu').html(content);
                     obj.parent().children().find('ul.dropdown-menu').css('display', 'block');
@@ -245,17 +239,13 @@ $this->bootstrap('js/bootstrap.min.js');
                 exit;
             }
         }
-        content = '<div class="each-category">'
-                    + '<div class="label label-info" data-id="' 
-                    + id + '" data-name="' 
-                    + title 
-                    + '" style="height: 20px; line-height: 20px; float: left; margin: 5px">' 
-                    + title
-                    + '<button class="close" style="float: none; margin-left: 3px; visibility: hidden" data-dismiss="alert" type="button">'
-                    + '×</button>'
-                    + '</div></div>';
-        $('div.all-categories').append(content);
-
+        $('div.article-all-categories').append(_.template(
+            $('#article-template-category').html(), 
+            {
+                id    : id,
+                title : title
+            })
+        );
         $('input[name="select-category"]').val('');
         $('input[name="select-id"]').val('');
         
@@ -267,5 +257,4 @@ $this->bootstrap('js/bootstrap.min.js');
         }
         $('input[name="category"]').val(existIds);
     });
-    
 </script>

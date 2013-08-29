@@ -185,7 +185,7 @@ EOD;
                 return Service::renderForm(
                     $this, 
                     $form, 
-                    __('There are some error occured!')
+                    __('Items marked red is required!')
                 );
             }
             

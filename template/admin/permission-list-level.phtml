@@ -1,8 +1,11 @@
 <?php
-$this->bootstrap();
-$this->css($this->assetModule('script/article-ui.css'));
-$this->jQuery();
-$this->Backbone();
+    $this->bootstrap();
+    $this->css(array(
+        $this->assetModule('script/article-ui.css'),
+        $this->assetModule('script/article-admin.css'),
+    ));
+    $this->jQuery();
+    $this->Backbone();
 ?>
 
 <div>
@@ -12,7 +15,9 @@ $this->Backbone();
 
     <div id="jsList" class="span12">
         <div class="form-inline">
-            <a class="btn" href="<?php echo $this->url('',array('action' => 'add-level')); ?>"><?php _e('Add'); ?></a>
+            <a class="btn" href="<?php echo $this->url('',array('action' => 'add-level')) ?>">
+                <?php _e('Add') ?>
+            </a>
         </div>
         <table class="table table-striped">
             <tbody>
@@ -21,17 +26,29 @@ $this->Backbone();
                     <th><?php _e('Description') ?></th>
                     <th><?php _e('Created Time') ?></th>
                 </tr>
-                <?php foreach ($levels as $level) { ?>
+                <?php 
+                    foreach ($levels as $level) { 
+                        $editUrl   = $this->url('', array('action' => 'edit-level', 'id' => $level['id']));
+                        $deleteUrl = $this->url('', array('action' => 'delete-level', 'id' => $level['id']));
+                ?>
                 <tr>
                     <td><?php echo $this->escape($level['title']) ?>
                     <?php if (!$level['active']) { ?> - <strong class="text-warning"><?php _e('Deactive') ?></strong> <?php } ?>
                         <div class="row-actions">
-                            <a href="<?php echo $this->url('', array('action' => 'edit-level', 'id' => $level['id'])) ?>"><?php _e('Edit') ?></a> |
-                            <a href="<?php echo $this->url('', array('action' => 'delete-level', 'id' => $level['id'])) ?>" onclick="return window.confirm('Really delete?');"><?php _e('Delete') ?></a> |
+                            <a href="<?php echo $this->escape($editUrl) ?>"><?php _e('Edit') ?></a> |
+                            <a href="<?php echo $this->escape($deleteUrl) ?>" 
+                               onclick="return window.confirm('Do you really want to delete it?');">
+                                   <?php _e('Delete') ?></a> |
                             <?php if ($level['active']) { ?>
-                                <a class="one-action" data-id="<?php echo $this->escape($level['id']) ?>" data-value="active" data-status="0" href="javascript:void(0)"><?php _e('Deactivate') ?></a>
+                                <a class="one-action" data-id="<?php echo $this->escape($level['id']) ?>" 
+                                   data-value="active" data-status="0" href="javascript:void(0)">
+                                       <?php _e('Deactivate') ?>
+                                </a>
                             <?php } else { ?>
-                                <a class="one-action" data-id="<?php echo $this->escape($level['id']) ?>" data-value="active" data-status="1" href="javascript:void(0)"><?php _e('Active') ?></a>
+                                <a class="one-action" data-id="<?php echo $this->escape($level['id']) ?>" 
+                                   data-value="active" data-status="1" href="javascript:void(0)">
+                                       <?php _e('Active') ?>
+                                </a>
                             <?php } ?>
                         </div>
                     </td>
