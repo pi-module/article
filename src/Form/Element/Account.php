@@ -51,11 +51,11 @@ class Account extends Select
                                       ->columns(array('id', 'name'))
                                       ->order('name ASC');
             $rowset = $model->selectWith($select);
-            $account = array(0 => __('Null'));
+            $account = array();
             foreach ($rowset as $row) {
                 $account[$row->id] = $row->name;
             }
-            
+            $account = empty($account) ? array(0 => __('Null')) : $account;
             $this->valueOptions = $account;
         }
 

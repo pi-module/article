@@ -889,6 +889,7 @@ class DraftController extends ActionController
             'delete'   => $delete,
             'status'   => Draft::FIELD_STATUS_DRAFT,
             'draft'    => $this->getDraftEmptyTemplate(),
+            'currentDelete' => true,
         ));
         $this->view()->setTemplate('draft-edit');
     }

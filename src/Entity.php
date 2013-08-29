@@ -182,6 +182,7 @@ class Entity
             'pages',
             'summary',
             'time_publish',
+            'visits',
         );
 
         $result = self::getAvailableArticlePage(

@@ -1,51 +1,4 @@
-div.modal {
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-}
-div.modal-header {
-    padding: 6px 15px;
-}
-div.modal-footer {
-    padding: 10px 15px;
-}
-.mr10 {
-    margin-right: 10px;
-}
-div.widget {
-    border: none;
-    margin-bottom: 20px;
-}
-.widget-header {
-    padding: 5px 10px;
-    background: #eee;
-    border: 1px solid #ccc;
-}
-.widget-header * {
-    margin-bottom: 0;
-}
-.widget-body {
-    border: 1px solid #ccc;
-    border-top: none;
-    padding: 10px;
-}
-.widget-body ul {
-    margin: 0;
-}
-.ellipsis {
-    display: inline-block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    vertical-align: middle;
-}
-.link-btn {
-    cursor: pointer;
-    text-decoration: underline;
-    color: #0088cc;
-}
-
-/*article list*/
+/* List page */
 .tab-content >.active.table {
     display: table;
 }
@@ -79,7 +32,8 @@ td {
 #jsList .form-search {
     margin: 0 20px 0 0;
 }
-/*upload*/
+
+/* Image Upload */
 .upload-image-bg {
     border: 1px solid #ccc;
     background: #FAFAFA;
@@ -115,7 +69,53 @@ td {
     text-align: center;
     border-radius: 3px;
 }
-/*draft-form*/
+/* draft edit page */
+div.widget {
+    border: none;
+    margin-bottom: 20px;
+}
+.widget-header {
+    padding: 5px 10px;
+    background: #eee;
+    border: 1px solid #ccc;
+}
+.widget-header * {
+    margin-bottom: 0;
+}
+.widget-body {
+    border: 1px solid #ccc;
+    border-top: none;
+    padding: 10px;
+}
+.widget-body ul {
+    margin: 0;
+}
+.ellipsis {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.link-btn {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #0088cc;
+}
+div.modal {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+div.modal-header {
+    padding: 6px 15px;
+}
+div.modal-footer {
+    padding: 10px 15px;
+}
+.mr10 {
+    margin-right: 10px;
+}
 .attachment-list {
     border: 1px solid #ccc;
     border-radius: 3px;
@@ -265,24 +265,18 @@ td {
     width: 100px;
     height: 75px;
 }
-.tag-list,
-.manufacturer-list,
-.part-list {
+.tag-list {
     position: relative;
     cursor: text;
     border: 1px solid #ccc;
     padding: 5px 4px;
     border-radius: 3px;
 }
-.tag-list > input,
-.manufacturer-list > input,
-.part-list > input {
+.tag-list > input {
     width: 98%;
     border: none;
 }
-.tag-list .label,
-.manufacturer-list .label,
-.part-list .label {
+.tag-list .label {
     display: inline-block;
     margin: 0 6px 2px 0;
     cursor: default;
@@ -291,15 +285,11 @@ td {
     line-height: 20px;
     padding: 0 6px;
 }
-.tag-list .icon-remove,
-.manufacturer-list .icon-remove,
-.part-list .icon-remove {
+.tag-list .icon-remove {
     margin-left: 8px;
     cursor: pointer;
 }
-.tag-list .typeahead,
-.manufacturer-list .typeahead,
-.part-list .typeahead {
+.tag-list .typeahead {
     width: 99%;
     overflow: auto;
 }
