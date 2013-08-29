@@ -92,27 +92,4 @@ class AjaxController extends ActionController
             'data'      => $resultset,
         );
     }
-
-    /**
-     * Check whether article is exists
-     * 
-     * @return array
-     */
-    public function checkArticleExistsAction()
-    {
-        Pi::service('log')->active(false);
-        $subject = trim(Service::getParam($this, 'subject', ''));
-        $id      = Service::getParam($this, 'id', null);
-        $result  = false;
-
-        if ($subject) {
-            $articleModel = $this->getModel('article');
-            $result = $articleModel->checkSubjectExists($subject, $id);
-        }
-
-        return array(
-            'status'  => $result ? self::AJAX_RESULT_FALSE : self::AJAX_RESULT_TRUE,
-            'message' => $result ? __('Subject is used by another article.') : __('ok'),
-        );
-    }
 }

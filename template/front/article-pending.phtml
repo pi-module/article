@@ -11,7 +11,7 @@ $this->Backbone();
             <span class="btn btn-approve" data-action="batch.approve"><?php _e('Approve'); ?></span>
         </div>
         <table class="table table-striped">
-            <thead>
+            <tbody>
                 <tr>
                     <th style="width: 2.2em;">
                         <input type="checkbox" class="check-all">
@@ -22,8 +22,6 @@ $this->Backbone();
                     <th style="width: 8%"><?php _e('Submitter') ?></th>
                     <th style="width: 100px;"><?php _e('Last update') ?></th>
                 </tr>
-            </thead>
-            <tbody>
                 <?php foreach ($data as $draft) { ?>
                 <tr data-id="<?php echo $this->escape($draft['id']) ?>">
                     <td>

@@ -627,9 +627,6 @@ var page = {
     status  : "<?php echo $this->escape($draft['status']) ?>",
     form    : $("form.row-fluid"),
     from    : "<?php echo isset($from) ? $this->escape($from) : '' ?>",
-    mediaDefaultTemplate : '<img style="width: 320px; height: 240px" src="' 
-                         + '<?php echo $this->escape($defaultMediaImage) ?>' 
-                         + '" />',
     mediaFakeId         : '<?php echo uniqid() ?>',
     featureFakeId       : '<?php echo uniqid() ?>',
     init    : function () {
@@ -847,7 +844,7 @@ var BasicInputView = Backbone.View.extend({
         var tar = $(e.currentTarget).removeClass("error");
         $.getJSON("<?php echo $this->url(
             '',
-            array('controller' => 'ajax', 'action' => 'check.article.exists')
+            array('controller' => 'article', 'action' => 'check.article.exists')
         ); ?>", {
             subject : $.trim(tar.val()),
             id      : page.$("[name=article]").val()
@@ -1447,7 +1444,7 @@ var FeatureView = Backbone.View.extend({
                 'action'     => 'remove'
             )
         ); ?>fake_id-'+ page.mediaFakeId).done(function() {
-            $("#media-image").html(page.mediaDefaultTemplate);
+            $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
             }

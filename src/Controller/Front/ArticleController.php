@@ -30,6 +30,7 @@ use Module\Article\Entity;
  * 3. Published article list page for management
  * 4. Active/deactivate/detete/edit article
  * 5. AJAX action for seaching article
+ * 6. AJAX action for checking article subject exists
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
@@ -617,5 +618,29 @@ class ArticleController extends ActionController
             ),
         ));
         exit ;
+    }
+    
+    /**
+     * Check whether article is exists by subject
+     * 
+     * @return array
+     */
+    public function checkArticleExistsAction()
+    {
+        Pi::service('log')->active(false);
+        $subject = trim(Service::getParam($this, 'subject', ''));
+        $id      = Service::getParam($this, 'id', null);
+        $result  = false;
+
+        if ($subject) {
+            $articleModel = $this->getModel('article');
+            $result = $articleModel->checkSubjectExists($subject, $id);
+        }
+
+        return array(
+            'status'  => $result ? false : true,
+            'message' => $result ? __('Subject is used by another article.') 
+                : __('ok'),
+        );
     }
 }
