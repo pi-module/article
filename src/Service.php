@@ -618,6 +618,13 @@ class Service
             return 'article';
         }
         
+        // Check if the route is already in database
+        $routeName = $module . '-' . $name;
+        $row = Pi::model('route')->find($routeName, 'name');
+        if (empty($row)) {
+            return 'article';
+        }
+        
         return $name;
     }
     
