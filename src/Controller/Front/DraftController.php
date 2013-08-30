@@ -784,20 +784,15 @@ class DraftController extends ActionController
         $from   = Service::getParam($this, 'from', 'my');
         $where  = Service::getParam($this, 'where', '');
         $where  = json_decode(urldecode($where), true);
+        $where  = array_filter($where);
         if (!in_array($from, array('my', 'all'))) {
             throw new \Exception(__('Invalid source'));
         }
         
         // Getting permission
         $rules      = Service::getPermission('my' == $from ? true : false);
-        $categories = array(0);
-        foreach ($rules as $categoryId => $resources) {
-            if (isset($resources['approve']) and $resources['approve']) {
-                $categories[] = $categoryId;
-            }
-        }
-        $where['category'] = array_filter($categories);
-        $where = array_filter($where);
+        $categories = array_keys($rules);
+        $where['category'] = empty($categories) ? 0 : $categories;
         
         $this->showDraftPage($status, $from, $where);
         
