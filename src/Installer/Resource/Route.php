@@ -46,6 +46,8 @@ class Route extends BasicRoute
                 break;
             }
             if (class_exists($class)) {
+                // Remove exists article custom route
+                Pi::model('route')->delete(array('module' => $module));
                 $this->config = $configs;
             }
         }
@@ -75,6 +77,7 @@ class Route extends BasicRoute
                 break;
             }
             if (class_exists($class)) {
+                Pi::model('route')->delete(array('module' => $module));
                 $this->config = $configs;
             }
         }
