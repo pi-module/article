@@ -382,13 +382,7 @@ class Service
     public static function getSummary($from = 'my', $rules = array())
     {
         // Processing user managment category
-        $pendingCategories = array();
-        foreach ($rules as $categoryId => $resources) {
-            if (isset($resources['approve']) and $resources['approve']) {
-                $pendingCategories[] = $categoryId;
-            }
-        }
-        $publishCategories = array_keys($rules);
+        $categories = array_keys($rules);
                     
         $module = Pi::service('module')->current();
         
@@ -418,7 +412,7 @@ class Service
                 $result['draft'] += $row->total;
             } else if (Draft::FIELD_STATUS_PENDING == $row->status) {
                 if ('all' == $from 
-                    and in_array($row->category, $pendingCategories)
+                    and in_array($row->category, $categories)
                 ) {
                     $result['pending'] += $row->total;
                 } elseif ('my' == $from) {
@@ -432,7 +426,7 @@ class Service
         $modelArticle = Pi::model('article', $module);
         $where        = array(
             'status'   => Article::FIELD_STATUS_PUBLISHED,
-            'category' => !empty($publishCategories) ? $publishCategories : 0,
+            'category' => !empty($categories) ? $categories : 0,
         );
         if ('my' == $from) {
             $where['uid'] = Pi::registry('user')->id ?: 0;
@@ -756,24 +750,39 @@ class Service
             }
         }
         
-        // Getting Rules
-        $aclHandler = new \Pi\Acl\Acl('admin');
-        $aclHandler->setModule($module);
-        $rowLevel = Pi::model('level', $module)->select(array('id' => $levelIds));
+        // Get level name
+        $rowLevel = Pi::model('level', $module)
+            ->select(array('id' => $levelIds))->toArray();
+        $levels   = array(0);
         foreach ($rowLevel as $row) {
             // Skip if level is not active
-            if (!$row->active) {
+            if (!$row['active']) {
                 continue;
             }
-            
+            $levels[$row['id']] = $row['name'];
+        }
+        
+        // Getting rules
+        $aclHandler = new \Pi\Acl\Acl('admin');
+        $aclHandler->setModule($module);
+        $modelRule = $aclHandler->getModel('rule');
+        $rowRules  = $modelRule->select(array('role' => $levels));
+        $rawRules  = array();
+        foreach ($rowRules as $rule) {
+            $rawRules[$rule->role][$rule->resource] = $rule->deny ? false : true;
+        }
+        
+        // Assemble rules
+        foreach ($levels as $id => $levelName) {
             $rule = array();
             foreach ($resources as $name) {
                 if (!empty($operation) and $name != $operation) {
                     continue;
                 }
-                $rule[$name] = $aclHandler->isAllowed($row->name, $name);
+                $rule[$name] = isset($rawRules[$levelName][$name])
+                    ? $rawRules[$levelName][$name] : false;
             }
-            foreach ($levelCategory[$row->id] as $categoryId) {
+            foreach ($levelCategory[$id] as $categoryId) {
                 $rules[$categoryId] = $rule;
             }
         }
