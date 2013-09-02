@@ -133,7 +133,7 @@ class Draft extends Model
     public function createOne()
     {
         $data = array(
-            'user'   => Pi::registry('user')->id,
+            'user'   => Pi::user()->id,
             'status' => self::FIELD_STATUS_DRAFT,
         );
         $row = $this->createRow($data);
