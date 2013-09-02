@@ -395,7 +395,7 @@ class Service
 
         $where['article < ?'] = 1;
         if ('my' == $from) {
-            $where['uid'] = Pi::registry('user')->id ?: 0;
+            $where['uid'] = Pi::user()->id ?: 0;
         }
         $modelDraft = Pi::model('draft', $module);
         $select     = $modelDraft->select()
@@ -429,7 +429,7 @@ class Service
             'category' => !empty($categories) ? $categories : 0,
         );
         if ('my' == $from) {
-            $where['uid'] = Pi::registry('user')->id ?: 0;
+            $where['uid'] = Pi::user()->id ?: 0;
         }
         $select = $modelArticle->select()
             ->columns(array('total' => new Expression('count(id)')))
@@ -516,7 +516,7 @@ class Service
         }
 
         $modelMedia = Pi::model('media', $module);
-        $rowMedia   = $modelMedia->select(array('media' => $mediaIds));
+        $rowMedia   = $modelMedia->select(array('id' => $mediaIds));
         foreach ($rowMedia as $media) {
             $result['attachment'][] = array(
                 'original_name' => $media->title,

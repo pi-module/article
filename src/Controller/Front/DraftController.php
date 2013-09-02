@@ -424,7 +424,7 @@ class DraftController extends ActionController
             'time_publish' => $rowDraft->time_publish,
             'time_update'  => $rowDraft->time_update > $timestamp 
                 ? $rowDraft->time_update : $timestamp,
-            'user_update'  => Pi::registry('user')->id,
+            'user_update'  => Pi::user()->id,
         );
         $rowArticle = $modelArticle->find($articleId);
         $rowArticle->assign($article);
@@ -582,10 +582,10 @@ class DraftController extends ActionController
         }
         
         // Added current logged user as submitter if there is no submitter
-        $data['uid'] = $data['uid'] ?: Pi::registry('user')->id;
+        $data['uid'] = $data['uid'] ?: Pi::user()->id;
 
         if (empty($id)) {
-            $data['uid']    = Pi::registry('user')->id;
+            $data['uid']    = Pi::user()->id;
             $data['status'] = Draft::FIELD_STATUS_DRAFT;
 
             $rowDraft = $modelDraft->saveRow($data);
@@ -649,7 +649,7 @@ class DraftController extends ActionController
         $where['status']        = $status;
         $where['article < ?']   = 1;
         if ('my' == $from) {
-            $where['uid']       = Pi::registry('user')->id;
+            $where['uid']       = Pi::user()->id;
         }
         if (isset($options['keyword'])) {
             $where['subject like ?'] = sprintf('%%%s%%', $options['keyword']);
@@ -742,7 +742,7 @@ class DraftController extends ActionController
         }
         
         $data = $form->getData();
-        $data['user_update'] = Pi::registry('user')->id;
+        $data['user_update'] = Pi::user()->id;
         $id   = $this->saveDraft($data);
         if (!$id) {
             return array(
@@ -870,7 +870,7 @@ class DraftController extends ActionController
             'category'      => $this->config('default_category'),
             'source'        => $this->config('default_source'),
             'fake_id'       => Upload::randomKey(),
-            'uid'           => Pi::registry('user')->id,
+            'uid'           => Pi::user()->id,
         ));
 
         $this->setModuleConfig();
