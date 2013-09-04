@@ -471,7 +471,13 @@
                         <div class="form-inline">
                             <select name="type" class="span2">
                                 <option value="title"><?php echo _e('Title') ?></option>
-                                <option value="tag" disabled="disabled"><?php echo _e('Tag') ?></option>
+                                <?php 
+                                    if (!empty($config['enable_tag'])) {
+                                ?>
+                                <option value="tag"><?php echo _e('Tag') ?></option>
+                                <?php
+                                    }
+                                ?>
                             </select>
                             <input placeholder="Keywords" type="text" name="keyword" value="">
                             <span class="btn btn-search"><?php _e('Search') ?></span>

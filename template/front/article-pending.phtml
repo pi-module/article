@@ -43,7 +43,7 @@
                         <?php echo $this->escape($draft['category_title']); ?>
                     </td>
                     <td><?php 
-                        echo !empty($article['tag']) ? $this->escape(join($article['tag'], ',')) 
+                        echo !empty($draft['tag']) ? $this->escape(implode(',', $draft['tag'])) 
                             : '<span class="muted">' . __('No tags') . '</span>' 
                     ?>
                     </td>

@@ -121,7 +121,7 @@ class Draft extends Model
     {
         return array(
             'id', 'subject', 'subtitle', 'category', 'image', 'uid', 
-            'author', 'slug', 'source', 'time_save', 'time_update'
+            'author', 'slug', 'source', 'time_save', 'time_update', 'tag',
         );
     }
 
