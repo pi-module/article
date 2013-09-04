@@ -563,7 +563,7 @@ class ArticleController extends ActionController
                     $articles    = array_flip($articleIds);
 
                     // Get articles
-                    $resultsetArticle = Service::getArticlePage(
+                    $resultsetArticle = Entity::getArticlePage(
                         $where, 
                         1, 
                         $limit, 
