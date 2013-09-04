@@ -60,7 +60,8 @@
                 } ?>
                 </td>
                 <td><?php 
-                    echo isset($draft['tag']) ? $this->escape($draft['tag']) 
+                    echo (isset($draft['tag']) and !empty($draft['tag']))
+                        ? $this->escape(implode(',', $draft['tag'])) 
                         : '<span class="muted">' . __('No tags') . '</span>' 
                 ?>
                 </td>
