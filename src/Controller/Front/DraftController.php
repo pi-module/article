@@ -16,7 +16,6 @@ use Module\Article\Form\DraftEditForm;
 use Module\Article\Form\DraftEditFilter;
 use Module\Article\Model\Draft;
 use Module\Article\Model\Article;
-use Module\Article\Upload;
 use Module\Article\Service;
 use Module\Article\Compiled;
 use Module\Article\Entity;
@@ -471,7 +470,7 @@ class DraftController extends ActionController
                 $image = Pi::path($rowArticle->image);
 
                 unlink($image);
-                unlink(Upload::getThumbFromOriginal($image));
+                unlink(Service::getThumbFromOriginal($image));
             }
 
             $rowArticle->image = $rowDraft->image;
@@ -608,7 +607,7 @@ class DraftController extends ActionController
         }
         
         // Save image
-        $session    = Upload::getUploadSession($module, 'feature');
+        $session    = Service::getUploadSession($module, 'feature');
         if (isset($session->$id) || ($fakeId && isset($session->$fakeId))) {
             $uploadInfo = isset($session->$id) 
                 ? $session->$id : $session->$fakeId;
@@ -869,7 +868,7 @@ class DraftController extends ActionController
         $form->setData(array(
             'category'      => $this->config('default_category'),
             'source'        => $this->config('default_source'),
-            'fake_id'       => Upload::randomKey(),
+            'fake_id'       => uniqid(),
             'uid'           => Pi::user()->id,
         ));
 
@@ -965,7 +964,7 @@ class DraftController extends ActionController
         $data['time_update']  = $data['time_update'] ? date('Y-m-d H:i:s', $data['time_update']) : '';
 
         $featureImage = $data['image'] ? Pi::url($data['image']) : '';
-        $featureThumb = $data['image'] ? Pi::url(Upload::getThumbFromOriginal($data['image'])) : '';
+        $featureThumb = $data['image'] ? Pi::url(Service::getThumbFromOriginal($data['image'])) : '';
 
         $form = $this->getDraftForm('edit', $options);
         $allCategory = $form->get('category')->getValueOptions();
@@ -1089,7 +1088,7 @@ class DraftController extends ActionController
                         )
                     ),
                     'preview_url' => Pi::url($media['url']),
-                    'thumb_url'   => Pi::url(Upload::getThumbFromOriginal($media['url'])),
+                    'thumb_url'   => Pi::url(Service::getThumbFromOriginal($media['url'])),
                 );
             }
         }
@@ -1505,7 +1504,7 @@ class DraftController extends ActionController
         }
         
         // Get distination path
-        $destination = Upload::getTargetDir('feature', $module, true);
+        $destination = Service::getTargetDir('feature', $module, true);
         
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -1560,7 +1559,7 @@ class DraftController extends ActionController
         $uploadInfo['thumb_w']  = $this->config('feature_thumb_width');
         $uploadInfo['thumb_h']  = $this->config('feature_thumb_height');
 
-        Upload::saveImage($uploadInfo);
+        Service::saveImage($uploadInfo);
 
         // Save image to draft
         $rowDraft = $this->getModel('draft')->find($id);
@@ -1569,7 +1568,7 @@ class DraftController extends ActionController
             $rowDraft->save();
         } else {
             // Or save info to session
-            $session = Upload::getUploadSession($module);
+            $session = Service::getUploadSession($module);
             $session->$id = $uploadInfo;
         }
 
@@ -1582,7 +1581,7 @@ class DraftController extends ActionController
             'size'         => filesize(Pi::path($fileName)),
             'w'            => $imageSize['0'],
             'h'            => $imageSize['1'],
-            'preview_url'  => Pi::url(Upload::getThumbFromOriginal($fileName)),
+            'preview_url'  => Pi::url(Service::getThumbFromOriginal($fileName)),
         );
 
         $return['status'] = true;
@@ -1608,7 +1607,7 @@ class DraftController extends ActionController
 
             if ($rowDraft && $rowDraft->image) {
 
-                $thumbUrl = Upload::getThumbFromOriginal($rowDraft->image);
+                $thumbUrl = Service::getThumbFromOriginal($rowDraft->image);
                 if ($rowDraft->article) {
                     $modelArticle = $this->getModel('article');
                     $rowArticle   = $modelArticle->find($rowDraft->article);
@@ -1627,12 +1626,12 @@ class DraftController extends ActionController
                 $affectedRows    = $rowDraft->save();
             }
         } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'feature');
+            $session = Service::getUploadSession($module, 'feature');
 
             if (isset($session->$fakeId)) {
                 $uploadInfo = $session->$fakeId;
 
-                $url = Upload::getThumbFromOriginal($uploadInfo['tmp_name']);
+                $url = Service::getThumbFromOriginal($uploadInfo['tmp_name']);
                 $affectedRows = unlink(Pi::path($uploadInfo['tmp_name']));
                 @unlink(Pi::path($url));
 

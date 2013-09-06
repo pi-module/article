@@ -33,7 +33,7 @@ class Visit extends Model
             'article'  => $id,
             'time'     => time(),
             'ip'       => $server['REMOTE_ADDR'],
-            'uid'      => $user->account->id ?: 0,
+            'uid'      => Pi::user()->id ?: 0,
         );
         $row    = $this->createRow($data);
         $result = $row->save();

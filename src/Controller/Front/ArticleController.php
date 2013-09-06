@@ -14,7 +14,6 @@ use Pi;
 use Pi\Paginator\Paginator;
 use Module\Article\Model\Article;
 use Module\Article\Model\Draft;
-use Module\Article\Upload;
 use Module\Article\Form\SimpleSearchForm;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
@@ -188,7 +187,7 @@ class ArticleController extends ActionController
             // Delete feature image
             if ($article->image) {
                 @unlink(Pi::path($article->image));
-                @unlink(Pi::path(Upload::getThumbFromOriginal($article->image)));
+                @unlink(Pi::path(Service::getThumbFromOriginal($article->image)));
             }
         }
         
@@ -425,7 +424,7 @@ class ArticleController extends ActionController
         // Select article of mine
         if ('my' == $from) {
             $user   = Pi::service('user')->getUser();
-            $where['uid'] = $user->account->id ?: 0;
+            $where['uid'] = Pi::user()->id ?: 0;
         }
 
         $module         = $this->getModule();

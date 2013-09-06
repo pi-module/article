@@ -19,7 +19,6 @@ use Module\Article\Form\CategoryMergeFilter;
 use Module\Article\Form\CategoryMoveForm;
 use Module\Article\Form\CategoryMoveFilter;
 use Module\Article\Model\Category;
-use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Model\Article;
@@ -124,7 +123,7 @@ class CategoryController extends ActionController
         }
 
         // Save image
-        $session    = Upload::getUploadSession($module, 'category');
+        $session    = Service::getUploadSession($module, 'category');
         if (isset($session->$id)
             || ($fakeId && isset($session->$fakeId))
         ) {
@@ -266,9 +265,7 @@ class CategoryController extends ActionController
             $form->get('parent')->setAttribute('value', $parent);
         }
 
-        $form->setData(array(
-            'fake_id'  => Upload::randomKey(),
-        ));
+        $form->setData(array('fake_id'  => uniqid()));
 
         Service::setModuleConfig($this);
         $this->view()->assign(array(
@@ -673,7 +670,7 @@ class CategoryController extends ActionController
         }
         
         // Get destination path
-        $destination = Upload::getTargetDir('category', $module, true, false);
+        $destination = Service::getTargetDir('category', $module, true, false);
 
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -726,7 +723,7 @@ class CategoryController extends ActionController
         $uploadInfo['w']        = $this->config('category_width');
         $uploadInfo['h']        = $this->config('category_height');
 
-        Upload::saveImage($uploadInfo);
+        Service::saveImage($uploadInfo);
 
         // Save image to category
         $rowCategory = $this->getModel('category')->find($id);
@@ -739,7 +736,7 @@ class CategoryController extends ActionController
             $rowCategory->save();
         } else {
             // Or save info to session
-            $session = Upload::getUploadSession($module, 'category');
+            $session = Service::getUploadSession($module, 'category');
             $session->$id = $uploadInfo;
         }
 
@@ -787,7 +784,7 @@ class CategoryController extends ActionController
                 $affectedRows       = $rowCategory->save();
             }
         } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'category');
+            $session = Service::getUploadSession($module, 'category');
 
             if (isset($session->$fakeId)) {
                 $uploadInfo = isset($session->$id)
