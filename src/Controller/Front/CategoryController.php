@@ -179,7 +179,7 @@ class CategoryController extends ActionController
         $limit  = (int) $config['page_limit_all'] ?: 40;
         $where  = array();
         
-        $route  = '.' . Service::getRouteName();
+        $route  = $module . '-' . Service::getRouteName();
 
         // Get category info
         $categories = Service::getCategoryList();

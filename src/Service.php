@@ -137,7 +137,6 @@ class Service
         $categories = $authors = $users = $tags = $urls = array();
 
         $modelDraft     = Pi::model('draft', $module);
-        $modelUser      = Pi::model('user');
         $modelAuthor    = Pi::model('author', $module);
 
         $resultset = $modelDraft->getSearchRows($where, $limit, $offset, $columns, $order);
@@ -170,7 +169,7 @@ class Service
             }
 
             if (!empty($userIds)) {
-                $resultsetUser = $modelUser->find($userIds);
+                $resultsetUser = Pi::user()->get($userIds);
                 foreach ($resultsetUser as $row) {
                     $users[$row->id] = array(
                         'name' => $row->identity,
