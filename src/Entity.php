@@ -12,7 +12,6 @@ namespace Module\Article;
 use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
-use Module\Article\Upload;
 use Module\Article\Cache;
 use Module\Article\Compiled;
 use Module\Article\Statistics;
@@ -431,7 +430,7 @@ class Entity
 
                 if (empty($columns) || in_array('image', $columns)) {
                     if ($row['image']) {
-                        $row['thumb'] = Upload::getThumbFromOriginal($row['image']);
+                        $row['thumb'] = Service::getThumbFromOriginal($row['image']);
                     }
                 }
 

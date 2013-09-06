@@ -13,7 +13,7 @@
  * @author Zongshu Lin <lin40553024@163.com>
  */
 return array(
-    'roles'      => array(
+    /*'roles'      => array(
         // Front role for article module
         'article-manager' => array(
             'title'     => _t('Article Manager'),
@@ -23,7 +23,7 @@ return array(
             'section'   => 'admin',
             'parents'   => array('staff'),
         )
-    ),
+    ),*/
     
     'resources'  => array(
         'front'          => array(
@@ -32,7 +32,7 @@ return array(
                 'module'      => 'article',
                 'title'       => _t('Author management'),
                 'access'      => array(
-                    'article-manager' => 0,
+                    //'article-manager' => 0,
                     'member'          => 0,
                     'guest'           => 0,
                     'inactive'        => 0,
@@ -44,7 +44,7 @@ return array(
                 'module'      => 'article',
                 'title'       => _t('Category management'),
                 'access'      => array(
-                    'article-manager' => 0,
+                    //'article-manager' => 0,
                     'member'          => 0,
                     'guest'           => 0,
                     'inactive'        => 0,
@@ -56,7 +56,7 @@ return array(
                 'module'      => 'article',
                 'title'       => _t('Topic management'),
                 'access'      => array(
-                    'article-manager' => 0,
+                    //'article-manager' => 0,
                     'member'          => 0,
                     'guest'           => 0,
                     'inactive'        => 0,
@@ -68,7 +68,7 @@ return array(
                 'module'      => 'article',
                 'title'       => _t('Media management'),
                 'access'      => array(
-                    'article-manager' => 0,
+                    //'article-manager' => 0,
                     'member'          => 0,
                     'guest'           => 0,
                     'inactive'        => 0,
@@ -83,7 +83,7 @@ return array(
                 'module'      => 'article',
                 'title'       => _t('Statistics page view'),
                 'access'      => array(
-                    'contributor'  => 1,
+                    //'contributor'  => 1,
                 ),
             ),
             // Module permission controller

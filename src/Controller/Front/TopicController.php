@@ -16,7 +16,6 @@ use Module\Article\Form\TopicEditForm;
 use Module\Article\Form\TopicEditFilter;
 use Module\Article\Form\SimpleSearchForm;
 use Module\Article\Model\Topic;
-use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Module\Article\Model\Article;
@@ -102,7 +101,7 @@ class TopicController extends ActionController
         }
 
         // Save image
-        $session    = Upload::getUploadSession($module, 'topic');
+        $session    = Service::getUploadSession($module, 'topic');
         if (isset($session->$id) 
             || ($fakeId && isset($session->$fakeId))
         ) {
@@ -625,9 +624,7 @@ class TopicController extends ActionController
         }
         
         $form   = $this->getTopicForm('add');
-        $form->setData(array(
-            'fake_id'  => Upload::randomKey(),
-        ));
+        $form->setData(array('fake_id'  => uniqid()));
 
         Service::setModuleConfig($this);
         $this->view()->assign(array(
@@ -876,7 +873,7 @@ class TopicController extends ActionController
         }
         
         // Get distination path
-        $destination = Upload::getTargetDir('topic', $module, true, false);
+        $destination = Service::getTargetDir('topic', $module, true, false);
 
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -929,7 +926,7 @@ class TopicController extends ActionController
         $uploadInfo['w']        = $this->config('topic_width');
         $uploadInfo['h']        = $this->config('topic_height');
 
-        Upload::saveImage($uploadInfo);
+        Service::saveImage($uploadInfo);
 
         // Save image to topic
         $rowTopic = $this->getModel('topic')->find($id);
@@ -942,7 +939,7 @@ class TopicController extends ActionController
             $rowTopic->save();
         } else {
             // Or save info to session
-            $session = Upload::getUploadSession($module, 'topic');
+            $session = Service::getUploadSession($module, 'topic');
             $session->$id = $uploadInfo;
         }
 
@@ -990,7 +987,7 @@ class TopicController extends ActionController
                 $affectedRows    = $rowTopic->save();
             }
         } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'topic');
+            $session = Service::getUploadSession($module, 'topic');
 
             if (isset($session->$fakeId)) {
                 $uploadInfo = isset($session->$id) 
