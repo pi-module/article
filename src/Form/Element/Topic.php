@@ -27,7 +27,8 @@ class Topic extends Select
     public function getValueOptions()
     {
         if (empty($this->valueOptions)) {
-            $module = Pi::service('module')->current();
+            $module = $this->getOption('module') 
+                ?: Pi::service('module')->current();
             $model  = Pi::model('topic', $module);
             $rowset = $model->select(array());
             $topics = array();

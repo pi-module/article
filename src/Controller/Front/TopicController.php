@@ -220,7 +220,7 @@ class TopicController extends ActionController
         $totalCount = $modelTopic->getSearchRowsCount($where);
 
         // Pagination
-        $route     = '.' . Service::getRouteName();
+        $route     = $this->getModule() . '-' . Service::getRouteName();
         $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit)
                   ->setCurrentPageNumber($page)
@@ -300,7 +300,7 @@ class TopicController extends ActionController
         $totalCount     = $modelArticle->getSearchRowsCount($where);
 
         // Pagination
-        $route     = '.' . Service::getRouteName();
+        $route     = $this->getModule() . '-' . Service::getRouteName();
         $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit)
             ->setCurrentPageNumber($page)
@@ -803,7 +803,7 @@ class TopicController extends ActionController
             'title'   => __('Topic List'),
             'topics'  => $rowset,
             'action'  => 'list-topic',
-            'route'   => '.' . Service::getRouteName(),
+            'route'   => $module . '-' . Service::getRouteName(),
             'defaultLogo' => Pi::service('asset')
                 ->getModuleAsset('image/default-topic-thumb.png', $module),
         ));

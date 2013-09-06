@@ -225,7 +225,6 @@ class Statistics
         $where['active'] = 1;
 
         $modelArticle = Pi::model('article', $module);
-        $modelUser    = Pi::model('user');
 
         $select = $modelArticle->select()
             ->columns(array('uid', 'total' => new Expression('count(uid)')))
@@ -248,10 +247,10 @@ class Statistics
         $userIds = array_unique($userIds);
 
         if (!empty($userIds)) {
-            $resultsetUser = $modelUser->find($userIds);
+            $resultsetUser = Pi::user()->get($userIds);
             foreach ($resultsetUser as $row) {
-                $users[$row->id] = array(
-                    'name' => $row->identity,
+                $users[$row['id']] = array(
+                    'name' => $row['identity'],
                 );
             }
             unset($resultsetUser);

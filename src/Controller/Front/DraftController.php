@@ -752,7 +752,7 @@ class DraftController extends ActionController
         $result['status']   = self::RESULT_TRUE;
         $result['data']     = array('id' => $id);
 
-        $route = '.' . Service::getRouteName();
+        $route = $this->getModule() . '-' . Service::getRouteName();
         $result['data']['preview_url'] = $this->url(
             $route,
             array(
@@ -986,22 +986,22 @@ class DraftController extends ActionController
 
         // Get submitter info
         if ($data['uid']) {
-            $user = Pi::model('user')->find($data['uid']);
+            $user = Pi::user()->get($data['uid']);
             if ($user) {
                 $this->view()->assign('user', array(
-                    'id'   => $user->id,
-                    'name' => $user->identity,
+                    'id'   => $user['id'],
+                    'name' => $user['identity'],
                 ));
             }
         }
         
         // Get update user info
         if ($data['user_update']) {
-            $userUpdate = Pi::model('user')->find($data['user_update']);
+            $userUpdate = Pi::user()->get($data['user_update']);
             if ($userUpdate) {
                 $this->view()->assign('userUpdate', array(
-                    'id'   => $userUpdate->id,
-                    'name' => $userUpdate->identity,
+                    'id'   => $userUpdate['id'],
+                    'name' => $userUpdate['identity'],
                 ));
             }
         }
@@ -1396,7 +1396,7 @@ class DraftController extends ActionController
             );
         }
         
-        $route = '.' . Service::getRouteName();
+        $route = $this->getModule() . '-' . Service::getRouteName();
         foreach ($details['content'] as &$value) {
             $value['url'] = $this->url($route, array_merge(array(
                 'time'       => date('Ymd', $time),

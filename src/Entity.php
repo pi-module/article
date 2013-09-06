@@ -273,7 +273,6 @@ class Entity
         $categories = $authors = $users = $tags = $urls = array();
 
         $modelArticle  = Pi::model('article', $module);
-        $modelUser     = Pi::model('user');
         
         // Generate columns of extended table and statistics table
         $extendedColumns = Pi::service('registry')
@@ -390,10 +389,10 @@ class Entity
             if (!empty($userIds) 
                 && (empty($columns) || in_array('uid', $columns))
             ) {
-                $resultsetUser = $modelUser->find($userIds);
+                $resultsetUser = Pi::user()->get($userIds);
                 foreach ($resultsetUser as $row) {
-                    $users[$row->id] = array(
-                        'name' => $row->identity,
+                    $users[$row['id']] = array(
+                        'name' => $row['identity'],
                     );
                 }
                 unset($resultsetUser);

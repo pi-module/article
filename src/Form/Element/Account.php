@@ -42,18 +42,10 @@ class Account extends Select
             }
 
             // Getting active account
-            $where  = array(
-                'active'  => 1,
-                'id'      => $ids,
-            );
-            $model  = Pi::model('user');
-            $select = $model->select()->where($where)
-                                      ->columns(array('id', 'name'))
-                                      ->order('name ASC');
-            $rowset = $model->selectWith($select);
+            $rowset = Pi::user()->get($ids);
             $account = array();
             foreach ($rowset as $row) {
-                $account[$row->id] = $row->name;
+                $account[$row['id']] = $row['name'];
             }
             $account = empty($account) ? array(0 => __('Null')) : $account;
             $this->valueOptions = $account;
