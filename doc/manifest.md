@@ -143,7 +143,7 @@
       * Description: list all categories
       * Template: category-list-category.phtml
 ## Admin 
-* ConfigController
+* SetupController
   * formAction
       * Description: config form of draft add/edit page
       * Template: config-form.phtml

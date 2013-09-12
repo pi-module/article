@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -24,119 +24,27 @@ use Module\Article\Entity;
  * 
  * Feature list:
  * 
- * 1. Article homepage
- * 2. Article detail page
- * 5. AJAX action for seaching article
- * 6. AJAX action for checking article subject exists
+ * 1. Published article list page for management
+ * 2. Active/deactivate/detete/edit article
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
 class ArticleController extends ActionController
 {
     /**
-     * Article homepage, all page content are dressed up by user 
+     * Default page, redirect to published article list page
      */
     public function indexAction()
     {
-
+        return $this->redirect()->toRoute(
+            'admin',
+            array(
+                'action' => 'published',
+                'from'   => 'all',
+            )
+        );
     }
     
-    /**
-     * Article detail page
-     * 
-     * @return ViewModel 
-     */
-    public function detailAction()
-    {
-        $id       = $this->params('id');
-        $slug     = $this->params('slug', '');
-        $page     = $this->params('p', 1);
-        $remain   = $this->params('r', '');
-        
-        if ('' !== $remain) {
-            $this->view()->assign('remain', $remain);
-        }
-
-        if (empty($id)) {
-            $id = $this->getModel('extended')->slugToId($slug);
-        }
-
-        $details = Entity::getEntity($id);
-        $params  = array();
-        
-        if (!$id or ($details['time_publish'] > time())) {
-            return $this->jumpTo404(__('Page not found'));
-        }
-        if (empty($details['active'])) {
-            return $this->jumpToException(
-                __('The article requested is not active'),
-                503
-            );
-        }
-        $route = $this->getModule() . '-' . Service::getRouteName();
-        if (strval($slug) != $details['slug']) {
-            $routeParams = array(
-                'time'       => date('Ymd', $details['time_publish']),
-                'id'         => $id,
-                'slug'       => $details['slug'],
-                'p'          => $page,
-                'controller' => 'article',
-                'action'     => 'detail',
-            );
-            if ($remain) {
-                $params['r'] = $remain;
-            }
-            return $this->redirect()
-                ->setStatusCode(301)
-                ->toRoute($route, array_merge($routeParams, $params));
-        }
-        
-        foreach ($details['content'] as &$value) {
-            $value['url'] = $this->url($route, array_merge(array(
-                'time'       => date('Ymd', $details['time_publish']),
-                'id'         => $id,
-                'slug'       => $slug,
-                'p'          => $value['page'],
-                'controller' => 'article',
-                'action'     => 'detail',
-            ), $params));
-            if (isset($value['title']) 
-                and preg_replace('/&nbsp;/', '', trim($value['title'])) !== ''
-            ) {
-                $showTitle = true;
-            } else {
-                $value['title'] = '';
-            }
-        }
-        $details['view'] = $this->url($route, array_merge(array(
-            'time'        => date('Ymd', $details['time_publish']),
-            'id'          => $id,
-            'slug'        => $slug,
-            'r'           => 0,
-            'controller'  => 'article',
-            'action'      => 'detail',
-        ), $params));
-        $details['remain'] = $this->url($route, array_merge(array(
-            'time'        => date('Ymd', $details['time_publish']),
-            'id'          => $id,
-            'slug'        => $slug,
-            'r'           => $page,
-            'controller'  => 'article',
-            'action'      => 'detail',
-        ), $params));
-
-        $config = Pi::service('module')->config('', $this->getModule());
-        $this->view()->assign(array(
-            'details'     => $details,
-            'page'        => $page,
-            'showTitle'   => isset($showTitle) ? $showTitle : null,
-            'config'      => $config,
-        ));
-    }
-
-<<<<<<< HEAD
-    
-=======
     /**
      * Delete published articles
      * 
@@ -233,7 +141,6 @@ class ArticleController extends ActionController
             ));
         }
     }
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
 
     /**
      * Active or deactivate articles
@@ -390,7 +297,7 @@ class ArticleController extends ActionController
 
         // Redirect to edit draft
         if ($draftId) {
-            return $this->redirect()->toRoute('', array(
+            return $this->redirect()->toRoute('default', array(
                 'action'     => 'edit',
                 'controller' => 'draft',
                 'id'         => $draftId,
@@ -409,7 +316,7 @@ class ArticleController extends ActionController
         $where  = array();
         $page   = Service::getParam($this, 'p', 1);
         $limit  = Service::getParam($this, 'limit', 20);
-        $from   = Service::getParam($this, 'from', 'my');
+        $from   = Service::getParam($this, 'from', 'all');
         $order  = 'time_publish DESC';
 
         // Get permission
@@ -425,10 +332,7 @@ class ArticleController extends ActionController
         
         // Select article of mine
         if ('my' == $from) {
-<<<<<<< HEAD
-=======
             $user   = Pi::service('user')->getUser();
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
             $where['uid'] = Pi::user()->id ?: 0;
         }
 
@@ -524,127 +428,5 @@ class ArticleController extends ActionController
         if ('my' == $from) {
             return $this->view()->setTemplate('draft-list');
         }
-    }
-    
-    /**
-     * Get article by title via AJAX.
-     * 
-     * @return ViewModel 
-     */
-    public function getFuzzyArticleAction()
-    {
-        Pi::service('log')->active(false);
-        $articles   = array();
-        $pageCount  = $total = 0;
-        $module     = $this->getModule();
-        $where      = array('status' => Article::FIELD_STATUS_PUBLISHED);
-
-        $keyword = Service::getParam($this, 'keyword', '');
-        $type    = Service::getParam($this, 'type', 'title');
-        $limit   = Service::getParam($this, 'limit', 10);
-        $limit   = $limit > 100 ? 100 : $limit;
-        $page    = Service::getParam($this, 'page', 1);
-        $exclude = Service::getParam($this, 'exclude', 0);
-        $offset  = $limit * ($page - 1);
-
-        $articleModel   = $this->getModel('article');
-
-        if (strcasecmp('tag', $type) == 0) {
-            if ($keyword) {
-                $total     = Pi::service('tag')->getCount($module, $keyword);
-                $pageCount = ceil($total / $limit);
-
-                // Get article ids
-                $articleIds = Pi::service('tag')->getList(
-                    $module, 
-                    $keyword,
-                    null, 
-                    $limit, 
-                    $offset
-                );
-                if ($articleIds) {
-                    $where['id'] = $articleIds;
-                    $articles    = array_flip($articleIds);
-
-                    // Get articles
-                    $resultsetArticle = Entity::getArticlePage(
-                        $where, 
-                        1, 
-                        $limit, 
-                        null, 
-                        null, 
-                        $module
-                    );
-
-                    foreach ($resultsetArticle as $key => $val) {
-                        $articles[$key] = $val;
-                    }
-
-                    $articles = array_filter($articles, function($var) {
-                        return is_array($var);
-                    });
-                }
-            }
-        } else {
-            // Get resultset
-            if ($keyword) {
-                $where['subject like ?'] = sprintf('%%%s%%', $keyword);
-            }
-
-            $articles = Entity::getArticlePage($where, $page, $limit);
-
-            // Get total
-            $total      = $articleModel->getSearchRowsCount($where);
-            $pageCount  = ceil($total / $limit);
-        }
-
-        foreach ($articles as $key => &$article) {
-            if ($exclude && $exclude == $key) {
-                unset($articles[$key]);
-            }
-            $article['time_publish_text'] = date(
-                'Y-m-d',
-                $article['time_publish']
-            );
-        }
-
-        echo json_encode(array(
-            'status'    => true,
-            'message'   => __('OK'),
-            'data'      => array_values($articles),
-            'paginator' => array(
-                'currentPage' => $page,
-                'pageCount'   => $pageCount,
-                'keyword'     => $keyword,
-                'type'        => $type,
-                'limit'       => $limit,
-                'totalCount'  => $total,
-            ),
-        ));
-        exit ;
-    }
-    
-    /**
-     * Check whether article is exists by subject
-     * 
-     * @return array
-     */
-    public function checkArticleExistsAction()
-    {
-        Pi::service('log')->active(false);
-        $subject = trim(Service::getParam($this, 'subject', ''));
-        $id      = Service::getParam($this, 'id', null);
-        $result  = false;
-
-        if ($subject) {
-            $articleModel = $this->getModel('article');
-            $result = $articleModel->checkSubjectExists($subject, $id);
-        }
-
-        return array(
-            'status'  => $result ? false : true,
-            'message' => $result ? __('Subject is used by another article.') 
-                : __('ok'),
-        );
     }
 }

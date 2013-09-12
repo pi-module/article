@@ -92,4 +92,43 @@ class AjaxController extends ActionController
             'data'      => $resultset,
         );
     }
+    
+    /**
+     * Get author name by AJAX
+     *  
+     */
+    public function getFuzzyAuthorAction()
+    {
+        Pi::service('log')->active(false);
+        $resultset = $result = array();
+
+        $name   = Service::getParam($this, 'name', '');
+        $limit  = Service::getParam($this, 'limit', 10);
+
+        $model  = $this->getModel('author');
+        $select = $model->select()
+                ->columns(array('id', 'name', 'photo'))
+                ->order('name ASC')
+                ->limit($limit);
+        if ($name) {
+            $select->where->like('name', "{$name}%");
+        }
+
+        $result = $model->selectWith($select)->toArray();
+
+        foreach ($result as $val) {
+            $resultset[] = array(
+                'id'    => $val['id'],
+                'name'  => $val['name'] . '[' . $val['id'] . ']',
+                'photo' => $val['photo'],
+            );
+        }
+
+        echo json_encode(array(
+            'status'    => true,
+            'message'   => __('OK'),
+            'data'      => $resultset,
+        ));
+        exit;
+    }
 }

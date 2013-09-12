@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -28,17 +28,16 @@ use Pi\File\Transfer\Upload as UploadHandler;
  * 
  * Feature list:
  * 
- * 1. Homepage of a certain topic
- * 2. Article list of a certain topic
+ * 1. List\add\edit\delete a topic
+ * 2. Pull\remove article to\from topic
  * 3. All topic list
+ * 4. AJAX action used to save or remove a topic image
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
 class TopicController extends ActionController
 {
     /**
-<<<<<<< HEAD
-=======
      * Get topic form object
      * 
      * @param string $action  Form name
@@ -74,7 +73,7 @@ class TopicController extends ActionController
             $id = $data['id'];
             unset($data['id']);
         }
-        $data['active'] = 1;
+        //$data['active'] = 1;
 
         $fakeId = Service::getParam($this, 'fake_id', 0);
 
@@ -131,7 +130,6 @@ class TopicController extends ActionController
     }
     
     /**
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
      * Homepage of a topic
      * 
      * @return ViewModel
@@ -241,98 +239,10 @@ class TopicController extends ActionController
     }
     
     /**
-     * list articles of a topic for users to view
-     */
-    public function listAction()
-    {
-        $topic   = Service::getParam($this, 'topic', '');
-        if (empty($topic)) {
-            return $this->jumpTo404(__('Invalid topic ID!'));
-        }
-        if (is_numeric($topic)) {
-            $row = $this->getModel('topic')->find($topic);
-        } else {
-            $row = $this->getModel('topic')->find($topic, 'slug');
-        }
-        $title = $row->title;
-        // Return 503 code if topic is not active
-        if (!$row->active) {
-            return $this->jumpToException(
-                __('The topic requested is not active'),
-                503
-            );
-        }
-        
-        $topicId    = $row->id;
-        $page       = Service::getParam($this, 'p', 1);
-        $page       = $page > 0 ? $page : 1;
-
-        $module = $this->getModule();
-        $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_topic_front'] ?: 20;
-        
-        // Getting relations
-        $modelRelation = $this->getModel('article_topic');
-        $rowRelation   = $modelRelation->select(array('topic' => $topicId));
-        $articleIds    = array();
-        foreach ($rowRelation as $row) {
-            $articleIds[] = $row['article'];
-        }
-        
-        $where = array(
-            'id' => $articleIds,
-        );
-        
-        // Get articles
-        $resultsetArticle = Entity::getAvailableArticlePage(
-            $where,
-            $page,
-            $limit
-        );
-
-        // Total count
-        $where = array_merge($where, array(
-            'time_publish <= ?' => time(),
-            'status'            => Article::FIELD_STATUS_PUBLISHED,
-            'active'            => 1,
-        ));
-        $modelArticle   = $this->getModel('article');
-        $totalCount     = $modelArticle->getSearchRowsCount($where);
-
-        // Pagination
-        $route     = $this->getModule() . '-' . Service::getRouteName();
-        $paginator = Paginator::factory($totalCount);
-        $paginator->setItemCountPerPage($limit)
-            ->setCurrentPageNumber($page)
-            ->setUrlOptions(array(
-                'router'    => $this->getEvent()->getRouter(),
-                'route'     => $route,
-                'params'    => array(
-                    'topic'      => $topic,
-                    'list'       => 'all',
-                ),
-            ));
-
-        $this->view()->assign(array(
-            'title'         => empty($topic) ? __('All') : $title,
-            'articles'      => $resultsetArticle,
-            'paginator'     => $paginator,
-        ));
-    }
-<<<<<<< HEAD
-=======
-    
-    /**
      * List articles of a topic for management
      */
     public function listArticleAction()
     {
-        // Checking permission
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $modelTopic = $this->getModel('topic');
 
         $topic      = Service::getParam($this, 'topic', '');
@@ -420,12 +330,6 @@ class TopicController extends ActionController
      */
     public function pullAction()
     {
-        // Checking permission
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $where  = array();
         $page   = Service::getParam($this, 'page', 1);
         $limit  = Service::getParam($this, 'limit', 20);
@@ -526,12 +430,6 @@ class TopicController extends ActionController
      */
     public function pullArticleAction()
     {
-        // Checking permission
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $topic = Service::getParam($this, 'topic', '');
         $id    = Service::getParam($this, 'id', 0);
         $ids   = array_filter(explode(',', $id));
@@ -588,11 +486,6 @@ class TopicController extends ActionController
      */
     public function removePullAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $id    = Service::getParam($this, 'id', 0);
         $ids   = array_filter(explode(',', $id));
         $from  = Service::getParam($this, 'from', '');
@@ -620,11 +513,6 @@ class TopicController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $form   = $this->getTopicForm('add');
         $form->setData(array('fake_id'  => uniqid()));
 
@@ -671,11 +559,6 @@ class TopicController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Topic Info'));
         
@@ -728,11 +611,6 @@ class TopicController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $id     = $this->params('id');
         if (empty($id)) {
             return $this->jumpTo404(__('Invalid topic ID!'));
@@ -764,11 +642,6 @@ class TopicController extends ActionController
      */
     public function listTopicAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
         $limit  = (int) $config['page_limit_management'] ?: 20;
@@ -818,11 +691,6 @@ class TopicController extends ActionController
      */
     public function activeAction()
     {
-        $allowed = Service::getModuleResourcePermission('topic');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $status = Service::getParam($this, 'status', 0);
         $id     = Service::getParam($this, 'id', 0);
         $from   = Service::getParam($this, 'from', 0);
@@ -1007,5 +875,4 @@ class TopicController extends ActionController
             'message'   => 'ok',
         );
     }
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
 }

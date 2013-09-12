@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -269,7 +269,7 @@ class MediaController extends ActionController
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array('action'    => 'list'));
+        return $this->redirect()->toRoute('', array('action' => 'list'));
     }
     
     /**
@@ -365,11 +365,6 @@ class MediaController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $form   = $this->getMediaForm('add');
 
         $form->setData(array('fake_id'  => uniqid()));
@@ -415,11 +410,6 @@ class MediaController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Media Info'));
         
@@ -473,11 +463,6 @@ class MediaController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $from   = Service::getParam($this, 'from', '');
         
         $id     = $this->params('id', 0);
