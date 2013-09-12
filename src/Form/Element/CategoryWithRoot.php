@@ -31,6 +31,9 @@ class CategoryWithRoot extends Select
                 ?: Pi::service('module')->current();
             $this->valueOptions = Pi::model('category', $module)
                 ->getSelectOptions(true);
+            if ('system' == Pi::service('module')->current()) {
+                $this->valueOptions = array(0 => __('Null')) + $this->valueOptions;
+            }
         }
 
         return $this->valueOptions;

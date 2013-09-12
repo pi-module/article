@@ -648,14 +648,11 @@ var page = {
             }, this.autosaveInterval * 1000 * 60);
         }
         <?php } ?>
-        this.attachmentUrl = "<?php echo $this->url('', array(
+        this.attachmentUrl = "<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'upload',
             'form_name'  => 'attachment')); ?>";
-        this.featureUrl="<?php echo $this->url('',array(
-            'controller' => 'upload', 
-            'action'     => 'feature.image')); ?>"+this.ajaxId();
-        this.galleryUrl = "<?php echo $this->url('', array(
+        this.galleryUrl = "<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'upload',
             'form_name'  => 'gallery',
@@ -771,7 +768,7 @@ var BasicInputView = Backbone.View.extend({
         this.typeahead(
             this.$(".author"),
             "<?php echo $this->url('', array(
-                'controller' => 'author',
+                'controller' => 'ajax',
                 'action'     => 'get.fuzzy.author',
                 'name'       => ''
             )); ?>",
@@ -1251,7 +1248,7 @@ var AttachmentListView = Backbone.View.extend({
     },
     searchMedia     : function() {
         var title = $('input[name="attachment-title"]').val();
-        $.get('<?php echo $this->url('', array(
+        $.get('<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'search',
             'type'       => $attachmentExtension,
@@ -1303,10 +1300,10 @@ var AttachmentListView = Backbone.View.extend({
             $('.media-insert[data-id="' + id + '"]').css('display', 'block');
         } else if ('upload' == source) {
             if (confirm("<?php _e('Do you really want to remove this media?')?>")) {
-                var url = '<?php echo $this->url('', array(
+                var url = '<?php echo $this->url('admin', array(
                     'controller' => 'media',
                     'action'     => 'remove',
-                    )) ?>' + 'fake_id-' + id;
+                    )) ?>' + 'fake_id/' + id;
                 $.get(url, function(result) {
                     result = $.parseJSON(result);
                     if (result.status) {
@@ -1326,11 +1323,11 @@ var AttachmentListView = Backbone.View.extend({
                 var source  = el.find('input.select-media-source').val();
                 // Saving uploaded medias
                 if ('upload' == source) {
-                    var url = '<?php echo $this->url('', array(
+                    var url = '<?php echo $this->url('admin', array(
                         'controller' => 'media',
                         'action'     => 'save',
                         'source'     => 'attachment',
-                    )) ?>/' + 'fake_id-' + id;
+                    )) ?>/' + 'fake_id/' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {
@@ -1388,7 +1385,7 @@ var FeatureView = Backbone.View.extend({
         "click .feature.icon-remove"    : "remove",
         "click .media.icon-remove"      : "removeUpload",
         "click #media-search"           : "searchMedia",
-        "click .media-insert"           : "insertMedia",
+        "click .media-insert a"         : "insertMedia",
         "click .media-remove.close"     : "removeMedia",
         "click #media-close"            : "cancel",
         "click #media-cancel"           : "cancel",
@@ -1407,11 +1404,11 @@ var FeatureView = Backbone.View.extend({
     // Fetching image by upload
     fileupload      : function() {
         var self = this;
-        var url  = '<?php echo $this->url('', array(
+        var url  = '<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-        )); ?>/fake_id-' + page.mediaFakeId;
+        )); ?>/fake_id/' + page.mediaFakeId;
         this.input.fileupload({
             formData    : function() {
                 return [];
@@ -1422,18 +1419,18 @@ var FeatureView = Backbone.View.extend({
                 if (d.status == 1) {
                     self.renderUpload(d.data);
                     // Clear hidden input value and select image of media section
-                    self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
+                    self.setMediaData('fake_id/' + page.mediaFakeId, 'upload');
                     $('#media-select-result').html('');
                 } else {
                     alert(d.message);
                 }
             }
         }).bind('fileuploadsend', function(e, data) {
-            data.url = '<?php echo $this->url('', array(
+            data.url = '<?php echo $this->url('admin', array(
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-            )); ?>/fake_id-' + page.mediaFakeId;
+            )); ?>/fake_id/' + page.mediaFakeId;
         });  
     },
     removeUpload    : function(clearData) {
@@ -1444,12 +1441,12 @@ var FeatureView = Backbone.View.extend({
         
         var self = this;
         $.getJSON('<?php echo $this->url(
-            '',
+            'admin',
             array(
                 'controller' => 'media',
                 'action'     => 'remove'
             )
-        ); ?>fake_id-'+ page.mediaFakeId).done(function() {
+        ); ?>fake_id/'+ page.mediaFakeId).done(function() {
             $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
@@ -1461,7 +1458,7 @@ var FeatureView = Backbone.View.extend({
         $('#media-image').html(_.template($('#media-uploaded-image').html(), obj));
     },
     saveUploadToMedia : function(id) {
-        var url = '<?php echo $this->url('', array(
+        var url = '<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'save',
             'source'     => 'feature',
@@ -1476,7 +1473,7 @@ var FeatureView = Backbone.View.extend({
             success:  function(result) {
                 if (result.status) {
                     $("#media-image").html(page.mediaDefaultTemplate);
-                    self.setMediaData('media_id-' + result.data.id, 'media');
+                    self.setMediaData('media_id/' + result.data.id, 'media');
                     page.mediaFakeId = result.data.newid;
                 } else {
                     alert(result.data.message);
@@ -1497,7 +1494,7 @@ var FeatureView = Backbone.View.extend({
                 'controller' => 'draft',
                 'action'     => 'save-image',
             )
-        ); ?>' + 'id-' + page.id + '/fake_id-' + page.featureFakeId + '/' + mediaId, function(result) {
+        ); ?>' + 'id-' + page.id + '/fake_id-' + page.featureFakeId + '/' + mediaId.replace(/\//, '-'), function(result) {
             result = $.parseJSON(result);
             if (result.status) {
                 self.render({preview_url: result.data.preview_url});
@@ -1534,7 +1531,7 @@ var FeatureView = Backbone.View.extend({
     searchMedia     : function() {
         var title = $('input[name="media-title"]').val();
         $.get('<?php echo $this->url(
-            '',
+            'admin',
             array(
                 'controller' => 'media',
                 'action'     => 'search',
@@ -1562,7 +1559,7 @@ var FeatureView = Backbone.View.extend({
         
         // Setting data
         $('#media-select-result').html(content);
-        this.setMediaData('media_id-' + id, 'media');
+        this.setMediaData('media_id/' + id, 'media');
     },
     removeMedia : function() {
         $('#media-select-result').html('');
@@ -1705,7 +1702,7 @@ var GalleryListView = Backbone.View.extend({
     },
     searchMedia     : function() {
         var title = $('input[name="gallery-title"]').val();
-        $.get('<?php echo $this->url('', array(
+        $.get('<?php echo $this->url('admin', array(
             'controller' => 'media',
             'action'     => 'search',
             'type'       => 'image',
@@ -1761,10 +1758,10 @@ var GalleryListView = Backbone.View.extend({
             $('.media-insert[data-id="' + id + '"]').css('display', 'block');
         } else if ('upload' == source) {
             if (confirm("<?php _e('Do you really want to remove this media?')?>")) {
-                var url = '<?php echo $this->url('', array(
+                var url = '<?php echo $this->url('admin', array(
                     'controller' => 'media',
                     'action'     => 'remove',
-                    )) ?>' + 'fake_id-' + id;
+                    )) ?>' + 'fake_id/' + id;
                 $.get(url, function(result) {
                     result = $.parseJSON(result);
                     if (result.status) {
@@ -1785,11 +1782,11 @@ var GalleryListView = Backbone.View.extend({
                 var source  = el.find('input.select-media-source').val();
                 // Saving uploaded medias
                 if ('upload' == source) {
-                    var url = '<?php echo $this->url('', array(
+                    var url = '<?php echo $this->url('admin', array(
                         'controller' => 'media',
                         'action'     => 'save',
                         'source'     => 'gallery',
-                    )) ?>/' + 'fake_id-' + id;
+                    )) ?>/' + 'fake_id/' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {

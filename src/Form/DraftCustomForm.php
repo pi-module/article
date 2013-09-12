@@ -11,7 +11,7 @@ namespace Module\Article\Form;
 
 use Pi;
 use Pi\Form\Form as BaseForm;
-use Module\Article\Controller\Admin\ConfigController;
+use Module\Article\Controller\Admin\SetupController;
 
 /**
  * Custom draft form class
@@ -44,11 +44,11 @@ class DraftCustomForm extends BaseForm
                 'label'    => __('Form Mode'),
             ),
             'attributes' => array(
-                'value'    => ConfigController::FORM_MODE_EXTENDED,
+                'value'    => SetupController::FORM_MODE_EXTENDED,
                 'options'  => array(
-                    ConfigController::FORM_MODE_NORMAL   => __('Normal'),
-                    ConfigController::FORM_MODE_EXTENDED => __('Extended'),
-                    ConfigController::FORM_MODE_CUSTOM   => __('Custom'),
+                    SetupController::FORM_MODE_NORMAL   => __('Normal'),
+                    SetupController::FORM_MODE_EXTENDED => __('Extended'),
+                    SetupController::FORM_MODE_CUSTOM   => __('Custom'),
                 ),
             ),
             'type'       => 'radio',

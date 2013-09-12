@@ -12,7 +12,6 @@ namespace Module\Article;
 use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
-use Module\Article\Upload;
 use Module\Article\Cache;
 use Module\Article\Compiled;
 use Module\Article\Statistics;
@@ -274,7 +273,6 @@ class Entity
         $categories = $authors = $users = $tags = $urls = array();
 
         $modelArticle  = Pi::model('article', $module);
-        $modelUser     = Pi::model('user');
         
         // Generate columns of extended table and statistics table
         $extendedColumns = Pi::service('registry')
@@ -391,10 +389,10 @@ class Entity
             if (!empty($userIds) 
                 && (empty($columns) || in_array('uid', $columns))
             ) {
-                $resultsetUser = $modelUser->find($userIds);
+                $resultsetUser = Pi::user()->get($userIds);
                 foreach ($resultsetUser as $row) {
-                    $users[$row->id] = array(
-                        'name' => $row->identity,
+                    $users[$row['id']] = array(
+                        'name' => $row['identity'],
                     );
                 }
                 unset($resultsetUser);
@@ -431,7 +429,7 @@ class Entity
 
                 if (empty($columns) || in_array('image', $columns)) {
                     if ($row['image']) {
-                        $row['thumb'] = Upload::getThumbFromOriginal($row['image']);
+                        $row['thumb'] = Service::getThumbFromOriginal($row['image']);
                     }
                 }
 

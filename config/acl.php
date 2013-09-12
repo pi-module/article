@@ -13,7 +13,7 @@
  * @author Zongshu Lin <lin40553024@163.com>
  */
 return array(
-    'roles'      => array(
+    /*'roles'      => array(
         // Front role for article module
         'article-manager' => array(
             'title'     => _t('Article Manager'),
@@ -23,67 +23,40 @@ return array(
             'section'   => 'admin',
             'parents'   => array('staff'),
         )
-    ),
+    ),*/
     
     'resources'  => array(
-        'front'          => array(
+        'admin'          => array(
+            'article'    => array(
+                'module'      => 'article',
+                'title'       => _t('Article management'),
+            ),
             // Article author resource
             'author'     => array(
                 'module'      => 'article',
                 'title'       => _t('Author management'),
-                'access'      => array(
-                    'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
             ),
             // Article category resource
             'category'   => array(
                 'module'      => 'article',
                 'title'       => _t('Category management'),
-                'access'      => array(
-                    'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
             ),
             // Topic resource
             'topic'      => array(
                 'module'      => 'article',
                 'title'       => _t('Topic management'),
-                'access'      => array(
-                    'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
             ),
             // Media resource
             'media'      => array(
                 'module'      => 'article',
                 'title'       => _t('Media management'),
-                'access'      => array(
-                    'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
             ),
-        ),
-        
-        'admin'          => array(
             // Article statistics resource
             'statistics' => array(
                 'module'      => 'article',
                 'title'       => _t('Statistics page view'),
                 'access'      => array(
-                    'contributor'  => 1,
+                    //'contributor'  => 1,
                 ),
             ),
             // Module permission controller
@@ -92,10 +65,53 @@ return array(
                 'title'       => _t('Permission management'),
             ),
             // Article configuration
-            'config'     => array(
+            'setup'      => array(
                 'module'      => 'article',
-                'title'       => _t('Configuration management'),
+                'title'       => _t('Setup management'),
             ),
+        ),
+    ),
+    
+    'exception'  => array(
+        // AJAX action of author
+        array(
+            'controller'    => 'author',
+            'action'        => 'save-image',
+        ),
+        array(
+            'controller'    => 'author',
+            'action'        => 'remove-image',
+        ),
+        // AJAX action of category
+        array(
+            'controller'    => 'category',
+            'action'        => 'save-image',
+        ),
+        array(
+            'controller'    => 'category',
+            'action'        => 'remove-image',
+        ),
+        // AJAX action of topic
+        array(
+            'controller'    => 'topic',
+            'action'        => 'save-image',
+        ),
+        array(
+            'controller'    => 'topic',
+            'action'        => 'remove-image',
+        ),
+        // AJAX action of media
+        array(
+            'controller'    => 'media',
+            'action'        => 'upload',
+        ),
+        array(
+            'controller'    => 'media',
+            'action'        => 'remove',
+        ),
+        array(
+            'controller'    => 'media',
+            'action'        => 'save',
         ),
     ),
 );

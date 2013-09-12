@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -15,10 +15,10 @@ use Pi\Paginator\Paginator;
 use Module\Article\Form\MediaEditForm;
 use Module\Article\Form\MediaEditFilter;
 use Module\Article\Form\SimpleSearchForm;
-use Module\Article\Upload;
 use Module\Article\Service;
 use Zend\Db\Sql\Expression;
 use Module\Article\Media;
+use Module\Article\File;
 use Pi\File\Transfer\Upload as UploadHandler;
 use ZipArchive;
 
@@ -83,7 +83,7 @@ class MediaController extends ActionController
         unset($data['media']);
         
         // Getting media info
-        $session    = Upload::getUploadSession($module, 'media');
+        $session    = Service::getUploadSession($module, 'media');
         if (isset($session->$id)
             || ($fakeId && isset($session->$fakeId))) {
             $uploadInfo = isset($session->$id)
@@ -113,7 +113,7 @@ class MediaController extends ActionController
         
         // Getting user ID
         $user   = Pi::service('user')->getUser();
-        $uid    = $user->account->id ?: 0;
+        $uid    = Pi::user()->id ?: 0;
         $data['uid'] = $uid;
         
         if (empty($id)) {
@@ -154,13 +154,122 @@ class MediaController extends ActionController
     }
     
     /**
+     * Output file
+     * 
+     * @param array $options 
+     */
+    protected function httpOutputFile(array $options)
+    {
+        if ((!isset($options['file']) && !isset($options['raw']))) {
+            if (!$options['silent']) {
+                header('HTTP/1.0 404 Not Found');
+            }
+            exit();
+        }
+        if (isset($options['file']) && !is_file($options['file'])) {
+            if (!$options['silent']) {
+                header('HTTP/1.0 403 Forbidden');
+            }
+            exit();
+        }
+        if (strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) {
+            $options['fileName'] = urlencode($options['fileName']);
+        }
+        $options['fileSize'] = isset($options['file']) 
+            ? filesize($options['file']) : strlen($options['raw']);
+
+        if (ini_get('zlib.output_compression')) {
+            ini_set('zlib.output_compression', 'Off');
+        }
+
+        header("Pragma: public");
+        header('Content-Description: File Transfer');
+        if (strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE') === false) {
+            header('Content-Type: application/force-download; charset=UTF-8');
+        } else {
+            header('Content-Type: application/octet-stream; charset=UTF-8');
+        }
+        header('Content-Disposition: attachment; filename="' . $options['fileName'] . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Cache-Control: private', false);
+        header('Pragma: public');
+        header('Content-Length: ' . $options['fileSize']);
+        ob_clean();
+        flush();
+
+        if (!empty($options['file'])) {
+            readfile($options['file']);
+            if (!empty($options['deleteFile'])) {
+                @unlink($options['file']);
+            }
+        } else {
+            echo $options['raw'];
+            ob_flush();
+            flush();
+        }
+        if (empty($options['notExit'])) {
+            exit();
+        }
+    }
+    
+    /**
+     * Calculate the image size by allowed image size.
+     * 
+     * @param string|array  $image
+     * @param array         $allowSize
+     * @return array
+     * @throws \Exception 
+     */
+    public static function scaleImageSize($image, $allowSize)
+    {
+        if (is_string($image)) {
+            $imageSizeRaw = getimagesize($image);
+            $imageSize['w'] = $imageSizeRaw[0];
+            $imageSize['h'] = $imageSizeRaw[1];
+        } else {
+            $imageSize = $image;
+        }
+        
+        if (!isset($imageSize['w']) or !isset($imageSize['h'])) {
+            throw \Exception(__('Raw image width and height data is needed!'));
+        }
+        
+        if (!isset($allowSize['image_width'])
+            or !isset($allowSize['image_height'])
+        ) {
+            throw \Exception(__('The limitation data is needed!'));
+        }
+        
+        $scaleImage = $imageSize;
+        if ($imageSize['w'] >= $imageSize['h']) {
+            if ($imageSize['w'] > $allowSize['image_width']) {
+                $scaleImage['w'] = (int) $allowSize['image_width'];
+                $scaleImage['h'] = (int) (($allowSize['image_width']
+                                 * $imageSize['h'])
+                                 / $imageSize['w']);
+            }
+        } else {
+            if ($imageSize['h'] > $allowSize['image_height']) {
+                $scaleImage['h'] = (int) $allowSize['image_height'];
+                $scaleImage['w'] = (int) (($allowSize['image_height'] 
+                                 * $imageSize['w'])
+                                 / $imageSize['h']);
+            }
+        }
+        
+        return $scaleImage;
+    }
+    
+    /**
      * Media index page, which will redirect to list page
      * 
      * @return ViewModel
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array('action'    => 'list'));
+        return $this->redirect()->toRoute('', array('action' => 'list'));
     }
     
     /**
@@ -256,16 +365,9 @@ class MediaController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $form   = $this->getMediaForm('add');
 
-        $form->setData(array(
-            'fake_id'  => Upload::randomKey(),
-        ));
+        $form->setData(array('fake_id'  => uniqid()));
 
         Service::setModuleConfig($this);
         $this->view()->assign(array(
@@ -308,11 +410,6 @@ class MediaController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Media Info'));
         
@@ -366,11 +463,6 @@ class MediaController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getModuleResourcePermission('media');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $from   = Service::getParam($this, 'from', '');
         
         $id     = $this->params('id', 0);
@@ -461,7 +553,7 @@ class MediaController extends ActionController
             ? $config['image_extension'] : $config['media_extension'];
         $mediaSize        = ($type == 'image')
             ? $config['max_image_size'] : $config['max_media_size'];
-        $destination = Upload::getTargetDir('media', $module, true, true);
+        $destination = Service::getTargetDir('media', $module, true, true);
         $upload      = new UploadHandler;
         $upload->setDestination(Pi::path($destination))
                 ->setRename($rename)
@@ -497,13 +589,13 @@ class MediaController extends ActionController
         $uploadInfo['tmp_name'] = $fileName;
         $imageSize              = array();
         if (in_array($ext, $imageExt)) {
-            $scaleImageSize = Upload::scaleImageSize(
+            $scaleImageSize = $this->scaleImageSize(
                 Pi::path($fileName),
                 $config
             );
             $uploadInfo['w'] = $width ?: $scaleImageSize['w'];
             $uploadInfo['h'] = $height ?: $scaleImageSize['h'];
-            Upload::saveImage($uploadInfo);
+            Service::saveImage($uploadInfo);
             
             $imageSizeRaw = getimagesize(Pi::path($fileName));
             $imageSize['w'] = $imageSizeRaw[0];
@@ -524,7 +616,7 @@ class MediaController extends ActionController
             $rowMedia->save();
         } else {
             // Or save info to session
-            $session = Upload::getUploadSession($module, 'media');
+            $session = Service::getUploadSession($module, 'media');
             $session->$id = $uploadInfo;
         }
         
@@ -574,7 +666,7 @@ class MediaController extends ActionController
                 $affectedRows = $row->save();
             }
         } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'media');
+            $session = Service::getUploadSession($module, 'media');
 
             if (isset($session->$fakeId)) {
                 $uploadInfo = isset($session->$id) ? $session->$id : $session->$fakeId;
@@ -650,7 +742,7 @@ class MediaController extends ActionController
         }
         
         $filePath = 'upload/temp';
-        Upload::mkdir($filePath);
+        File::mkdir($filePath);
         $filename = sprintf('%s/media-%s.zip', $filePath, time());
         $filename = Pi::path($filename);
         $zip      = new ZipArchive();
@@ -676,7 +768,7 @@ class MediaController extends ActionController
         if ($compress) {
             $options['deleteFile'] = true;
         }
-        Upload::httpOutputFile($options, $this);
+        $this->httpOutputFile($options, $this);
     }
     
     /**

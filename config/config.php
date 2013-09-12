@@ -78,7 +78,7 @@ return array(
             'title'       => _t('Enable Tag'),
             'description' => _t('Enable tag (Tag module must be installed)'),
             'edit'        => 'checkbox',
-            'value'       => 1,
+            'value'       => 0,
             'filter'      => 'number_int',
         ),
         'default_source'  => array(

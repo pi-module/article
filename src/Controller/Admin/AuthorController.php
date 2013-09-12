@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -15,7 +15,6 @@ use Pi\Paginator\Paginator;
 use Module\Article\Form\AuthorEditForm;
 use Module\Article\Form\AuthorEditFilter;
 use Module\Article\Model\Author;
-use Module\Article\Upload;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
 use Pi\File\Transfer\Upload as UploadHandler;
@@ -94,7 +93,7 @@ class AuthorController extends ActionController
         }
 
         // Save photo
-        $session    = Upload::getUploadSession($module, 'author');
+        $session    = Service::getUploadSession($module, 'author');
         if (isset($session->$id)
             || ($fakeId && isset($session->$fakeId))) {
             $uploadInfo = isset($session->$id) 
@@ -183,9 +182,7 @@ class AuthorController extends ActionController
             $this->redirect()->toRoute('', array('action' => 'list'));
         }
 
-        $form->setData(array(
-            'fake_id'  => Upload::randomKey(),
-        ));
+        $form->setData(array('fake_id'  => uniqid()));
         $this->view()->assign('form', $form);
     }
     
@@ -383,7 +380,7 @@ class AuthorController extends ActionController
         }
         
         // Get destination path
-        $destination = Upload::getTargetDir('author', $module, true, false);
+        $destination = Service::getTargetDir('author', $module, true, false);
 
         if ($mediaId) {
             $rowMedia = $this->getModel('media')->find($mediaId);
@@ -436,7 +433,7 @@ class AuthorController extends ActionController
         $uploadInfo['w']        = $this->config('author_width');
         $uploadInfo['h']        = $this->config('author_height');
         
-        Upload::saveImage($uploadInfo);
+        Service::saveImage($uploadInfo);
 
         $rowAuthor = $this->getModel('author')->find($id);
         if ($rowAuthor) {
@@ -448,7 +445,7 @@ class AuthorController extends ActionController
             $rowAuthor->save();
         } else {
             // Or save info to session
-            $session = Upload::getUploadSession($module, 'author');
+            $session = Service::getUploadSession($module, 'author');
             $session->$id = $uploadInfo;
         }
 
@@ -496,7 +493,7 @@ class AuthorController extends ActionController
                 $affectedRows     = $rowAuthor->save();
             }
         } else if ($fakeId) {
-            $session = Upload::getUploadSession($module, 'author');
+            $session = Service::getUploadSession($module, 'author');
 
             if (isset($session->$fakeId)) {
                 $uploadInfo = isset($session->$id)
@@ -513,44 +510,5 @@ class AuthorController extends ActionController
             'status'    => $affectedRows ? true : false,
             'message'   => 'ok',
         );
-    }
-    
-    /**
-     * Get author name by AJAX
-     *  
-     */
-    public function getFuzzyAuthorAction()
-    {
-        Pi::service('log')->active(false);
-        $resultset = $result = array();
-
-        $name   = Service::getParam($this, 'name', '');
-        $limit  = Service::getParam($this, 'limit', 10);
-
-        $model  = $this->getModel('author');
-        $select = $model->select()
-                ->columns(array('id', 'name', 'photo'))
-                ->order('name ASC')
-                ->limit($limit);
-        if ($name) {
-            $select->where->like('name', "{$name}%");
-        }
-
-        $result = $model->selectWith($select)->toArray();
-
-        foreach ($result as $val) {
-            $resultset[] = array(
-                'id'    => $val['id'],
-                'name'  => $val['name'] . '[' . $val['id'] . ']',
-                'photo' => $val['photo'],
-            );
-        }
-
-        echo json_encode(array(
-            'status'    => true,
-            'message'   => __('OK'),
-            'data'      => $resultset,
-        ));
-        exit;
     }
 }

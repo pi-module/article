@@ -78,7 +78,7 @@ class TagController extends ActionController
             });
         }
 
-        $route = '.' . Service::getRouteName();
+        $route = $this->getModule() . '.' . Service::getRouteName();
         // Pagination
         $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit)

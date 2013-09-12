@@ -26,7 +26,7 @@ use Module\Article\Service;
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
-class ConfigController extends ActionController
+class SetupController extends ActionController
 {
     const ELEMENT_EDIT_PATH = 'var/article/config/elements.edit.php';
     

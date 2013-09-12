@@ -11,7 +11,7 @@ namespace Module\Article\Form;
 
 use Pi;
 use Pi\Form\Form as BaseForm;
-use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Controller\Admin\SetupController as Config;
 
 /**
  * Draft edit form class

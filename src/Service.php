@@ -12,9 +12,8 @@ namespace Module\Article;
 use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
-use Module\Article\Upload;
 use Pi\Mvc\Controller\ActionController;
-use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Controller\Admin\SetupController as Config;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;
@@ -66,9 +65,6 @@ class Service
             'featureWidth'     => $handler->config('feature_width'),
             'featureHeight'    => $handler->config('feature_height'),
             'imageExtension'   => array_map('trim', explode(',', $handler->config('image_extension'))),
-            'max_image_size'   => Upload::fromByteString($handler->config('max_image_size')),
-            'media_extension'  => $handler->config('media_extension'),
-            'max_media_size'   => Upload::fromByteString($handler->config('max_media_size')),
             'defaultMediaImage' => Pi::service('asset')
                 ->getModuleAsset(
                     $handler->config('default_media_image'),
@@ -141,7 +137,6 @@ class Service
         $categories = $authors = $users = $tags = $urls = array();
 
         $modelDraft     = Pi::model('draft', $module);
-        $modelUser      = Pi::model('user');
         $modelAuthor    = Pi::model('author', $module);
 
         $resultset = $modelDraft->getSearchRows($where, $limit, $offset, $columns, $order);
@@ -174,7 +169,7 @@ class Service
             }
 
             if (!empty($userIds)) {
-                $resultsetUser = $modelUser->find($userIds);
+                $resultsetUser = Pi::user()->get($userIds);
                 foreach ($resultsetUser as $row) {
                     $users[$row->id] = array(
                         'name' => $row->identity,
@@ -202,7 +197,7 @@ class Service
 
                 if (empty($columns) || isset($columns['image'])) {
                     if ($row['image']) {
-                        $row['thumb'] = Upload::getThumbFromOriginal($row['image']);
+                        $row['thumb'] = self::getThumbFromOriginal($row['image']);
                     }
                 }
             }
@@ -234,11 +229,11 @@ class Service
                     && strcmp($featureImage->image, $rowArticle->image) != 0
                 ) {
                     @unlink(Pi::path($featureImage->image));
-                    @unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
+                    @unlink(Pi::path(self::getThumbFromOriginal($featureImage->image)));
                 }
             } else if ($featureImage->image) {
                 @unlink(Pi::path($featureImage->image));
-                @unlink(Pi::path(Upload::getThumbFromOriginal($featureImage->image)));
+                @unlink(Pi::path(self::getThumbFromOriginal($featureImage->image)));
             }
         }
 
@@ -631,7 +626,7 @@ class Service
     public static function isMine($uid)
     {
         $user   = Pi::service('user')->getUser();
-        if ($uid == $user->account->id) {
+        if ($uid == Pi::user()->id) {
             return true;
         }
         
@@ -722,7 +717,7 @@ class Service
         $where = array();
         if (empty($uid)) {
             $user   = Pi::service('user')->getUser();
-            $uid    = $user->account->id ?: 0;
+            $uid    = Pi::user()->id ?: 0;
         }
         $where['uid'] = $uid;
         
@@ -835,7 +830,7 @@ class Service
         // Getting front-end role of user
         if (empty($uid)) {
             $user   = Pi::service('user')->getUser();
-            $uid    = $user->account->id ?: 0;
+            $uid    = Pi::user()->id ?: 0;
         }
         $rowRole = Pi::model('user_role')->find($uid, 'user');
         
@@ -904,5 +899,96 @@ class Service
         }
         
         return $rows;
+    }
+    
+    /**
+     * Get session instance
+     * 
+     * @param string  $module
+     * @param string  $type
+     * @return Pi\Application\Service\Session 
+     */
+    public static function getUploadSession($module = null, $type = 'default')
+    {
+        $module = $module ?: Pi::service('module')->current();
+        $ns     = sprintf('%s_%s_upload', $module, $type);
+
+        return Pi::service('session')->$ns;
+    }
+    
+    /**
+     * Get target directory
+     * 
+     * @param string  $section
+     * @param string  $module
+     * @param bool    $autoCreate
+     * @param bool    $autoSplit
+     * @return string 
+     */
+    public static function getTargetDir(
+        $section, 
+        $module = null, 
+        $autoCreate = false, 
+        $autoSplit = true
+    ) {
+        $module     = $module ?: Pi::service('module')->current();
+        $config     = Pi::service('module')->config('', $module);
+        $pathKey    = sprintf('path_%s', strtolower($section));
+        $path       = isset($config[$pathKey]) ? $config[$pathKey] : '';
+
+        if ($autoSplit && !empty($config['sub_dir_pattern'])) {
+            $path .= '/' . date($config['sub_dir_pattern']);
+        }
+
+        if ($autoCreate) {
+            File::mkdir(Pi::path($path));
+        }
+
+        return $path;
+    }
+    
+    /**
+     * Get thumb image name
+     * 
+     * @param string  $fileName
+     * @return string 
+     */
+    public static function getThumbFromOriginal($fileName)
+    {
+        $parts = pathinfo($fileName);
+        return $parts['dirname'] 
+            . '/' . $parts['filename'] . '-thumb.' . $parts['extension'];
+    }
+    
+    /**
+     * Save image
+     * 
+     * @param array  $uploadInfo
+     * @return string|bool 
+     */
+    public static function saveImage($uploadInfo)
+    {
+        $result = false;
+        $size   = array();
+
+        $fileName       = $uploadInfo['tmp_name'];
+        $absoluteName   = Pi::path($fileName);
+        
+        $size = array($uploadInfo['w'], $uploadInfo['h']);
+
+        Pi::service('image')->resize($absoluteName, $size);
+        
+        // Create thumb
+        if (!empty($uploadInfo['thumb_w']) 
+            or !empty($uploadInfo['thumb_h'])
+        ) {
+            Pi::service('image')->resize(
+                $absoluteName,
+                array($uploadInfo['thumb_w'], $uploadInfo['thumb_h']),
+                Pi::path(self::getThumbFromOriginal($fileName))
+            );
+        }
+
+        return $result ? $fileName : false;
     }
 }

@@ -9,14 +9,14 @@
 <?php include 'message-box.phtml' ?>
 
 <div id="jsUpload">
-    <?php include $this->templateComponent('form') ?>
+    <?php include $this->templateComponent('form'); ?>
     
     <script id="temp-upload" type="text/template">
         <div>
-            <div id="category-image" class="upload-image-bg">
+            <div id="topic-image" class="upload-image-bg">
                 <?php $src = $form->get('image')->getValue() ?>
                 <?php if ($src) { ?>
-                    <div class="black-bg"><i class="category icon-remove"></i></div>    
+                    <div class="black-bg"><i class="topic icon-remove"></i></div>    
                     <img src="<?php echo Pi::url($src) ?>">
                     <?php } else { ?>    
                     <i class="icon-columns"></i>
@@ -36,8 +36,8 @@
 var page = {
     id      : function() {
         return "<?php echo $form->get('id')->getValue() 
-            ? 'id-' . $form->get('id')->getValue() 
-            : 'fake_id-' . $form->get('fake_id')->getValue(); ?>";
+            ? 'id/' . $form->get('id')->getValue() 
+            : 'fake_id/' . $form->get('fake_id')->getValue(); ?>";
     },
     form    : $("form.form-horizontal"),
     $       : function(selector) {
@@ -47,19 +47,17 @@ var page = {
 };
 
 var UploadView = Backbone.View.extend({
-    template        : _.template('<div class="black-bg">'
-                    + '<i class="category icon-remove"></i></div>'
-                    + '<img src="<%=preview_url %>">'
-    ),
+    template        : _.template('<div class="black-bg"><i class="topic icon-remove"></i></div>'
+                    + '<img src="<%=preview_url %>">'),
     events          : {
-        "click .category.icon-remove"   :"remove",
-        "click .media.icon-remove"      : "removeUpload",
-        "click #media-search"           : "searchMedia",
-        "click .media-insert"           : "insertMedia",
-        "click .media-remove.close"     : "removeMedia",
-        "click #media-close"            : "cancel",
-        "click #media-cancel"           : "cancel",
-        "click #media-process"          : "processImage"
+        "click .topic.icon-remove"  :"remove",
+        "click .media.icon-remove"  : "removeUpload",
+        "click #media-search"       : "searchMedia",
+        "click .media-insert a"     : "insertMedia",
+        "click .media-remove.close" : "removeMedia",
+        "click #media-close"        : "cancel",
+        "click #media-cancel"       : "cancel",
+        "click #media-process"      : "processImage"
     },
     initialize      : function() {
         page.$("[name=placeholder]")
@@ -77,7 +75,7 @@ var UploadView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-        )); ?>/fake_id-' + page.mediaFakeId;
+        )); ?>/fake_id/' + page.mediaFakeId;
         this.input.fileupload({
             formData    : function() {
                 return [];
@@ -88,7 +86,7 @@ var UploadView = Backbone.View.extend({
                 if (d.status == 1) {
                     self.renderUpload(d.data);
                     // Clear hidden input value and select image of media
-                    self.setMediaData('fake_id-' + page.mediaFakeId, 'upload');
+                    self.setMediaData('fake_id/' + page.mediaFakeId, 'upload');
                     $('#media-select-result').html('');
                 } else {
                     alert(d.message);
@@ -99,7 +97,7 @@ var UploadView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-            )); ?>/fake_id-' + page.mediaFakeId;
+            )); ?>/fake_id/' + page.mediaFakeId;
         });  
     },
     removeUpload    : function(clearData) {
@@ -115,7 +113,7 @@ var UploadView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'remove'
             )
-        ); ?>fake_id-' + page.mediaFakeId).done(function() {
+        ); ?>fake_id/'+ page.mediaFakeId).done(function() {
             $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
@@ -124,35 +122,32 @@ var UploadView = Backbone.View.extend({
     },
     renderUpload    : function(obj) {
         obj.preview_url = obj.preview_url + '?' + new Date().getTime();
-        $('#media-image').html(_.template(
-            $('#media-uploaded-image').html(),
-            obj
-        ));
+        $('#media-image').html(_.template($('#media-uploaded-image').html(), obj));
     },
     saveUploadToMedia : function(id) {
         var url = '<?php echo $this->url('', array(
             'controller' => 'media',
             'action'     => 'save',
-            'source'     => 'category',
+            'source'     => 'topic',
         )) ?>/' + id;
         var self = this;
         $.ajax({
-            cache       : false,
-            async       : false,
-            dataType    : 'json',
-            type        : 'get',
-            url         : url,
-            success     : function(result) {
+            cache:    false,
+            async:    false,
+            dataType: 'json',
+            type:     'get',
+            url:      url,
+            success:  function(result) {
                 if (result.status) {
                     $("#media-image").html(page.mediaDefaultTemplate);
                     self.renderMessage('success', result.data.message);
-                    self.setMediaData('media_id-' + result.data.id, 'media');
+                    self.setMediaData('media_id/' + result.data.id, 'media');
                     page.mediaFakeId = result.data.newid;
                 } else {
                     self.renderMessage('error', result.data.message);
                 }
             },
-            error       : function() {
+            error:    function() {
                 self.renderMessage(
                     'error',
                     '<?php _e('Error ocurred when request saving image!') ?>'
@@ -160,17 +155,20 @@ var UploadView = Backbone.View.extend({
             }
         })
     },
-    // Processing category image
-    saveCategory    : function() {
+    // Processing topic image
+    saveTopic        : function() {
         var self    = this;
         var mediaId = $('input[name="image-id"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'category',
-            'action'     => 'save-image',
-        )); ?>' + page.id() + '/' + mediaId, function(result) {
+        $.get('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'topic',
+                'action'     => 'save-image',
+            )
+        ); ?>' + page.id() + '/' + mediaId, function(result) {
             result = $.parseJSON(result);
             if (result.status) {
-                page.$('[name=image]').val(result.data.filename);
+                page.$("[name=image]").val(result.data.filename);
                 self.render(result.data);
                 // Remove all generated data
                 self.removeMedia();
@@ -185,26 +183,29 @@ var UploadView = Backbone.View.extend({
         $.getJSON('<?php echo $this->url(
             '',
             array(
-                'controller' => 'category',
+                'controller' => 'topic',
                 'action'     => 'remove-image'
             )
         ); ?>' + page.id()).done(function() {
-            page.$('[name=image]').val('');
-            self.$("#category-image").html('<i class="icon-columns"></i>');
+            page.$("[name=image]").val('');
+            self.$("#topic-image").html('<i class="icon-columns"></i>');
         });  
     },
     render          : function(obj) {
         obj.preview_url = obj.preview_url + '?' + new Date().getTime();
-        this.$("#category-image").html(this.template(obj));
+        this.$("#topic-image").html(this.template(obj));
     },
     // Fetching image from media
     searchMedia     : function() {
         var title = $('input[name="media-title"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => 'image',
-        )); ?>/' + 'title-' + title, function(result) {
+        $.get('<?php echo $this->url(
+            '',
+            array(
+                'controller' => 'media',
+                'action'     => 'search',
+                'type'       => 'image',
+            )
+        ); ?>/' + 'title-' + title, function(result) {
             var lists = $.parseJSON(result);
             for (i in lists) {
                 $('#media-lists')
@@ -226,7 +227,7 @@ var UploadView = Backbone.View.extend({
         
         // Setting data
         $('#media-select-result').html(content);
-        this.setMediaData('media_id-' + id, 'media');
+        this.setMediaData('media_id/' + id, 'media');
     },
     removeMedia : function() {
         $('#media-select-result').html('');
@@ -261,8 +262,8 @@ var UploadView = Backbone.View.extend({
                 self.saveUploadToMedia(id);
             }
 
-            // Creating temporary image for category
-            self.saveCategory();
+            // Creating temporary image for topic
+            self.saveTopic();
         }
     },
     renderMessage : function(status, message) {
