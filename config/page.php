@@ -66,9 +66,39 @@ return array(
     
     'admin'   => array(
         array(
-            'controller'   => 'config',
+            'controller'   => 'article',
             'permission'   => array(
-                'parent'       => 'config',
+                'parent'       => 'article',
+            ),
+        ),
+        array(
+            'controller'   => 'topic',
+            'permission'   => array(
+                'parent'       => 'topic',
+            ),
+        ),
+        array(
+            'controller'   => 'media',
+            'permission'   => array(
+                'parent'       => 'media',
+            ),
+        ),
+        array(
+            'controller'   => 'category',
+            'permission'   => array(
+                'parent'       => 'category',
+            ),
+        ),
+        array(
+            'controller'   => 'author',
+            'permission'   => array(
+                'parent'       => 'author',
+            ),
+        ),
+        array(
+            'controller'   => 'setup',
+            'permission'   => array(
+                'parent'       => 'setup',
             ),
         ),
         array(

@@ -11,7 +11,7 @@ namespace Module\Article\Form;
 
 use Pi;
 use Zend\InputFilter\InputFilter;
-use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Controller\Admin\SetupController as Config;
 
 /**
  * Filter and valid class for custom draft form

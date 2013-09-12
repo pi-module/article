@@ -13,7 +13,7 @@ use Pi;
 use Zend\Db\Sql\Expression;
 use Module\Article\Model\Article;
 use Pi\Mvc\Controller\ActionController;
-use Module\Article\Controller\Admin\ConfigController as Config;
+use Module\Article\Controller\Admin\SetupController as Config;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;

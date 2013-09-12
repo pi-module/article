@@ -7,7 +7,7 @@
  * @license      http://pialog.org/license.txt New BSD License
  */
 
-namespace Module\Article\Controller\Front;
+namespace Module\Article\Controller\Admin;
 
 use Pi\Mvc\Controller\ActionController;
 use Pi;
@@ -30,16 +30,16 @@ use Pi\File\Transfer\Upload as UploadHandler;
  * 
  * Feature list:
  * 
- * 1. List article of a category
+ * 1. List/add/edit/delete category
+ * 2. Merge/move a category to another category
+ * 3. AJAX action for saving category image
+ * 4. AJAX action for deleting category image
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
 class CategoryController extends ActionController
 {
     /**
-<<<<<<< HEAD
-     * List articles of a category
-=======
      * Get category form object
      * 
      * @param string $action  Form name
@@ -157,95 +157,11 @@ class CategoryController extends ActionController
      */
     public function indexAction()
     {
-        return $this->redirect()->toRoute('', array('action' => 'list'));
-    }
-    
-    /**
-     * Processing article list in category
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
-     */
-    public function listAction()
-    {
-        $modelCategory = $this->getModel('category');
-
-        $category   = Service::getParam($this, 'category', '');
-        $categoryId = is_numeric($category)
-            ? (int) $category : $modelCategory->slugToId($category);
-        $page       = Service::getParam($this, 'p', 1);
-        $page       = $page > 0 ? $page : 1;
-
-        $module = $this->getModule();
-        $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_limit_all'] ?: 40;
-        $where  = array();
-        
-        $route  = $module . '-' . Service::getRouteName();
-
-        // Get category info
-        $categories = Service::getCategoryList();
-        foreach ($categories as &$row) {
-            $row['url'] = $this->url($route, array(
-                'category' => $row['slug'] ?: $row['id'],
-            ));
-        }
-        $categoryIds = $modelCategory->getDescendantIds($categoryId);
-        if (empty($categoryIds)) {
-            return $this->jumpTo404(__('Invalid category id'));
-        }
-        $where['category'] = $categoryIds;
-        $categoryInfo      = $categories[$categoryId];
-
-        // Get articles
-        $columns           = array('id', 'subject', 'time_publish', 'category');
-        $resultsetArticle  = Entity::getAvailableArticlePage(
-            $where,
-            $page,
-            $limit,
-            $columns,
-            null,
-            $module
+        return $this->redirect()->toRoute(
+            '',
+            array('action' => 'list')
         );
-
-        // Total count
-        $where = array_merge($where, array(
-            'time_publish <= ?' => time(),
-            'status'            => Article::FIELD_STATUS_PUBLISHED,
-            'active'            => 1,
-        ));
-        $modelArticle   = $this->getModel('article');
-        $totalCount     = $modelArticle->getSearchRowsCount($where);
-
-        // Pagination
-        $paginator = Paginator::factory($totalCount);
-        $paginator->setItemCountPerPage($limit)
-            ->setCurrentPageNumber($page)
-            ->setUrlOptions(array(
-                'router'    => $this->getEvent()->getRouter(),
-                'route'     => $route,
-                'params'    => array(
-                    'category'      => $category,
-                ),
-            ));
-
-        $this->view()->assign(array(
-            'title'         => __('Article List in Category'),
-            'articles'      => $resultsetArticle,
-            'paginator'     => $paginator,
-            'categories'    => $categories,
-            'categoryInfo'  => $categoryInfo,
-            'category'      => $category,
-            'p'             => $page,
-            'config'        => $config,
-            //'seo'           => $this->setupSeo($categoryId),
-        ));
-
-        $this->view()->viewModel()->getRoot()->setVariables(array(
-            'breadCrumbs' => true,
-            'Tag'         => $categoryInfo['title'],
-        ));
     }
-<<<<<<< HEAD
-=======
     
     /**
      * Add category information
@@ -254,11 +170,6 @@ class CategoryController extends ActionController
      */
     public function addAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $parent = $this->params('parent', 0);
 
         $form   = $this->getCategoryForm('add');
@@ -307,7 +218,7 @@ class CategoryController extends ActionController
             
             return $this->redirect()->toRoute(
                 '',
-                array('action' => 'list-category')
+                array('action' => 'list')
             );
         }
     }
@@ -319,11 +230,6 @@ class CategoryController extends ActionController
      */
     public function editAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Category Info'));
         
@@ -358,7 +264,7 @@ class CategoryController extends ActionController
 
             return $this->redirect()->toRoute(
                 '',
-                array('action' => 'list-category')
+                array('action' => 'list')
             );
         }
         
@@ -388,11 +294,6 @@ class CategoryController extends ActionController
      */
     public function deleteAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $id     = $this->params('id');
 
         if ($id == 1) {
@@ -445,7 +346,7 @@ class CategoryController extends ActionController
                 ->clear($module);
 
             // Go to list page
-            $this->redirect()->toRoute('', array('action' => 'list-category'));
+            $this->redirect()->toRoute('', array('action' => 'list'));
             $this->view()->setTemplate(false);
         } else {
             return $this->jumpTo404(__('Invalid category ID!'));
@@ -455,13 +356,8 @@ class CategoryController extends ActionController
     /**
      * List all added categories
      */
-    public function listCategoryAction()
+    public function listAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $model = $this->getModel('category');
         $rowset = $model->enumerate(null, null, true);
 
@@ -481,11 +377,6 @@ class CategoryController extends ActionController
      */
     public function mergeAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $form = new CategoryMergeForm();
         $this->view()->assign('form', $form);
         $this->view()->assign('title', __('Merge Category'));
@@ -555,7 +446,7 @@ class CategoryController extends ActionController
             // Go to list page
             return $this->redirect()->toRoute(
                 '',
-                array('action' => 'list-category')
+                array('action' => 'list')
             );
         }
         
@@ -577,11 +468,6 @@ class CategoryController extends ActionController
      */
     public function moveAction()
     {
-        $allowed = Service::getModuleResourcePermission('category');
-        if (!$allowed) {
-            return $this->jumpToDenied();
-        }
-        
         $form = new CategoryMoveForm();
         $this->view()->assign('form', $form);
         $this->view()->assign('title', __('Move Category'));
@@ -624,7 +510,7 @@ class CategoryController extends ActionController
             // Go to list page
             return $this->redirect()->toRoute(
                 '',
-                array('action' => 'list-category')
+                array('action' => 'list')
             );
         }
         
@@ -804,5 +690,4 @@ class CategoryController extends ActionController
             'message'   => 'ok',
         );
     }
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
 }

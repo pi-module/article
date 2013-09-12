@@ -30,7 +30,7 @@
                     <td>
                         <?php echo $this->escape($draft['subject']); ?>
                         <div class="row-actions">
-                            <a href="<?php echo $this->url('', array('action' => 'edit', 'controller' => 'draft', 'id' => $draft['id'])); ?>?from=all">
+                            <a href="<?php echo $this->url('default', array('action' => 'edit', 'controller' => 'draft', 'id' => $draft['id'])); ?>?from=all">
                                 <?php _e('Edit'); ?>
                             </a>
                             <span class="divider">|</span>
