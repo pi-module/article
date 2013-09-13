@@ -35,61 +35,21 @@ return array(
             'author'     => array(
                 'module'      => 'article',
                 'title'       => _t('Author management'),
-<<<<<<< HEAD
-=======
-                'access'      => array(
-                    //'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
             ),
             // Article category resource
             'category'   => array(
                 'module'      => 'article',
                 'title'       => _t('Category management'),
-<<<<<<< HEAD
-=======
-                'access'      => array(
-                    //'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
             ),
             // Topic resource
             'topic'      => array(
                 'module'      => 'article',
                 'title'       => _t('Topic management'),
-<<<<<<< HEAD
-=======
-                'access'      => array(
-                    //'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
             ),
             // Media resource
             'media'      => array(
                 'module'      => 'article',
                 'title'       => _t('Media management'),
-<<<<<<< HEAD
-=======
-                'access'      => array(
-                    //'article-manager' => 0,
-                    'member'          => 0,
-                    'guest'           => 0,
-                    'inactive'        => 0,
-                    'banned'          => 0,
-                ),
->>>>>>> de9203a3459205c3efec9fbf8796415b4d626bba
             ),
             // Article statistics resource
             'statistics' => array(
