@@ -5,5 +5,10 @@
                 <?php _e('Custom Form') ?>
             </a>
         </li>
+        <li class="<?php echo $action == 'route' ? 'active' : '' ?>">
+            <a href="<?php echo $this->url('admin', array('action' => 'route')) ?>">
+                <?php _e('Custom Route') ?>
+            </a>
+        </li>
     </ul>
 </div>

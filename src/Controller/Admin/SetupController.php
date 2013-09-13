@@ -16,6 +16,10 @@ use Module\Article\Form\DraftCustomFilter;
 use Module\Article\File;
 use Module\Article\Form\DraftEditForm;
 use Module\Article\Service;
+use Module\Article\Installer\Resource\Route;
+use Module\Article\Form\RouteCustomForm;
+use Module\Article\Form\RouteCustomFilter;
+use Zend\EventManager\Event;
 
 /**
  * Config controller
@@ -126,6 +130,104 @@ EOD;
     }
     
     /**
+     * Get route configuration parameters
+     * 
+     * @param array  $configs
+     * @return array 
+     */
+    protected function canonizeConfig($configs)
+    {
+        if (empty($configs)) {
+            return array();
+        }
+        
+        $routeConfig = array();
+        foreach ($configs as $name => $config) {
+            $routeConfig = $config;
+            $routeConfig['name'] = $name;
+            
+            unset($routeConfig['options']);
+            $routeConfig = array_merge($routeConfig, $config['options']);
+            
+            unset($routeConfig['default']);
+            $routeConfig = array_merge(
+                $routeConfig,
+                $config['options']['default']
+            );
+            break;
+        }
+        
+        return $routeConfig;
+    }
+    
+    /**
+     * Save route parameters into file
+     * 
+     * @param array $config
+     * @return bool 
+     */
+    protected function saveRouteConfig($config)
+    {
+        $config['priority'] = $config['priority'] ?: 100;
+        
+        // Assemble options fields value
+        $options = '';
+        $optionalFields = array(
+            'structure_delimiter', 'param_delimiter',
+            'key_value_delimiter', 'route',
+        );
+        foreach ($optionalFields as $field) {
+            if (!empty($config[$field])) {
+                $options .= '            '
+                         . "'" . $field . "' => '" 
+                         . $config[$field] 
+                         . "',\r\n";
+            }
+        }
+        
+        // Assemble default fields value
+        $defaultFields = array('module', 'controller', 'action');
+        $default = '';
+        foreach ($defaultFields as $field) {
+            if (!empty($config[$field])) {
+                $default .= '                '
+                         . "'" . $field . "' => '" 
+                         . $config[$field] 
+                         . "',\r\n";
+            }
+        }
+        
+        $content =<<<EOD
+<?php
+return array(
+    '{$config['name']}' => array(
+        'section'  => '{$config['section']}',
+        'priority' => '{$config['priority']}',
+        'type'     => '{$config['type']}',
+        'options'  => array(
+{$options}
+            'default'  => array(
+{$default}
+            ),
+        ),
+    ),
+);
+
+EOD;
+        
+        $filename = sprintf(
+            '%s/%s/config/%s', 
+            Pi::path('var'),
+            $this->getModule(), 
+            Route::RESOURCE_CONFIG_NAME
+        );
+        
+        $result = File::addContent($filename, $content);
+        
+        return $result;
+    }
+
+    /**
      * Default action, jump to form configuration page
      * 
      * @return ViewModel 
@@ -162,7 +264,7 @@ EOD;
             $form->setData($data);
         }
         
-        $this->view()->assign('title', __('Configuration Form'));
+        $this->view()->assign('title', __('Form Configuration'));
         $this->view()->assign('form', $form);
         $this->view()->assign('custom', self::FORM_MODE_CUSTOM);
         $this->view()->assign('action', 'form');
@@ -215,5 +317,190 @@ EOD;
             
             Service::renderForm($this, $form, __('Data saved successful!'), false);
         }
+    }
+    
+    /**
+     * Save route parameter
+     * 
+     * @return ViewModel 
+     */
+    public function routeAction()
+    {
+        $module   = $this->getModule();
+        $filename = sprintf(
+            '%s/%s/config/%s', 
+            Pi::path('var'),
+            $module, 
+            Route::RESOURCE_CONFIG_NAME
+        );
+        
+        // Get custom configuration parameters
+        $fields  = array(
+            'name', 'section', 'priority', 'type', 'structure_delimiter',
+            'param_delimiter', 'key_value_delimiter', 'route',
+            'module', 'controller', 'action',
+        );
+        $configs = array();
+        $configFile = '';
+        if (file_exists($filename)) {
+            $configs = include $filename;
+            $configs = $this->canonizeConfig($configs);
+            $configFile = $filename;
+        }
+        foreach ($fields as $field) {
+            if (!isset($configs[$field])) {
+                $configs[$field] = '';
+            }
+        }
+        
+        // Get custom class
+        $class = '';
+        if (isset($configs['type']) and class_exists($configs['type'])) {
+            $class = $configs['type'];
+        }
+        
+        // Get form
+        $form = new RouteCustomForm();
+        $form->setAttributes(array(
+            'action'    => $this->url(
+                '',
+                array('action' => 'route', 'status' => 'edit')
+            ),
+            'class'     => 'form-horizontal',
+        ));
+        $form->setData($configs);
+        
+        // Get current route
+        $rowRoute = Pi::model('route')->select(array('module' => $module));
+        foreach ($rowRoute as $row) {
+            list($moduleName, $routeName) = explode('-', $row->name, 2);
+            if ('article' == $routeName) {
+                $routeName .= ' [default]';
+            } else {
+                $routeName .= ' [custom]';
+            }
+            break;
+        }
+        
+        $this->view()->assign(array(
+            'configs'   => $configs,
+            'class'     => $class,
+            'form'      => $form,
+            'status'    => $this->params('status', 'browse'),
+            'filename'  => $configFile,
+            'route'     => $routeName,
+        ));
+        
+        if ($this->request->isPost()) {
+            $post = $this->request->getPost();
+            $form->setData($post);
+            $form->setInputFilter(new RouteCustomFilter);
+            if (!$form->isValid()) {
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('There are some error occured!')
+                );
+            }
+            
+            $data = $form->getData();
+            $result = $this->saveRouteConfig($data);
+            if (!$result) {
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not save configuration data!')
+                );
+            }
+            
+            return $this->redirect()->toRoute('', array('action' => 'route'));
+        }
+    }
+    
+    /**
+     * Delete custom route configuration file
+     * 
+     * @return ViewModel 
+     */
+    public function deleteRouteAction()
+    {
+        $filename = sprintf(
+            '%s/%s/config/%s', 
+            Pi::path('var'),
+            $this->getModule(), 
+            Route::RESOURCE_CONFIG_NAME
+        );
+        
+        if (file_exists($filename)) {
+            @unlink($filename);
+        }
+        
+        return $this->redirect()->toRoute('', array('action' => 'route'));
+    }
+    
+    public function setupRouteAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $module = $this->getModule();
+        $route  = $this->params('custom', 0);
+        
+        $return = array('status' => false);
+        $resourceClass = 'Pi\Application\Installer\Resource\Route';
+        if (!class_exists($resourceClass)) {
+            $return['message'] = __('Route resource class is not exists!');
+            echo json_encode($return);
+            exit;
+        }
+        $methodAction = 'updateAction';
+        if (!method_exists($resourceClass, $methodAction)) {
+            $return['message'] = __('Update method is not exists!');
+            echo json_encode($return);
+            exit;
+        }
+        
+        if ($route) {
+            $optionsFile = sprintf(
+                '%s/%s/config/%s',
+                Pi::path('var'),
+                $module, 
+                Route::RESOURCE_CONFIG_NAME
+            );
+        } else {
+            $optionsFile = Pi::path('module') .  '/article/config/route.php';
+        }
+        
+        if (!file_exists($optionsFile)) {
+            $return['message'] = __('Config file is not exists!');
+            echo json_encode($return);
+            exit;
+        }
+        $options = include $optionsFile;
+        $class   = '';
+        foreach ($options as $config) {
+            $class = $config['type'];
+            break;
+        }
+        if (!class_exists($class)) {
+            $return['message'] = __('Route class is not exists!');
+            echo json_encode($return);
+            exit;
+        }
+        Pi::model('route')->delete(array('module' => $module));
+        
+        if (empty($options) || !is_array($options)) {
+            $options = array();
+        }
+        
+        $event = new Event;
+        $event->setParam('module', $module);
+        $resourceHandler = new $resourceClass($options);
+        $resourceHandler->setEvent($event);
+        $ret = $resourceHandler->$methodAction();
+        
+        $return['status'] = $ret;
+        $return['message'] = $ret ? __('Success!') : __('Setup failed!');
+        echo json_encode($return);
+        exit;
     }
 }

@@ -54,34 +54,4 @@ class Route extends BasicRoute
         
         return parent::installAction();
     }
-
-    /**
-     * Update route resource
-     * 
-     * @return bool 
-     */
-    public function updateAction()
-    {
-        $module     = $this->event->getParam('module');
-        $filename   = sprintf(
-            'var/%s/config/%s', 
-            $module, 
-            self::RESOURCE_CONFIG_NAME
-        );
-        $configPath = Pi::path($filename);
-        if (file_exists($configPath)) {
-            $configs      = include $configPath;
-            $class        = '';
-            foreach ($configs as $config) {
-                $class    = $config['type'];
-                break;
-            }
-            if (class_exists($class)) {
-                Pi::model('route')->delete(array('module' => $module));
-                $this->config = $configs;
-            }
-        }
-        
-        return parent::updateAction();
-    }
 }
