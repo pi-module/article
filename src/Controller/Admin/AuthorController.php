@@ -17,6 +17,7 @@ use Module\Article\Form\AuthorEditFilter;
 use Module\Article\Model\Author;
 use Zend\Db\Sql\Expression;
 use Module\Article\Service;
+use Module\Article\Media;
 use Pi\File\Transfer\Upload as UploadHandler;
 
 /**
@@ -510,5 +511,93 @@ class AuthorController extends ActionController
             'status'    => $affectedRows ? true : false,
             'message'   => 'ok',
         );
+    }
+    
+    /**
+     * Process upload image by AJAX 
+     */
+    public function uploadAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $module   = $this->getModule();
+        $config   = Pi::service('module')->config('', $module);
+
+        $return   = array('status' => false);
+        $fakeId   = $this->params('fake_id', 0);
+
+        // Checking whether ID is empty
+        if (empty($fakeId)) {
+            $return['message'] = __('Invalid fake ID!');
+            echo json_encode($return);
+            exit ;
+        }
+        
+        $rawInfo  = $this->request->getFiles('upload');
+        
+        // Rename
+        $ext      = strtolower(pathinfo($rawInfo['name'], PATHINFO_EXTENSION));
+        $rename   = $fakeId . $ext;
+
+        // Get path to store
+        $destination = Service::getTargetDir('author', $module, true, false);
+
+        $upload    = new UploadHandler;
+        $upload->setDestination(Pi::path($destination))
+            ->setRename($rename)
+            ->setExtension($config['image_extension'])
+            ->setSize(Media::transferSize($config['max_media_size'], false));
+        
+        // Get raw file name
+        if (empty($rawInfo)) {
+            $content = $this->request->getContent();
+            preg_match('/filename="(.+)"/', $content, $matches);
+            $rawName = $matches[1];
+        } else {
+            $rawName = null;
+        }
+        
+        // Checking whether uploaded file is valid
+        if (!$upload->isValid($rawName)) {
+            $return['message'] = implode(', ', $upload->getMessages());
+            echo json_encode($return);
+            exit ;
+        }
+
+        $upload->receive();
+        $fileName = $destination . '/' . $rename;
+        
+        // Resolve allowed image extension
+        $imageSize    = array();
+        $imageSizeRaw = getimagesize(Pi::path($fileName));
+        $imageSize['w'] = $imageSizeRaw[0];
+        $imageSize['h'] = $imageSizeRaw[1];
+        
+        $uploadInfo = array(
+            'tmp_name'  => $fileName,
+            'w'         => $imageSize['w'],
+            'h'         => $imageSize['h'],
+        );
+
+        // Save info to session
+        $session = Service::getUploadSession($module, 'author');
+        $session->$fakeId = $uploadInfo;
+        
+        // Prepare return data
+        $return['data'] = array_merge(
+            array(
+                'originalName' => $rawInfo['name'],
+                'size'         => $rawInfo['size'],
+                'preview_url'  => Pi::url($fileName),
+                'basename'     => basename($fileName),
+                'type'         => $ext,
+                'id'           => $fakeId,
+                'filename'     => $fileName,
+            ),
+            $imageSize
+        );
+        $return['status'] = true;
+        echo json_encode($return);
+        exit;
     }
 }

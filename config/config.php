@@ -256,17 +256,10 @@ return array(
                 ),
             ),
         ),
-        'author_width'    => array(
+        'author_size'     => array(
             'category'    => 'media',
-            'title'       => _t('Author Photo Width'),
-            'description' => _t('Author photo width'),
-            'value'       => 110,
-            'filter'      => 'number_int',
-        ),
-        'author_height'   => array(
-            'category'    => 'media',
-            'title'       => _t('Author Photo Height'),
-            'description' => _t('Author photo height'),
+            'title'       => _t('Author Photo Size'),
+            'description' => _t('Author photo width and height'),
             'value'       => 110,
             'filter'      => 'number_int',
         ),
