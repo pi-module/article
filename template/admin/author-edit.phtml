@@ -8,12 +8,18 @@
     );
     $this->jQuery('extension/fileupload-min.js');
     $this->Backbone();
-    $this->bootstrap('js/bootstrap.min.js');
     $this->js(array(
         $this->assetModule('script/ajax-upload-min.js'),
         $this->assetModule('script/jquery.Jcrop.min.js')
     ));
 ?>
+
+<style>
+    .article-preview-photo img {
+         max-width: none;
+    }
+</style>
+
 <h2 class="page-header"><?php echo $this->escape($title); ?></h2>
 
 <?php include 'message-box.phtml' ?>
@@ -56,25 +62,20 @@
                 </div>
                 <img class="hide article-upload-image">
             </div>
-            <div class="article-preview-photo" style="width: <?php echo $this->escape($authorSize) ?>px; height: <?php echo $this->escape($authorSize) ?>px">
-                <?php
-                    if ($src) {
-                ?>
-                <img src="<?php echo Pi::url($src) ?>">
-                <?php 
-                    } else {
-                ?>
-                    <i class="icon-user"></i>
-                <?php
-                    }
-                ?>
+            <div class="article-preview">
+                <div class="preview-desc"><?php _e('Please make sure your photo is clearly.') ?></div>
+                <div class="article-preview-photo" style="width: <?php echo $this->escape($authorSize) ?>px; height: <?php echo $this->escape($authorSize) ?>px">
+                    <img src="<?php echo $src ? Pi::url($src) : '' ?>" class="<?php echo $src ? '' : 'hide' ?>">
+                    <i class="icon-user<?php echo $src ? ' hide' : '' ?>"></i>
+                </div>
+                <div class="preview-desc-size muted"><?php echo __('Size: ') . $this->escape($authorSize) . '×' . $this->escape($authorSize) . 'px' ?></div>
             </div>
             <input name="photo-url" type="hidden">
         </div>
         <!-- Footer -->
         <div class="modal-footer">
-            <button id="photo-cancel" class="btn" data-dismiss="modal" aria-hidden="true"><?php _e('Cancel') ?></button>
-            <button id="photo-process" class="btn btn-primary" data-dismiss="modal" ><?php _e('Yes') ?></button>
+            <button id="photo-cancel" class="btn" disabled><?php _e('Cancel') ?></button>
+            <button id="photo-process" class="btn btn-primary" data-dismiss="modal" disabled><?php _e('Yes') ?></button>
         </div>
     </div>
 </div>
@@ -83,40 +84,50 @@
     var jcrop_api;
     var page = {
         id      : function() {
-            return "<?php echo 'fake_id/' . $form->get('fake_id')->getValue() ?>";
+            return "<?php echo $form->get('id')->getValue()
+                ? 'id/' . $form->get('id')->getValue()
+                : 'fake_id/' . $form->get('fake_id')->getValue() ?>";
         },
-        form    : $("form.form-horizontal"),
+        resizeFakeId : '<?php echo uniqid() ?>',
+        el      : $('#jsUpload'),
         $       : function(selector) {
-            return  this.form.find(selector);      
+            return  this.el.find(selector);      
         },
         size    : '<?php echo $this->escape($authorSize) ?>',
+        savedPhoto : '',
         format  : function() {
             var format = '<?php echo implode(',', $imageExtension) ?>';
             var data   = new Array();
             data = format.split(',');
             return data;
         },
+        template : _.template('<div class="black-bg">'
+                        + '<i class="author icon-remove"></i></div>'
+                        + '<img src="<%=preview_url %>">'
+        ),
+        events  : function() {
+            $('#photo-process').click(this.savePhoto.bind(this));
+            $('#photo-cancel').click(this.cancelUpload.bind(this));
+            
+        },
         init: function() {
-            var self = this;
             page.$("[name=placeholder]")
                 .parents(".control-group:first")
                 .find(".controls")
                 .html($("#template-upload").html());
-            this.$el = $('#jsUpload');
-            this.uploadImg = this.$('.a-upload-image');
-            this.preImg = $('.article-preview-photo img');
-            //$('#user-avatar-cancel').click(this.cancelAvatar.bind(this));
-            //$('#user-avatar-save').click(this.savePhoto.bind(this));
-            //$('input[name="source"]').click(this.changeSource.bind(this));
-            //$('input[name="email"]').blur(this.changeGravatar.bind(this));
+            
+            $('.icon-remove').click(this.removePhoto.bind(this));
             this.ajaxUpload();
         },
         ajaxUpload: function() {
+            this.uploadImg = page.$('.article-upload-image');
+            this.preImg    = page.$('.article-preview-photo img');
+            this.iconImg   = page.$('.article-preview-photo i');
             new ajaxUpload($('.article-add-photo'), {
                 action  : '<?php echo $this->url('', array(
                     'controller' => 'author',
-                    'action'     => 'upload'
-                )) ?>' + page.id(),
+                    'action'     => 'upload',
+                )) ?>fake_id/' + page.resizeFakeId,
                 format  : page.format(),
                 name    : 'upload',
                 json    : true,
@@ -124,9 +135,11 @@
                     page.$('.article-add-photo').val('<?php _e('In process ...') ?>');
                 },
                 done: function(res) {
-                    if (res.status) {console.log(12);
-                        page.$('.article-upload-hit').remove();
+                    if (res.status) {
+                        page.$('.article-upload-hit').addClass('hide');
                         $('[target=ajaxUploadIframe]').remove();
+                        page.$('#photo-cancel').removeAttr('disabled');
+                        page.$('#photo-process').removeAttr('disabled');
                         page.initJcrop(res.data);
                     } else {
                         alert(res.message);
@@ -140,13 +153,15 @@
             });
         },
         initJcrop: function(res) {
-            var url = res['preview_url'],
+            var time = new Date().getTime();
+            var url = res['preview_url'] + '?' + time,
                 boundx = 0,
                 boundy = 0;
             var preImg = this.preImg;
             this.result = res;
             this.uploadImg.removeClass('hide').attr('src', url);
-            this.preImg.attr('src', url);
+            this.preImg.removeClass('hide').attr('src', url);
+            this.iconImg.addClass('hide');
             jcrop_api && jcrop_api.destroy();
             if (res.w > res.h) {
                 boundx = 300;
@@ -192,99 +207,100 @@
                 this.setSelect([40,40,200,200]);
             });
         },
-        savePhoto: function(e) {
-            e.preventDefault();
-            var source = $('input[name="source"]:checked').val();
-            var d      = new Object();
-            if ('upload' == source) {
-                d = jcrop_api.tellScaled();
-                var ret = this.result.w > this.result.h ? this.result.w / 300 : this.result.h / 300;
-                this.$('.btn-primary').attr('disabled', 'disabled');
-                for (var i in d) {
-                    if (d.hasOwnProperty(i)) {
-                        d[i] = Math.round(d[i] * ret);
-                    }
-                }
-                d['avatar'] = this.result.preview_url;
-                d['fake_id'] = '<?php echo $form->get('fake_id')->getValue() ?>';
-            } else if ('gravatar' == source) {
-                d['email'] = $('input[name="email"]').val();
-            } else if ('repository' == source) {
-                d['name'] = $('input[name="repository-avatar"]:checked').val();
-            }
-            
-            d['source'] = source;
-            $.post('<?php echo $this->url('', array('action' => 'save')); ?>', d).done(function(res) {
-                res = $.parseJSON(res);
-                if (res.status) {
-                    window.location.reload();
-                } else {
-                    alert(res.message);
-                }
-            });
-        },
-        cancelAvatar    : function() {
-            var source = $('input[name="source"]:checked').val();
-            if ('upload' == source) {
-                var url = '<?php echo $this->url('', array(
-                    'controller'   => 'avatar',
-                    'action'       => 'remove',
-                    'fake_id'      => $form->get('fake_id')->getValue(),
-                )) ?>';
-                $.get(url, function(result) {
-                    result = $.parseJSON(result);
-                    if (result.status) {
-                        window.location.reload();
+        cancelUpload   : function() {
+            var url = '<?php echo $this->url('', array(
+                'action'       => 'remove-upload',
+            )) ?>fake_id/' + page.resizeFakeId;
+            var preImg  = this.preImg;
+            var iconImg = this.iconImg;
+            $.get(url, function(result) {
+                result = $.parseJSON(result);
+                if (result.status) {
+                    var imageUrl = '<?php echo $src ? Pi::url($src) : '' ?>';
+                    imageUrl = page.savedPhoto ? page.savedPhoto : imageUrl;
+                    if (imageUrl) {
+                        preImg.attr('style', '');
+                        preImg.attr('src', imageUrl);
                     } else {
-                        alert(result.message);
+                        preImg.attr('style', '');
+                        preImg.attr('src', '');
+                        preImg.addClass('hide');
+                        iconImg.removeClass('hide');
                     }
+                    page.$('.article-upload-hit').removeClass('hide');
+                    page.$('.article-uploaded-box img').remove();
+                    page.$('.article-uploaded-box').append('<img class="hide article-upload-image">');
+                    page.$('.article-uploaded-box .jcrop-holder').remove();
+                    page.$('.article-add-photo').val('<?php _e('Upload') ?>');
+                    page.init();
+                } else {
+                    alert(result.message);
+                }
+                page.$('#photo-cancel').attr('disabled', 'disabled');
+                page.$('#photo-process').attr('disabled', 'disabled');
+            });
+        },
+        savePhoto: function(e) {
+            var self = this;
+            e.preventDefault();
+            var d = jcrop_api.tellScaled();
+            var ret = this.result.w > this.result.h ? this.result.w / 300 : this.result.h / 300;
+            for (var i in d) {
+                if (d.hasOwnProperty(i)) {
+                    d[i] = Math.round(d[i] * ret);
+                }
+            }
+            d['photo']   = this.result.preview_url;
+            d['id']      = '<?php echo $form->get('id')->getValue() ?>';
+            d['fake_id'] = '<?php echo $form->get('fake_id')->getValue() ?>';
+            d['upload_id'] = page.resizeFakeId;
+            
+            if (this.result.preview_url) {
+                $.post('<?php echo $this->url('', array('action' => 'save-image')); ?>', d).done(function(res) {
+                    res = $.parseJSON(res);
+                    if (res.status) {
+                        page.$('.article-upload-hit').removeClass('hide');
+                        page.$('.article-uploaded-box img').remove();
+                        page.$('.article-uploaded-box').append('<img class="hide article-upload-image">');
+                        page.$('.article-uploaded-box .jcrop-holder').remove();
+                        page.$('.article-add-photo').val('<?php _e('Upload') ?>');
+
+                        self.render(res.data);
+                        page.savedPhoto = res.data.preview_url;
+                        page.init();
+                    } else {
+                        alert(res.message);
+                    }
+                    page.$('#photo-cancel').attr('disabled', 'disabled');
+                    page.$('#photo-process').attr('disabled', 'disabled');
                 });
-            } else {
-                window.location.reload();
             }
         },
-        changeSource    : function(e) {
-            var source = $(e.target).val();
-            $('.user-source').addClass('hide');
-            $('#user-avatar-source-' + source).removeClass('hide');
-            
-            $('.preview-image').addClass('hide');
-            $('.' + source).removeClass('hide');
-        },
-        changeGravatar  : function(e) {
-            var email = $(e.target).val();
-            var d   = new Object();
-            d['email'] = email;
-            $.post('<?php echo $this->url('', array('action' => 'gravatar')); ?>', d).done(function(res) {
-                res = $.parseJSON(res);
-                if (res.status) {
-                    $('.user-gravatar-image').find('img').attr('src', res.preview_url);
-                    var sizes = page.sizes();
-                    for (var i = 0; i < sizes.length; i++) {
-                        $('#user-preview-gravatar-' + sizes[i]).attr('src', res.preview_url);
-                    }
-                } else {
-                    alert(res.message);
-                }
+        removePhoto    : function() {
+            var self    = this;
+            var preImg  = this.preImg;
+            var iconImg = this.iconImg;
+            $.getJSON('<?php echo $this->url(
+                '',
+                array(
+                    'controller' => 'author',
+                    'action'     => 'remove-image'
+                )
+            ); ?>' + page.id()).done(function() {
+                page.$('[name=image]').val('');
+                self.$("#author-image").html('<i class="icon-user"></i>');
+                preImg.attr('style', '');
+                preImg.attr('src', '');
+                preImg.addClass('hide');
+                iconImg.removeClass('hide');
+                page.init();
             });
         },
-        changeRepository    : function(e) {
-            var name = $(e.target).val();
-            var d   = new Object();
-            d['name'] = name;
-            $.post('<?php echo $this->url('', array('action' => 'repository')); ?>', d).done(function(res) {
-                res = $.parseJSON(res);
-                if (res.status) {
-                    var sizes = page.sizes();
-                    for (var i = 0; i < sizes.length; i++) {
-                        var url = res.dirname + '/' + sizes[i] + '.' + res.ext;
-                        $('#user-preview-repository-' + sizes[i]).attr('src', url);
-                    }
-                } else {
-                    alert(res.message);
-                }
-            });
+        render          : function(obj) {
+            obj.preview_url = obj.preview_url + '?' + new Date().getTime();
+            page.$("#author-image").html(page.template(obj));
         }
     }
+    page.events();
     page.init();
 </script>

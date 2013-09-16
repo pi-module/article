@@ -116,8 +116,30 @@ div .well {
 
 .article-preview-photo {
     border: 1px solid #dddddd;
+    margin-left: 10px;
+    text-align: center;
+    overflow: hidden;
 }
 
 .article-preview-photo i {
-    
+    color: #A7A7A7;
+    font-size: 80px;
+    margin-top: 15px;
+    display: block;
+}
+
+.article-preview {
+    margin-left: 320px;
+}
+
+.article-preview .preview-desc {
+    color: #c09853;
+    margin-bottom: 10px;
+}
+
+.article-preview .preview-desc-size {
+    margin-left: 20px;
+    width: 110px;
+    text-align: center;
+    margin-top: 10px;
 }
