@@ -91,3 +91,55 @@ div .well {
     width: 150px;
     display: inline-block;
 }
+
+/* Author photo upload */
+.article-uploaded-box {
+    border: 1px solid #e5e5e5;
+    float: left;
+    margin-right: 40px;
+    width: 300px;
+    height: 300px;
+    overflow: hidden !important;
+    *position: relative;
+    *z-index: 10;
+}
+
+.article-upload-hit {
+    text-align: center;
+    margin-top: 120px;
+}
+
+.article-preview-box {
+    border: 1px solid #dddddd;
+    overflow: hidden;
+}
+
+.article-preview-photo {
+    border: 1px solid #dddddd;
+    margin-left: 10px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.article-preview-photo i {
+    color: #A7A7A7;
+    font-size: 80px;
+    margin-top: 15px;
+    display: block;
+}
+
+.article-preview {
+    margin-left: 320px;
+}
+
+.article-preview .preview-desc {
+    color: #c09853;
+    margin-bottom: 10px;
+}
+
+.article-preview .preview-desc-size {
+    margin-left: 20px;
+    width: 110px;
+    text-align: center;
+    margin-top: 10px;
+}

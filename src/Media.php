@@ -124,6 +124,9 @@ class Media
         
         $result = $value;
         if ($direction) {
+            if (!is_numeric($value)) {
+                return $value;
+            }
             $value = intval($value);
             if ($value / (1024 * 1024 * 1024 * 1024) > 1) {
                 $result = sprintf('%.2f', $value / (1024 * 1024 * 1024 * 1024)) . 'T';
