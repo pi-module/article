@@ -18,6 +18,7 @@ use Module\Article\Form\DraftEditForm;
 use Module\Article\Model\Draft;
 use Module\Article\Compiled;
 use Module\Article\Controller\Admin\PermissionController as Perm;
+use Module\Article\Media;
 
 /**
  * Common service API
@@ -56,8 +57,7 @@ class Service
     {
         $module = Pi::service('module')->current();
         $handler->view()->assign(array(
-            'authorWidth'      => $handler->config('author_width'),
-            'authorHeight'     => $handler->config('author_height'),
+            'authorSize'       => $handler->config('author_size'),
             'categoryWidth'    => $handler->config('category_width'),
             'categoryHeight'   => $handler->config('category_height'),
             'topicWidth'       => $handler->config('topic_width'),
@@ -75,6 +75,7 @@ class Service
                     $handler->config('default_media_thumb'),
                     $module
                 ),
+            'maxMediaSize'      => Media::transferSize($handler->config('max_media_size')),
         ));
     }
     
