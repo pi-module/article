@@ -5,53 +5,44 @@
     $this->Backbone();
     $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
 ?>
-<?php include 'topic-nav.phtml' ?>
+
+<style>
+    .article-pull-title {
+        padding: 10px 0 20px 0;
+    }
+</style>
+
+<?php include 'message-box.phtml' ?>
 
 <div class="row-fluid">
     <div class="span12">
         <div id="jsList">
-            <div class="clearfix">
-            <div class="pull-left form-inline">
-                <a class="btn btn-primary" id="article-pull" data-toggle="modal" href="#show-topics" 
-                data-content="<?php echo $this->url('', array('action' => 'pull-article', 'id' => '')) ?>">
-                    <?php _e('Pull') ?>
-                </a>
-                <div id="show-topics" class="modal hide fade" tabindex="-1" role="dialog" 
-                    aria-labelledby="myModalLabel" aria-hidden="true">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h3 id="myModelLabel"><?php _e('Choose a topic') ?></h3>
-                    </div>
-                    <div class="modal-body">
-                        <select name="topics">
-                            <?php foreach ($topics as $key => $title) { ?>
-                            <option value="<?php echo $this->escape($key) ?>">
-                                <?php echo $this->escape($title) ?>
-                            </option>
-                            <?php } ?>
-                        </select>
-                        <input type="hidden" name="pull-url" value="">
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn" data-dismiss="modal" aria-hidden="true"><?php _e('Cancel') ?></button>
-                        <button id="pull-topic" class="btn btn-primary" data-dismiss="modal">
-                            <?php _e('Pull') ?>
-                        </button>
-                    </div>
-                </div>
-                <select class="search-cate">
-                    <option value=""><?php _e('All categories') ?></option>
-                    <?php foreach ($categories as $val) { ?>
-                    <option value="<?php echo $this->escape($val['id']) ?>" 
-                        <?php if ($category == $val['id']) echo "selected" ?>>
-                            <?php echo $this->escape($val['title']) ?>
-                    </option>
-                    <?php } ?>
-                </select>
+            <div class="article-pull-title">
+                <strong><?php _e('Pull articles for ') ?>
+                    <a href="<?php echo $this->url('', array('action' => 'list-article', 'topic' => $topic['id'])) ?>">
+                        <?php echo $this->escape($topic['title']) ?>
+                    </a>
+                </strong>
             </div>
+            <div class="clearfix">
+                <div class="pull-left form-inline">
+                    <a class="btn btn-primary" id="article-pull"
+                    data-content="<?php echo $this->url('', array('action' => 'pull-article', 'topic' => $topic['id'], 'id' => '')) ?>">
+                        <?php _e('Pull') ?>
+                    </a>
+                    <select class="search-cate">
+                        <option value=""><?php _e('All categories') ?></option>
+                        <?php foreach ($categories as $val) { ?>
+                        <option value="<?php echo $this->escape($val['id']) ?>" 
+                            <?php if ($category == $val['id']) echo "selected" ?>>
+                                <?php echo $this->escape($val['title']) ?>
+                        </option>
+                        <?php } ?>
+                    </select>
+                </div>
                 <?php
                 $form->setAttributes(array(
-                    'action' => $this->url('', array('action' => 'pull')),
+                    'action' => $this->url('', array('action' => 'pull', 'topic' => $topic['id'])),
                     'method' => 'get',
                     'class'  => 'pull-right form-search',
                 ));
@@ -79,16 +70,17 @@
                     <th><?php _e('Title') ?></th>
                     <th style="width: 10%"><?php _e('Category') ?></th>
                     <th style="width: 15%"><?php _e('Topic') ?></th>
-                    <th style="width: 14%"><?php _e('Tag') ?></th>
                     <th style="width: 8%"><?php _e('Submitter') ?></th>
-                    <th style="width: 8%"><?php _e('View') ?></th>
                     <th style="width: 100px"><?php _e('Publish date') ?></th>
                 </tr>
                 <?php $now = time() ?>    
                 <?php foreach ($data as $article) { ?>
                 <tr data-id="<?php echo $this->escape($article['id']) ?>">
-                    <td><input type="checkbox" value="<?php echo $this->escape($article['id']) ?>" 
+                    <td>
+                    <?php if (!in_array($article['id'], $pulled)) { ?>
+                        <input type="checkbox" value="<?php echo $this->escape($article['id']) ?>" 
                                class="check-one">
+                    <?php } ?>
                     </td>
                     <td>
                         <?php if ($article['time_publish'] > $now ) { ?>
@@ -99,18 +91,21 @@
                         target="_blank"><?php echo $this->escape($article['subject']) ?>
                         </a>
                         <?php } ?>
-                        <?php if ($article['active'] == 0) { ?> 
-                            - <strong class="text-warning"><?php _e('Deactive') ?></strong> 
+                        <?php if (in_array($article['id'], $pulled)) { ?>
+                            - <strong class="text-warning"><?php _e('Pulled') ?></strong> 
                         <?php } ?>
                         <?php if ($article['image']) { ?>
                             <i class="icon-picture" title="<?php _e('Feature image') ?>"></i> 
                         <?php } ?>
                         <div class="row-actions">
-                            <a class="one-action" data-toggle="modal" href="#show-topics" data-value="pull" 
+                            <?php if (!in_array($article['id'], $pulled)) { ?>
+                            <a class="one-action" data-value="pull" href="#"
                             data-content="<?php echo $this->url('', array(
                                 'action' => 'pull-article',
+                                'topic'  => $topic['id'],
                                 'id'     => ''
-                            )) ?>"><?php _e('Pull') ?></a>   
+                            )) ?>"><?php _e('Pull') ?></a>
+                            <?php } ?>
                         </div>
                     </td>
                     <td><?php echo $this->escape($article['category_title']) ?></td>
@@ -119,15 +114,9 @@
                         : '<span class="muted">' . __('No topics') . '</span>'
                     ?>
                     </td>
-                    <td><?php echo !empty($article['tag']) 
-                        ? $this->escape(join($article['tag'], ','))
-                        : '<span class="muted">' . __('No tags') . '</span>'
-                    ?>
-                    </td>
                     <td><?php echo !empty($article['user_name']) 
                         ? $this->escape($article['user_name']) : '&nbsp;'; ?>
                     </td>
-                    <td><?php echo $article['visits'] ? $this->escape($article['visits']) : 0 ?></td>
                     <td><?php echo date('Y-m-d', $article['time_publish']) ?></td>
                 </tr>
                 <?php } ?>
@@ -161,6 +150,18 @@
             this.$(".one-action").click(this.oneAction);
             this.$("#article-pull").click(this.pullArticle);
             this.$("#pull-topic").click(this.pullToTopic);
+            
+            var count = '<?php echo $this->escape($count) ?>';
+            if (count.length) {
+                var message = count + ' article have been pull into '
+                            + '<?php echo $this->escape($topic['title']) ?>'
+                            + '&nbsp;&nbsp;&nbsp;&nbsp'
+                            + '<a href="<?php 
+                                echo $this->url('', array('action' => 'list-article', 'topic' => $topic['id'])) 
+                            ?>"><?php _e('Preview') ?></a>';
+                this.renderMessage(true, message);
+            }
+            
         },
         checkAll : function() {
             var flag=this.$(".check-all").prop("checked");
@@ -175,7 +176,7 @@
             this.toggleBulk();
         },
         search  : function() {
-            var url = "<?php echo $this->url('', array('action' => 'pull')) ?>";
+            var url = "<?php echo $this->url('', array('action' => 'pull', 'topic' => $topic['id'])) ?>";
             location.href = url + "?category=" + this.$(".search-cate").val();
         },
         clickOne : function(e) {
@@ -191,11 +192,12 @@
             var el   = $(e.target),
                 id   = el.parents("tr:first").attr("data-id"),
                 val  = el.attr("data-value");
+            var self = this;
             if ('pull' == val) {
                 var url = el.attr('data-content');
                 url += id;
-
-                this.$('input[name="pull-url"]').val(url);
+                
+                location.href = url + "?from=" + this.encodeUrl();
             } else {
                 location.href = this.url + val + "?id=" + id + "&from="
                               + this.encodeUrl();
@@ -209,18 +211,23 @@
             var url = el.attr('data-content');
 
             var id  = [];
+            var count = 0;
             this.$(".check-one:checked").each(function() {
-                id.push($(this).val()); 
+                id.push($(this).val());
+                count++;
             });
             var ids = id.join(',');
             url += ids;
 
-            this.$('input[name="pull-url"]').val(url);
+            location.href = url + "?from=" + this.encodeUrl();
         },
-        pullToTopic : function(e) {
-            var url   = this.$('input[name="pull-url"]').val();
-            var topic = this.$('select[name="topics"]').val();
-            location.href = url + '/topic-' + topic + "?from=" + this.encodeUrl();
+        renderMessage : function(status, message) {
+            $('#message-box').html(
+                _.template($('#template-message').html(), {
+                    status      : status ? 'success' : 'error',
+                    message     : message
+                })
+            );
         }
     }
     page.init();

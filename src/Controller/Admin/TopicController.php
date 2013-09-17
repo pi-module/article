@@ -256,9 +256,12 @@ class TopicController extends ActionController
         $where  = array();
         
         if (!empty($topic)) {
-            $topicId = is_numeric($topic) 
-                ? (int) $topic : $modelTopic->slugToId($topic);
-            $where['topic'] = $topicId;
+            if (is_numeric($topic)) {
+                $rowTopic = $this->getModel('topic')->find($topic);
+            } else {
+                $rowTopic = $this->getModel('topic')->find($topic, 'slug');
+            }
+            $where['topic'] = $rowTopic->id;
         }
         
         // Selecting articles
@@ -267,13 +270,17 @@ class TopicController extends ActionController
                                        ->where($where)
                                        ->offset($offset)
                                        ->limit($limit)
-                                       ->order('article DESC');
+                                       ->order('time DESC');
         $rowArticleSet = $modelRelation->selectWith($select)->toArray();
         
         // Getting article details
-        $articleIds    = array();
+        $articleIds = array(0);
+        $userIds    = array(0);
+        $pulls      = array();
         foreach ($rowArticleSet as $row) {
             $articleIds[] = $row['article'];
+            $userIds[]    = $row['user_pull'];
+            $pulls[$row['article']] = $row;
         }
         $articleIds    = empty($articleIds) ? 0 : $articleIds;
         $articles      = Entity::getArticlePage(
@@ -281,6 +288,9 @@ class TopicController extends ActionController
             1,
             $limit
         );
+        
+        // Get users
+        $users = Pi::user()->get($userIds);
         
         // Get topic details
         $rowTopicSet   = $modelTopic->select(array());
@@ -314,7 +324,7 @@ class TopicController extends ActionController
             ));
 
         $this->view()->assign(array(
-            'title'         => __('Article List in Topic'),
+            'title'         => $rowTopic->title,
             'articles'      => $rowArticleSet,
             'details'       => $articles,
             'topics'        => $topics,
@@ -322,6 +332,9 @@ class TopicController extends ActionController
             'paginator'     => $paginator,
             'config'        => $config,
             'action'        => 'list-article',
+            'count'         => $totalCount,
+            'pulls'         => $pulls,
+            'users'         => $users,
         ));
     }
     
@@ -330,16 +343,36 @@ class TopicController extends ActionController
      */
     public function pullAction()
     {
+        // Fetch topic details
+        $topic      = Service::getParam($this, 'topic', '');
+        
+        if (empty($topic)) {
+            return $this->jumpTo404(__('Invalid topic ID!'));
+        }
+        
+        if (is_numeric($topic)) {
+            $rowTopic = $this->getModel('topic')->find($topic);
+        } else {
+            $rowTopic = $this->getModel('topic')->find($topic, 'slug');
+        }
+        
         $where  = array();
         $page   = Service::getParam($this, 'page', 1);
         $limit  = Service::getParam($this, 'limit', 20);
-        $order  = 'time_publish DESC';
 
         $data   = $ids = array();
 
         $module         = $this->getModule();
         $modelArticle   = $this->getModel('article');
         $categoryModel  = $this->getModel('category');
+        $modelRelation  = $this->getModel('article_topic');
+        
+        // Get topic articles
+        $rowRelation = $modelRelation->select(array('topic' => $rowTopic->id));
+        $topicArticles = array();
+        foreach ($rowRelation as $row) {
+            $topicArticles[] = $row['article'];
+        }
 
         // Get category
         $category = Service::getParam($this, 'category', 0);
@@ -356,6 +389,7 @@ class TopicController extends ActionController
 
         // Build where
         $where['status'] = Article::FIELD_STATUS_PUBLISHED;
+        $where['active'] = 1;
         
         $keyword = Service::getParam($this, 'keyword', '');
         if (!empty($keyword)) {
@@ -401,6 +435,7 @@ class TopicController extends ActionController
                 'module'        => $module,
                 'controller'    => 'topic',
                 'action'        => 'pull',
+                'topic'         => $topic,
                 'category'      => $category,
                 'keyword'       => $keyword,
             )),
@@ -420,6 +455,8 @@ class TopicController extends ActionController
             'action'     => 'pull',
             'topics'     => $topics,
             'relation'   => $relation,
+            'topic'      => $rowTopic->toArray(),
+            'pulled'     => $topicArticles,
         ));
     }
     
@@ -448,10 +485,13 @@ class TopicController extends ActionController
         }
         
         $data  = array();
+        $time  = time();
         foreach ($ids as $value) {
             $data[$value] = array(
-                'article' => $value,
-                'topic'   => $topic,
+                'article'   => $value,
+                'topic'     => $topic,
+                'time'      => $time,
+                'user_pull' => Pi::user()-id,
             );
         }
         
@@ -474,7 +514,7 @@ class TopicController extends ActionController
         } else {
             return $this->redirect()->toRoute(
                 '',
-                array('action' => 'list-article')
+                array('action' => 'list-article', 'message' => count($ids))
             );
         }
     }
@@ -649,12 +689,31 @@ class TopicController extends ActionController
         $page   = $page > 0 ? $page : 1;
         $offset = ($page - 1) * $limit;
         
+        // Fetch topics
         $model  = $this->getModel('topic');
         $select = $model->select()
                         ->offset($offset)
                         ->limit($limit);
-        $rowset = $model->selectWith($select);
+        $rowset = $model->selectWith($select)->toArray();
         
+        $topicIds = array(0);
+        foreach ($rowset as $row) {
+            $topicIds[] = $row['id'];
+        }
+        
+        // Fetch topic article count
+        $modelCount = $this->getModel('article_topic');
+        $select = $modelCount->select()
+            ->where(array('topic' => $topicIds))
+            ->columns(array('topic', 'count' => new Expression('count(*)')))
+            ->group(array('topic'));
+        $rowCount = $modelCount->selectWith($select);
+        $count = array();
+        foreach ($rowCount as $row) {
+            $count[$row->topic] = $row->count;
+        }
+        
+        // Get total topic count
         $select = $model->select()
             ->columns(array('count' => new Expression('count(*)')));
         $count  = (int) $model->selectWith($select)->current()->count;
@@ -679,8 +738,7 @@ class TopicController extends ActionController
             'topics'  => $rowset,
             'action'  => 'list-topic',
             'route'   => $module . '-' . Service::getRouteName(),
-            'defaultLogo' => Pi::service('asset')
-                ->getModuleAsset('image/default-topic-thumb.png', $module),
+            'count'   => $count,
         ));
     }
 
