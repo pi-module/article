@@ -26,10 +26,18 @@ class DraftCustomForm extends BaseForm
      */
     protected $items = array();
     
+    /**
+     * Saved custom elements
+     * @var array 
+     */
+    protected $custom = array();
+    
     public function __construct($name, $options = array())
     {
         $this->items = isset($options['elements']) 
             ? $options['elements'] : array();
+        $this->custom = isset($options['custom'])
+            ? $options['custom'] : array();
         parent::__construct($name);
     }
     
@@ -61,7 +69,7 @@ class DraftCustomForm extends BaseForm
                     'label'     => $title,
                 ),
                 'attributes'    => array(
-                    'value'     => 0,
+                    'value'     => in_array($name, $this->custom) ? 1 : 0,
                 ),
                 'type'          => 'checkbox',
             ));

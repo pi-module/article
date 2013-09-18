@@ -33,6 +33,7 @@ use Zend\EventManager\Event;
 class SetupController extends ActionController
 {
     const ELEMENT_EDIT_PATH = 'var/article/config/elements.edit.php';
+    const ELEMENT_CUSTOM_PATH = 'config/elements.custom.php';
     
     const FORM_MODE_NORMAL   = 'normal';
     const FORM_MODE_EXTENDED = 'extension';
@@ -125,6 +126,37 @@ EOD;
         
         $filename = Pi::path(self::ELEMENT_EDIT_PATH);
         $result   = File::addContent($filename, $content);
+        
+        return $result;
+    }
+    
+    /**
+     * Update custom elements
+     * 
+     * @param array  $elements
+     * @return bool 
+     */
+    protected function updateCustomElement($elements)
+    {
+        $content = '';
+        foreach ($elements as $element) {
+            $content .= '    \'' . trim($element) . "',\r\n";
+        }
+        
+        $code =<<<EOD
+<?php
+return array(
+{$content});
+
+EOD;
+
+        $filename = sprintf(
+            '%s/%s/%s',
+            Pi::path('var'),
+            $this->getModule(),
+            self::ELEMENT_CUSTOM_PATH
+        );
+        $result = File::addContent($filename, $code);
         
         return $result;
     }
@@ -244,10 +276,29 @@ EOD;
      */
     public function formAction()
     {
-        $items = DraftEditForm::getExistsFormElements();
-        $this->view()->assign('items', $items);
+        // Get exists and needed elements
+        $items          = DraftEditForm::getExistsFormElements();
+        $neededElements = DraftEditForm::getNeededElements();
         
-        $form = new DraftCustomForm('custom', array('elements' => $items));
+        // Get custom elements
+        $filename = sprintf(
+            '%s/%s/%s',
+            Pi::path('var'),
+            $this->getModule(),
+            self::ELEMENT_CUSTOM_PATH
+        );
+        $customElements = array();
+        if (file_exists($filename)) {
+            $customElements = include $filename;
+        }
+        $customElements = $customElements ?: $neededElements;
+        
+        // Render form
+        $params = array(
+            'elements'  => $items,
+            'custom'    => $customElements,
+        );
+        $form = new DraftCustomForm('custom', $params);
         $form->setAttributes(array(
             'action'  => $this->url('', array('action' => 'form')),
             'method'  => 'post',
@@ -263,20 +314,23 @@ EOD;
             }
             $form->setData($data);
         }
+        foreach ($neededElements as $element) {
+            $form->get($element)->setAttribute('disabled', 'disabled');
+        }
         
-        $this->view()->assign('title', __('Form Configuration'));
-        $this->view()->assign('form', $form);
-        $this->view()->assign('custom', self::FORM_MODE_CUSTOM);
-        $this->view()->assign('action', 'form');
+        $this->view()->assign(array(
+            'title'     => __('Form Configuration'),
+            'form'      => $form,
+            'custom'    => self::FORM_MODE_CUSTOM,
+            'action'    => 'form',
+            'items'     => $items,
+        ));
         
         if ($this->request->isPost()) {
-            $post = $this->request->getPost();
-            if (self::FORM_MODE_CUSTOM != $post['mode']) {
-                foreach (array_keys($items) as $name) {
-                    $post[$name] = 0;
-                }
+            $post = (array) $this->request->getPost();
+            foreach ($neededElements as $need) {
+                $post[$need] = 1;
             }
-            $neededElements = DraftEditForm::getNeededElements();
             $form->setData($post);
             $form->setInputFilter(
                 new DraftCustomFilter($post['mode'], 
@@ -292,14 +346,18 @@ EOD;
             }
             
             $data     = $form->getData();
+            
+            // Update custom form elements
             $elements = array();
-            if (self::FORM_MODE_CUSTOM == $data['mode']) {
-                foreach (array_keys($items) as $name) {
-                    if (!empty($data[$name])) {
-                        $elements[] = $name;
-                    }
+            foreach (array_keys($items) as $name) {
+                if (!empty($data[$name])) {
+                    $elements[] = $name;
                 }
-            } else {
+            }
+            $this->updateCustomElement($elements);
+                
+            // Insert configuration into file
+            if (self::FORM_MODE_CUSTOM != $data['mode']) {
                 $elements = $data['mode'];
             }
             $options = array(
@@ -312,11 +370,107 @@ EOD;
             );
             $result  = $this->saveFormConfig($elements, $items, $options);
             if (!$result) {
-                return Service::renderForm($this, $form, __('Can not save data!'));
+                return Service::renderForm(
+                    $this,
+                    $form,
+                    __('Can not save data!')
+                );
             }
             
-            Service::renderForm($this, $form, __('Data saved successful!'), false);
+            Service::renderForm(
+                $this,
+                $form,
+                __('Data saved successful!'),
+                false
+            );
         }
+    }
+    
+    public function updateAction()
+    {
+        Pi::service('log')->active(false);
+        
+        $elements = $this->params('elements', '');
+        $elements = explode(',', $elements);
+        
+        $result = $this->updateCustomElement($elements);
+        
+        echo json_encode(array(
+            'status'    => $result,
+            'message'   => $result ? __('Success!') : __('Can not save file!'),
+        ));
+        exit;
+    }
+    
+    /**
+     * Preview draft edit page
+     * 
+     * @return ViewModel 
+     */
+    public function previewAction()
+    {
+        // Get elements
+        $options = array();
+        $mode    = $this->params('mode', '');
+        if (empty($mode)) {
+            return $this->jumpTo404(__('Invalid mode!'));
+        }
+        $options['mode'] = $mode;
+        
+        if ('custom' == $mode) {
+            $elements = $this->params('elements', '');
+            $options['elements'] = explode(',', $elements);
+        } else {
+            $options['elements'] = DraftEditForm::getDefaultElements($mode);
+        }
+        
+        $form = new DraftEditForm('add', $options);
+        
+        // Get allowed categories
+        $rules        = Service::getPermission();
+        $listCategory = array();
+        $approve      = array();
+        $delete       = array();
+        foreach ($rules as $key => $rule) {
+            if (isset($rule['compose']) and $rule['compose']) {
+                $listCategory[$key] = true;
+            }
+            if (isset($rule['approve']) and $rule['approve']) {
+                $approve[] = $key;
+            }
+            if (isset($rule['approve-delete']) and $rule['approve-delete']) {
+                $delete[] = $key;
+            }
+        }
+        
+        $categories = $form->get('category')->getValueOptions();
+        $form->get('category')
+            ->setValueOptions(array_intersect_key($categories, $listCategory));
+        
+        $form->setData(array(
+            'category'      => $this->config('default_category'),
+            'source'        => $this->config('default_source'),
+            'fake_id'       => uniqid(),
+            'uid'           => Pi::user()->id,
+        ));
+        
+        $module = $this->getModule();
+        $this->view()->assign(array(
+            'form'      => $form,
+            'config'    => Pi::service('module')->config('', $module),
+            'elements'  => $options['elements'],
+            'rules'     => $rules,
+            'approve'   => $approve,
+            'delete'    => $delete,
+            'status'    => \Module\Article\Model\Draft::FIELD_STATUS_DRAFT,
+            'currentDelete' => true,
+        ));
+        $template = sprintf(
+            '%s/%s/template/front/draft-edit.phtml',
+            Pi::path('module'),
+            $module
+        );
+        $this->view()->setTemplate($template);
     }
     
     /**

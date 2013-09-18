@@ -143,3 +143,11 @@ div .well {
     text-align: center;
     margin-top: 10px;
 }
+
+/* Custom form */
+#article-config-form-elements {
+    margin: 0 0 0 60px;
+}
+#article-config-form-elements .page-header {
+    margin-top: 20px;
+}
