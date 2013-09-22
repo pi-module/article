@@ -9,7 +9,7 @@
             </div>
         </div>
     </div>
-    <div class="normal-list" style="width: 100%">
+    <div class="normal-list" style="max-width: 100%">
         <?php 
             $i = 0;
             foreach ($medias as $media) { 
@@ -27,7 +27,7 @@
                     <img src="<?php echo Pi::url($media['url']) ?>" style="vertical-align: bottom">
                     <div class="list-operation hide"></div>
                     <button class="btn btn-small hide" data-url="<?php echo $this->url('', array('action' => 'edit', 'id' => $media['id'])) ?>"><?php _e('Edit') ?></button>
-                    <a class="item-detail hide" target="_blank" href="<?php echo $this->url('', array('action' => '', 'id' => $media['id'])) ?>">
+                    <a class="item-detail hide" target="_blank" href="<?php echo $this->url('', array('action' => 'detail', 'id' => $media['id'])) ?>">
                         <?php _e('Full size') ?>
                     </a>
                 </div>

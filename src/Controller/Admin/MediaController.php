@@ -402,10 +402,37 @@ class MediaController extends ActionController
      */
     public function detailAction()
     {
+        $id = $this->params('id', 0);
+        if (empty($id)) {
+            return Service::jumpToErrorOperation($this, __('Invalid ID!'));
+        }
+        
+        $module = $this->getModule();
+        $config = Pi::service('module')->config('', $module);
+        
+        $media = $this->getModel('media')->find($id);
+        
+        $type  = '';
+        $imageExt = array_map('trim', explode(',', $config['image_format']));
+        if (in_array($media->type, $imageExt)) {
+            $type = 'image';
+            header('Content-type: image/' . $media->type);
+            readfile(Pi::url($media->url));
+            exit();
+        } else {
+            $this->view()->assign(array(
+                'content' => __('This page have not been considered yet!'))
+            );
+            $this->view()->setTemplate(false);
+            return ;
+        }
+        
         $this->view()->assign(array(
-            'content' => __('This page have not been considered yet!'))
-        );
-        $this->view()->setTemplate(false);
+            'title'     => __('Media Detail'),
+            'type'      => $type,
+            'media'     => $media->toArray(),
+        ));
+        $this->view()->setTemplate('media-detail-' . $type);
     }
     
     /**
