@@ -215,6 +215,49 @@ class MediaController extends ActionController
     }
     
     /**
+     * Get extension of given type
+     * 
+     * @param string  $type
+     * @return array 
+     */
+    protected function getExtension($type = '')
+    {
+        if ($type and 
+            !in_array($type, array('image', 'doc', 'video', 'zip'))
+        ) {
+            return array();
+        }
+        
+        $module = $this->getModule();
+        $config = Pi::service('module')->config('', $module);
+        
+        // Get image
+        $images = array_filter(explode(',', $config['image_format']));
+        $images = array_map('trim', $images);
+        
+        // Get doc
+        $doc    = array_filter(explode(',', $config['doc_format']));
+        $doc    = array_map('trim', $doc);
+        
+        // Get video
+        $video  = array_filter(explode(',', $config['video_format']));
+        $video  = array_map('trim', $video);
+        
+        // Get compression
+        $zip    = array_filter(explode(',', $config['zip_format']));
+        $zip    = array_map('trim', $zip);
+        
+        $result = array(
+            'image' => $images,
+            'doc'   => $doc,
+            'video' => $video,
+            'zip'   => $zip,
+        );
+        
+        return $type ? $result[$type] : $result;
+    }
+    
+    /**
      * Calculate the image size by allowed image size.
      * 
      * @param string|array  $image
@@ -277,15 +320,30 @@ class MediaController extends ActionController
      */
     public function listAction()
     {
-        $type    = $this->params('type', '');
+        $params  = $where = array();
+        $type    = $this->params('type', 'image');
         $keyword = $this->params('keyword', '');
         
-        $where = array();
-        if (!empty($type)) {
-            $where['type'] = $type;
+        $style   = 'default';
+        if ('image' == $type) {
+            $style = $this->params('style', 'normal');
+            $params['style'] = $style;
+        }
+        
+        $where['type'] = $this->getExtension($type);
+        $types  = array();
+        foreach ($where['type'] as $item) {
+            $types[$item] = $item;
+        }
+        
+        $miniType = $this->params('mini_type', '');
+        if (!empty($miniType)) {
+            $where['type'] = $miniType;
+            $params['mini_type'] = $miniType;
         }
         if (!empty($keyword)) {
             $where['title like ?'] = '%' . $keyword . '%';
+            $params['keyword'] = $keyword;
         }
         
         $model = $this->getModel('media');
@@ -296,14 +354,6 @@ class MediaController extends ActionController
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
         $limit  = (int) $config['page_limit_all'] ?: 40;
-        $types  = array();
-        foreach (explode(',', $config['media_extension']) as $item) {
-            $types[$item] = strtolower(trim($item));
-        }
-        $imageTypes = array();
-        foreach (explode(',', $config['image_extension']) as $item) {
-            $imageTypes[$item] = strtolower(trim($item));
-        }
         
         $resultSet = Media::getList($where, $page, $limit, null, null, $module);
 
@@ -321,13 +371,13 @@ class MediaController extends ActionController
                 'route'     => $this->getEvent()
                     ->getRouteMatch()
                     ->getMatchedRouteName(),
-                'params'    => array(
+                'params'    => array_merge(array(
                     'module'     => $this->getModule(),
                     'controller' => 'media',
                     'action'     => 'list',
                     'type'       => $type,
-                    'keyword'    => $keyword,
-                ),
+                    'style'      => $style,
+                ), $params),
             ));
         
         // Getting search form
@@ -341,9 +391,9 @@ class MediaController extends ActionController
             'keyword'       => $keyword,
             'types'         => $types,
             'form'          => $form,
-            'imageTypes'    => $imageTypes,
-            'defaultLogo'   => Pi::service('asset')
-                ->getModuleAsset('image/default-media-thumb.png', $module),
+            'count'         => $count,
+            'miniType'      => $miniType,
+            'style'         => $style,
         ));
     }
     

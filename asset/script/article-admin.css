@@ -151,3 +151,86 @@ div .well {
 #article-config-form-elements .page-header {
     margin-top: 20px;
 }
+
+/* Media list */
+.article-media-normal {
+    border: 1px solid #dddddd;
+}
+.article-media-normal .normal-header {
+    background-color: #eeeeee;
+    height: 40px;
+    line-height: 40px;
+    vertical-align: middle;
+    padding: 10px;
+    border-bottom: 1px solid #dddddd;
+}
+.article-media-normal .normal-list {
+    padding: 20px;
+    display: inline-block;
+}
+.list-one-line {
+    margin-bottom: 20px;
+    display: inline-block;
+    width: 100%;
+}
+.list-item {
+    height: 200px;
+    line-height: 200px;
+    position: relative;
+    vertical-align: bottom;
+    padding: 0 5px 5px 5px;
+    border: solid 1px #fff;
+}
+.list-item img {
+}
+.list-item input {
+    position: absolute;
+    top: -5px;
+    left: -1px;
+}
+.list-item .item-delete {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 15px;
+    width: 15px;
+    border-radius: 2px;
+    text-align: center;
+    line-height: 15px;
+    vertical-align: 15px;
+    background-color: red;
+    color: #fff;
+    cursor: pointer;
+}
+.list-operation {
+    position: absolute;
+    bottom: 0;
+    height: 40px;
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    left: 0;
+    right: 0;
+}
+.list-item button {
+    position: absolute;
+    left: 3px;
+    bottom: 5px;
+}
+.list-item .item-detail {
+    position: absolute;
+    right: 5px;
+    bottom: 10px;
+    height: 20px;
+    line-height: 20px;
+    color: #fff;
+}
+
+.default-header {
+    background-color: #eeeeee;
+    height: 40px;
+    line-height: 40px;
+    vertical-align: middle;
+    padding: 10px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+}
