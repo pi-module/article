@@ -1,17 +1,12 @@
 <ul class="nav nav-pills">
-    <li class="<?php if ('list-article' == $action) echo 'active' ?>">
-        <a href="<?php echo $this->url('', array('action' => 'list-article')) ?>">
-            <?php _e('List Topic Articles') ?>
-        </a>
-    </li>
     <li class="<?php if ('list-topic' == $action) echo 'active' ?>">
         <a href="<?php echo $this->url('', array('action' => 'list-topic')) ?>">
-            <?php  _e('List Topics') ?>
+            <?php  _e('All Topics') ?>
         </a>
     </li>
-    <li class="<?php if ('pull' == $action) echo 'active' ?>">
-        <a href="<?php echo $this->url('', array('action' => 'pull')) ?>">
-            <?php  _e('Pull Articles') ?>
+    <li class="<?php if ('add' == $action) echo 'active' ?>">
+        <a href="<?php echo $this->url('', array('action' => 'add')) ?>">
+            <?php  _e('Add Topic') ?>
         </a>
     </li>
 </ul>

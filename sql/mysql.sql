@@ -159,6 +159,8 @@ CREATE TABLE `{article_topic}` (
   `id`              int(10) UNSIGNED      NOT NULL AUTO_INCREMENT,
   `article`         int(10) UNSIGNED      NOT NULL DEFAULT 0,
   `topic`           int(10) UNSIGNED      NOT NULL DEFAULT 0,
+  `time`            int(10) UNSIGNED      NOT NULL DEFAULT 0,
+  `user_pull`       int(10) UNSIGNED      NOT NULL DEFAULT 0,
 
   PRIMARY KEY           (`id`),
   KEY `article`         (`article`),

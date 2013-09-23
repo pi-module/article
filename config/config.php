@@ -120,6 +120,12 @@ return array(
             ),
             'filter'      => 'string',
         ),
+        'default_topic_template_image' => array(
+            'category'    => 'general',
+            'title'       => _t('Default Topic Template Screenshot'),
+            'description' => _t(''),
+            'value'       => 'image/default-topic-template.png',
+        ),
 
         // Autosave
         'autosave_interval' => array(
@@ -172,7 +178,31 @@ return array(
             'category'    => 'media',
             'title'       => _t('Media Extension'),
             'description' => _t('Media types which can be uploaded.'),
-            'value'       => 'pdf,rar,zip,doc,docx,xls,xlsx,ppt,pptx,jpg,png,gif',
+            'value'       => 'pdf,rar,zip,doc,txt,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif',
+        ),
+        'image_format'    => array(
+            'category'    => 'media',
+            'title'       => _t('Image Format'),
+            'description' => _t('Decide which extension belong to image'),
+            'value'       => 'jpg,jpeg,png,gif,bmp,tiff,exif',
+        ),
+        'doc_format'      => array(
+            'category'    => 'media',
+            'title'       => _t('Documentation Format'),
+            'description' => _t('Decide which extension belong to doc'),
+            'value'       => 'pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv',
+        ),
+        'video_format'    => array(
+            'category'    => 'media',
+            'title'       => _t('Vedio Format'),
+            'description' => _t('Decide which extension belong to vedio'),
+            'value'       => 'avi,rm,rmvb,flv,swf,wmv,mp4',
+        ),
+        'zip_format'      => array(
+            'category'    => 'media',
+            'title'       => _t('Compression Format'),
+            'description' => _t('Decide which extension belong to compression'),
+            'value'       => 'zip,rar',
         ),
         'max_media_size'  => array(
             'category'    => 'media',

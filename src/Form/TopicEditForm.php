@@ -102,17 +102,6 @@ class TopicEditForm extends BaseForm
         ));
         
         $this->add(array(
-            'name'       => 'template',
-            'options'    => array(
-                'label'       => __('Template'),
-            ),
-            'attributes' => array(
-                'description' => __('Topic template'),
-            ),
-            'type'       => 'Module\Article\Form\Element\Template',
-        ));
-        
-        $this->add(array(
             'name'       => 'description',
             'options'    => array(
                 'label'       => __('Description'),
@@ -121,7 +110,16 @@ class TopicEditForm extends BaseForm
                 'type'        => 'textarea',
                 'description' => __('Display in the website.'),
             ),
-            
+        ));
+        
+        $this->add(array(
+            'name'       => 'template-placeholder',
+            'options'    => array(
+                'label'       => __('Template'),
+            ),
+            'attributes' => array(
+                'description' => __('Choose a template for topic.'),
+            ),
         ));
         
         $this->add(array(
@@ -147,6 +145,14 @@ class TopicEditForm extends BaseForm
             'name'       => 'image',
             'attributes' => array(
                 'type'        => 'hidden',
+            ),
+        ));
+        
+        $this->add(array(
+            'name'       => 'template',
+            'attributes' => array(
+                'type'        => 'hidden',
+                'value'       => 'default',
             ),
         ));
         
