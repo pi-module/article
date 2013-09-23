@@ -1,54 +1,101 @@
 <?php
     $this->bootstrap();
-    $this->css($this->assetModule('script/article-front-admin.css'));
+    $this->css(array(
+        $this->assetModule('script/article-front-admin.css'),
+        $this->assetModule('script/article-admin.css'),
+    ));
     $this->jQuery();
     $this->Backbone();
     $this->js(Pi::url('static/vendor/bootstrap/js/bootstrap.js'));
 ?>
+
 <div class="row-fluid">
     <div class="span12">
         <div id="jsList">
-            <div class="clearfix">
-            <div class="pull-left form-inline">
-                <a class="btn" href="<?php echo $this->url('', array('action' => 'add')) ?>"><?php _e('Add') ?></a>
-                <select class="bulk-operation hide">
-                    <option value=""><?php _e('Bulk operation') ?></option>
-                    <option value="download"><?php _e('Download') ?></option>
-                    <option value="delete"><?php _e('Delete') ?></option>
-                </select>
-                <select class="search-type">
-                    <option value=""><?php echo __('All types'); ?></option>
-                    <?php foreach ($types as $key => $val) { ?>
-                    <option value="<?php echo $this->escape($key) ?>" <?php if ($type == $key) echo "selected" ?>><?php echo $this->escape($val) ?></option>
-                    <?php } ?>
-                </select>
+            <div>
+                <ul class="nav nav-tabs">
+                    <li class="<?php echo 'image' == $type ? 'active' : '' ?>">
+                        <a href="<?php echo $this->url('', array('action' => 'list', 'type' => 'image')) ?>">
+                            <?php _e('Images') ?>
+                        </a>
+                    </li>
+                    <li class="<?php echo 'doc' == $type ? 'active' : '' ?>">
+                        <a href="<?php echo $this->url('', array('action' => 'list', 'type' => 'doc')) ?>">
+                            <?php _e('Docs') ?>
+                        </a>
+                    </li>
+                    <li class="<?php echo 'video' == $type ? 'active' : '' ?>">
+                        <a href="<?php echo $this->url('', array('action' => 'list', 'type' => 'video')) ?>">
+                            <?php _e('Videos') ?>
+                        </a>
+                    </li>
+                    <li class="<?php echo 'zip' == $type ? 'active' : '' ?>">
+                        <a href="<?php echo $this->url('', array('action' => 'list', 'type' => 'zip')) ?>">
+                            <?php _e('Zips') ?>
+                        </a>
+                    </li>
+                    <a class="btn pull-right" href="<?php echo $this->url('', array('action' => 'add')) ?>">
+                        <?php _e('Upload') ?>
+                    </a>
+                </ul>
             </div>
+            <div class="clearfix">
+                <div class="pull-left form-inline">
+                    <select class="bulk-operation hide">
+                        <option value=""><?php _e('Bulk operation') ?></option>
+                        <option value="download"><?php _e('Download') ?></option>
+                        <option value="delete"><?php _e('Delete') ?></option>
+                    </select>
+                    <select class="search-type" data-url="<?php echo $this->url('', array('action' => 'list', 'type' => $type, 'style' => $style)) ?>" style="margin-right: 20px">
+                        <option value=""><?php _e('All') ?></option>
+                        <?php foreach ($types as $key => $val) { ?>
+                        <option value="<?php echo $this->escape($key) ?>" <?php if ($miniType == $key) echo "selected" ?>><?php echo $this->escape($val) ?></option>
+                        <?php } ?>
+                    </select>
+                    <div class="muted pull-right" style="padding-top: 5px">
+                        <?php echo $this->escape($count) . ' results' ?>
+                    </div>
+                </div>
                 <?php
                 $form->setAttributes(array(
-                    'action' => $this->url('', array('action' => 'list')),
+                    'action' => $this->url('', array('action' => 'list', 'type' => $type, 'style' => $style)),
                     'method' => 'get',
-                    'class'  => 'pull-right form-search',
+                    'class'  => 'pull-right',
                 ));
                 echo $this->form()->openTag($form);
                 ?>
-                <div class="input-append">
-                    <?php
-                    $element = $form->get('keyword');
-                    $element->setAttributes(array(
-                        'class'       => 'input-medium search-query',
-                        'placeholder' => $element->getOption('label') ?: __('Title'),
-                    ));
-                    echo $this->formElement($element);
-                    ?>
-                    <button type="submit" class="btn"><?php _e('Search') ?></button>
-                </div>
+                    <div class="input-append">
+                        <?php
+                        $element = $form->get('keyword');
+                        $element->setAttributes(array(
+                            'class'       => 'input-append',
+                            'placeholder' => $element->getOption('label') ?: __('Title'),
+                        ));
+                        echo $this->formElement($element);
+                        ?>
+                        <button type="submit" class="btn"><?php _e('Search') ?></button>
+                    </div>
                 <?php echo $this->form()->closeTag(); ?>
             </div>
-            <table class="table table-striped">
+            <?php if ('image' == $type) { ?>
+            <div class="default-header<?php echo 'default' == $style ? '' : ' hide' ?>" style="margin-bottom: 10px">
+                <input type="checkbox" class="check-all">
+                <button class="btn remove-checked" style="margin-left: 10px"><?php _e('Delete') ?></button>
+                <div class="pull-right btn-toolbar" style="margin-top: 0">
+                    <div class="btn-group">
+                        <a class="btn" href="#"><i class="icon-th-large"></i></a>
+                        <a class="btn" disabled="disabled"><i class="icon-th-list"></i></a>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
+            <table class="table table-striped<?php echo 'default' == $style ? '' : ' hide' ?>">
                 <tbody>
                 <tr>
                     <th style="width:2.2em;">
+                    <?php if ('image' != $type) { ?>
                         <input type="checkbox" class="check-all">
+                    <?php } ?>
                     </th>
                     <th style="width: 40px"><?php _e('ID') ?></th>
                     <th style="width: 50px"><?php _e('Image') ?></th>
@@ -68,14 +115,14 @@
                     </td>
                     <td><?php echo $this->escape($media['id']) ?></td>
                     <td><?php 
-                        if (in_array($media['type'], $imageTypes)) {
+                        if ('image' == $type) {
                             $image = Pi::url($media['url']);
                     ?>
-                            <img src="<?php echo $this->escape($image) ?>" style="width: 40px;">
+                        <img src="<?php echo $this->escape($image) ?>" style="width: 40px;">
                     <?php
                         } else {
                     ?>
-                            <div class="list-image"><i class="icon-file"></i></div>
+                        <div class="list-image"><i class="icon-file"></i></div>
                     <?php
                         }
                     ?>
@@ -92,7 +139,7 @@
                     </td>
                     <td><?php echo $this->escape($media['type']) ?></td>
                     <td><?php echo $this->escape($media['size']) ?></td>
-                    <td><?php if (in_array($media['type'], $imageTypes)) { ?>
+                    <td><?php if ('image' == $type) { ?>
                         <?php echo $this->escape($media['w']) . ' * ' . $this->escape($media['h']) ?>
                     <?php } else {
                         echo '<span class="muted">' . __('None') . '</span>';
@@ -111,27 +158,74 @@
                 <?php } ?>
                 </tbody>
             </table>
-        <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml',array('class' => 'pagination-right')); ?>
+        </div>
+        <?php
+            if ('image' == $type) {
+                include 'media-list-normal.phtml';
+            }
+        ?>
+        <div style="text-align: center">
+            <?php echo $this->paginationControl($paginator, 'Sliding', 'paginator.phtml'); ?>
         </div>
     </div>
 </div>
 <script>
 (function($){
     var page = {
-        url : "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
-        el  : $("#jsList"),
-        $   : function(selector) {
+        url     : "<?php echo $this->url('', array('controller' => 'media','action' => '')) ?>" . replace(/\/$/,""),
+        type    : '<?php echo $this->escape($type) ?>',
+        el      : $("#jsList"),
+        $       : function(selector) {
             return this.el.find(selector);
         },
-        init : function() {
+        init    : function() {
             this.$(".media-list-title").tooltip();
             _.bindAll(this);
             this.$(".check-all").click(this.checkAll);
-            this.$(".search-status").change(this.search);
             this.$(".search-type").change(this.search);
             this.$(".bulk-operation").change(this.bulk);
             this.$(".check-one").click(this.clickOne);
             this.$(".one-action").click(this.oneAction);
+            this.$(".icon-th-large").click(this.toggleList);
+            this.$(".remove-checked").click(this.removeChecked);
+        },
+        toggleList      : function() {
+            $("table").addClass('hide');
+            $(".default-header").addClass('hide');
+            $(".article-media-normal").removeClass('hide');
+            $(".icon-th-list").attr("disabled", "disabled");
+            $(".icon-th-large").removeAttr("disabled");
+            
+            // Change action url of search form
+            var url = '';
+            url = $("form").attr('action');
+            url = url.replace('style/default', 'style/normal');
+            $("form").attr('action', url);
+            
+            // Change url of paginator
+            $('.pagination').find('a').each(function() {
+                url = $(this).attr("href");
+                url = url.replace('style/default', 'style/normal');
+                $(this).attr('href', url);
+            });
+            
+            // Change url of section
+            url = $('.search-type').attr('data-url');
+            url = url.replace('style/default', 'style/normal');
+            $(".search-type").attr('data-url', url);
+        },
+        removeChecked   : function() {
+            var id = [];
+            var count = 0;
+            this.$(".check-one:checked").each(function() {
+                id.push($(this).val());
+                count++;
+            });
+            if (count) {
+                if (confirm("<?php _e('Are you sure want to delete selected images?'); ?>")) {
+                    location.href = this.url + "delete?id=" + id.join(",") + "&from=" + this.encodeUrl();
+                }
+            }
         },
         checkAll : function() {
             var flag = this.$(".check-all").prop("checked");
@@ -144,10 +238,23 @@
                 }
             });
             this.toggleBulk();
+            
+            // Check all items in normal style
+            var self = this;
+            $('.normal-header').find('.check-all').prop("checked", flag);
+            $('.normal-list input[type="checkbox"]').prop("checked", flag).each(function() {
+                var el = $(this).parents(".one-item");
+                if (flag) {
+                    self.displayElement(el);
+                    self.toggleBackground(el);
+                } else {
+                    self.hideElement(el);
+                }
+            });
         },
-        search : function() {
-            var url = "<?php echo $this->url('', array('action' => 'list')) ?>";
-            location.href = url + "?type=" + this.$(".search-type").val();
+        search : function(e) {
+            var url = $(e.target).data('url');
+            location.href = url + "?mini_type=" + this.$(".search-type").val();
         },
         bulk : function() {
             var id  = [],
@@ -185,12 +292,28 @@
                 tr.removeClass("info");
             }
             this.toggleBulk();
+            
+            // Check the same item in normal
+            var id     = el.val();
+            var status = el.prop("checked");
+            var boxObj = $('.normal-list').find('input[value="' + id + '"]');
+            var itemObj = boxObj.parents('.one-item');
+            boxObj.prop("checked", status);
+            if (status) {
+                this.displayElement(itemObj);
+                itemObj.find('.list-item').css('background-color', '#c0eaff');
+            } else {
+                this.hideElement(itemObj);
+                itemObj.find('.list-item').css('background-color', '#fff');
+            }
         },
         toggleBulk : function() {
-            if (this.$(".check-one:checked").length) {
-                this.$(".bulk-operation").show();
-            } else {
-                this.$(".bulk-operation").hide();
+            if ('image' != page.type) {
+                if (this.$(".check-one:checked").length) {
+                    this.$(".bulk-operation").show();
+                } else {
+                    this.$(".bulk-operation").hide();
+                }
             }
         },
         oneAction : function(e) {
@@ -213,6 +336,34 @@
             this.$(".bulk-operation").val("");
             this.$(".bulk-operation").hide();
             $('tr').removeClass('info');
+        },
+        displayElement  : function(el) {
+            el.find('input[type="checkbox"]').removeClass('hide');
+            el.find('i.item-delete').removeClass('hide');
+            el.find('.list-operation').removeClass('hide');
+            el.find('button.btn-small').removeClass('hide');
+            el.find('.item-detail').removeClass('hide');
+
+            el.find('.list-item').css('border', 'solid 1px #0082be');
+        },
+        hideElement     : function(el) {
+            el.find('input[type="checkbox"]').addClass('hide');
+            el.find('i.item-delete').addClass('hide');
+            el.find('.list-operation').addClass('hide');
+            el.find('button.btn-small').addClass('hide');
+            el.find('.item-detail').addClass('hide');
+
+            el.find('.list-item').css({
+                'background-color'  : '#fff',
+                'border'            : 'solid 1px #fff'
+            });
+        },
+        toggleBackground    : function(el) {
+            if (el.find('input[type="checkbox"]').prop("checked")) {
+                el.find('.list-item').css('background-color', '#c0eaff');
+            } else {
+                el.find('.list-item').css('background-color', '#e8f6ff');
+            }
         }
     }
     page.init();
