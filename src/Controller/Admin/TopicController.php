@@ -38,6 +38,16 @@ use Pi\File\Transfer\Upload as UploadHandler;
 class TopicController extends ActionController
 {
     /**
+     * Custom template path 
+     */
+    const TEMPLATE_PATH = 'article/template/front';
+    
+    /**
+     * Custom template format 
+     */
+    const TEMPLATE_FORMAT = '/^topic-custom-(.+)/';
+    
+    /**
      * Get topic form object
      * 
      * @param string $action  Form name
@@ -130,112 +140,38 @@ class TopicController extends ActionController
     }
     
     /**
-     * Homepage of a topic
+     * Get screenshot image of a template, if the image is not added by user
+     * a default image will be used according to configuration
      * 
-     * @return ViewModel
+     * @param string  $name
+     * @return string 
      */
-    public function indexAction()
+    protected function getScreenshot($name)
     {
-        $topic   = Service::getParam($this, 'topic', '');
-        if (empty($topic)) {
-            return $this->jumpTo404(__('Invalid topic ID!'));
-        }
-        if (is_numeric($topic)) {
-            $row = $this->getModel('topic')->find($topic);
-        } else {
-            $row = $this->getModel('topic')->find($topic, 'slug');
-        }
-        if (!$row->id) {
-            return $this->jumpTo404(__('Topic is not exists!'));
-        }
-        // Return 503 code if topic is not active
-        if (!$row->active) {
-            return $this->jumpToException(
-                __('The topic requested is not active'),
-                503
-            );
-        }
-        
-        // Get topic articles
-        $rowRelations = $this->getModel('article_topic')
-                             ->select(array('topic' => $row->id));
-        $articleIds   = array();
-        foreach ($rowRelations as $relation) {
-            $articleIds[] = $relation->article;
-        }
-        $articleIds   = array_filter($articleIds);
-        if (!empty($articleIds)) {
-            $where    = array(
-                'id'  => $articleIds,
-            );
-            $articles = Entity::getAvailableArticlePage($where, null, null);
-        }
-        
-        $this->view()->assign(array(
-            'content'   => $row->content,
-            'title'     => $row->title,
-            'image'     => Pi::url($row->image),
-            'articles'  => $articles,
-        ));
-        
-        $template = ('default' == $row->template)
-            ? 'topic-index' : $row->template;
-        $this->view()->setTemplate($template);
-    }
-    
-    /**
-     * Topic list page for viewing 
-     */
-    public function allTopicAction()
-    {
-        $page       = Service::getParam($this, 'p', 1);
-        $page       = $page > 0 ? $page : 1;
-
-        $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_topic_front'] ?: 20;
-        
-        $where = array(
-            'active' => 1,
+        $module = $this->getModule();
+        $path = sprintf(
+            '%s/%s/topic-template/%s.png',
+            Pi::path('static'),
+            $module,
+            $name
         );
-        
-        // Get topics
-        $resultsetTopic = TopicService::getTopics($where, $page, $limit);
-        
-        // Get topic article counts
-        $model  = $this->getModel('article_topic');
-        $select = $model->select()
-                        ->columns(array(
-                            'count' => new Expression('count(id)'), 'topic'))
-                        ->group(array('topic'));
-        $rowRelation   = $model->selectWith($select);
-        $articleCount  = array();
-        foreach ($rowRelation as $row) {
-            $articleCount[$row->topic] = $row->count;
+        if (file_exists($path)) {
+            $url = sprintf(
+                '%s/%s/topic-template/%s.png',
+                Pi::url('static'),
+                $module,
+                $name
+            );
+        } else {
+            $url = sprintf(
+                '%s/module-%s/%s',
+                Pi::url('asset'),
+                $module,
+                $this->config('default_topic_template_image')
+            );
         }
-
-        // Total count
-        $modelTopic = $this->getModel('topic');
-        $totalCount = $modelTopic->getSearchRowsCount($where);
-
-        // Pagination
-        $route     = $this->getModule() . '-' . Service::getRouteName();
-        $paginator = Paginator::factory($totalCount);
-        $paginator->setItemCountPerPage($limit)
-                  ->setCurrentPageNumber($page)
-                  ->setUrlOptions(array(
-                'router'    => $this->getEvent()->getRouter(),
-                'route'     => $route,
-                'params'    => array(
-                    'topic'      => 'all',
-                ),
-            ));
-
-        $this->view()->assign(array(
-            'title'         => __('All Topics'),
-            'topics'        => $resultsetTopic,
-            'paginator'     => $paginator,
-            'count'         => $articleCount,
-        ));
+        
+        return $url;
     }
     
     /**
@@ -558,14 +494,17 @@ class TopicController extends ActionController
 
         Service::setModuleConfig($this);
         $this->view()->assign(array(
-            'title'                 => __('Add Topic Info'),
-            'form'                  => $form,
+            'title'   => __('Add Topic Info'),
+            'form'    => $form,
+            'module'  => $this->getModule(),
+            'url'     => $this->getScreenshot('default'),
         ));
         $this->view()->setTemplate('topic-edit');
         
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
+            $this->view()->assign('url', $this->getScreenshot($post['template']));
             $form->setInputFilter(new TopicEditFilter);
             $form->setValidationGroup(Topic::getAvailableFields());
             if (!$form->isValid()) {
@@ -601,12 +540,14 @@ class TopicController extends ActionController
     {
         Service::setModuleConfig($this);
         $this->view()->assign('title', __('Edit Topic Info'));
+        $this->view()->assign('module', $this->getModule());
         
         $form = $this->getTopicForm('edit');
         
         if ($this->request->isPost()) {
             $post = $this->request->getPost();
             $form->setData($post);
+            $this->view()->assign('url', $this->getScreenshot($post['template']));
             $options = array(
                 'id'   => $post['id'],
             );
@@ -642,6 +583,7 @@ class TopicController extends ActionController
         $form->setData($row->toArray());
 
         $this->view()->assign('form', $form);
+        $this->view()->assign('url', $this->getScreenshot($row->template));
     }
     
     /**
@@ -932,5 +874,103 @@ class TopicController extends ActionController
             'status'    => $affectedRows ? true : false,
             'message'   => 'ok',
         );
+    }
+    
+    /**
+     * Get all avaliable templates 
+     */
+    public function getTemplateAction()
+    {
+        Pi::service('log')->active(false);
+        $return = array('status' => false);
+        
+        $limit  = (int) $this->params('limit', 1);
+        $page   = (int) $this->params('page', 1);
+        $offset = $limit * ($page - 1);
+        
+        $path      = sprintf(
+            '%s/%s', 
+            rtrim(Pi::path('module'), '/'), 
+            self::TEMPLATE_PATH
+        );
+        $iterator  = new \DirectoryIterator($path);
+        $templates = array('default' => 'Default');
+        foreach ($iterator as $fileinfo) {
+            if (!$fileinfo->isFile()) {
+                continue;
+            }
+            $filename = $fileinfo->getFilename();
+            $name     = substr($filename, 0, strrpos($filename, '.'));
+            if (!preg_match(self::TEMPLATE_FORMAT, $name, $matches)) {
+                continue;
+            }
+            $displayName = preg_replace('/[-_]/', ' ', $matches[1]);
+            $templates[$matches[1]] = ucfirst($displayName);
+        }
+        asort($templates);
+        
+        $data  = array();
+        $index = 0;
+        $count = 0;
+        foreach ($templates as $name => $title) {
+            // Get template from the given offset
+            if ($index++ < $offset) {
+                continue;
+            }
+            
+            // Get template
+            $url = $this->getScreenshot($name);
+            $fullSize = $this->url(
+                '',
+                array(
+                    'action' => 'view-fullsize',
+                    'name'   => $name
+                )
+            );
+            $data[] = array(
+                'name'      => $name,
+                'title'     => $title,
+                'url'       => $url,
+                'fullsize'  => $fullSize,
+            );
+            
+            // Select template according to limit
+            if (++$count >= $limit) {
+                break;
+            }
+        }
+        $nextPage = ($offset + $limit) >= count($templates) ? 0 : $page + 1;
+        
+        $return = array(
+            'status'    => true,
+            'message'   => __('Success'),
+            'data'      => $data,
+            'previous'  => $page - 1,
+            'next'      => $nextPage,
+        );
+        echo json_encode($return);
+        exit;
+    }
+    
+    /**
+     * View the fullsize image of template screenshot
+     * 
+     * @return ViewModel 
+     */
+    public function viewFullsizeAction()
+    {
+        $name = $this->params('name', 0);
+        if (empty($name)) {
+            return Service::jumpToErrorOperation(
+                $this,
+                __('Invalid template name!')
+            );
+        }
+        
+        $url = $this->getScreenshot($name);
+        
+        header('Content-type: image/png');
+        readfile($url);
+        exit();
     }
 }

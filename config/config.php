@@ -120,6 +120,12 @@ return array(
             ),
             'filter'      => 'string',
         ),
+        'default_topic_template_image' => array(
+            'category'    => 'general',
+            'title'       => _t('Default Topic Template Screenshot'),
+            'description' => _t(''),
+            'value'       => 'image/default-topic-template.png',
+        ),
 
         // Autosave
         'autosave_interval' => array(

@@ -86,7 +86,7 @@ class TopicController extends ActionController
         ));
         
         $template = ('default' == $row->template)
-            ? 'topic-index' : $row->template;
+            ? 'topic-index' : 'topic-custom-' . $row->template;
         $this->view()->setTemplate($template);
     }
     

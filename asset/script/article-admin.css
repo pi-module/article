@@ -234,3 +234,96 @@ div .well {
     border: 1px solid #dddddd;
     border-radius: 4px;
 }
+
+/* Topic edit page */
+.topic-image-desc {
+    position: absolute;
+    margin: 40px 0 0 120px;
+}
+.topic-image-desc p {
+    margin: 0;
+    font-size: 12px;
+}
+#topic-template {
+    width: 300px;
+    height: 300px;
+    position: relative;
+    border: solid 1px #dddddd;
+    border-radius: 5px;
+}
+.topic-template-title {
+    position: absolute;
+    left: 10px;
+    bottom: 40px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 20;
+}
+.topic-template-desc {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    color: #fff;
+    z-index: 20;
+}
+.topic-template-change {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 20;
+}
+.topic-template-screenshot {
+    position: absolute;
+    top: 0;
+    z-index: 0;
+}
+.topic-template-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.7);
+    z-index: 10;
+    border-radius: 0 0 5px 5px;
+}
+#topic-templates {
+    border: solid 1px #dddddd;
+    background-color: #eeeeee;
+    margin: 20px 0 0 0;
+    border-radius: 5px;
+    padding: 20px 20px 20px 0;
+}
+.template {
+    position: relative;
+}
+.template-screenshot {
+    border: solid 1px #333333;
+}
+.template-bar {
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    right: -1px;
+    height: 30px;
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0.7);
+    z-index: 10;
+}
+.template-apply {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 20;
+}
+.template-title {
+    color: #333333;
+    font-weight: bold;
+}
+.diable-image {
+    filter: gray;
+    -moz-opacity: .1;
+    opacity: 0.7;
+}
