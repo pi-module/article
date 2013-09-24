@@ -1,0 +1,15 @@
+<div>
+    <?php foreach ($articles as $article) { ?>
+    <div class="media">
+        <img class="pull-left" src="<?php echo $this->escape($article['image']) ?>">
+        <div class="media-body">
+            <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C; font-weight: bold">
+                <?php echo $this->escape($article['subject']) ?>
+            </a>
+            <div class="muted" style="margin-top: 5px">
+                <?php echo $article['summary'] ?>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
+</div>

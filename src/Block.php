@@ -143,8 +143,6 @@ class Block
         $config   = Pi::service('module')->config('', $module);
         $image    = $config['default_feature_thumb'];
         $image    = Pi::service('asset')->getModuleAsset($image, $module);
-        $length   = isset($options['max_subject_length']) 
-            ? intval($options['max_subject_length']) : 15;
         
         $postCategory = isset($params['category']) ? $params['category'] : 0;
         $postTopic    = isset($params['topic']) ? $params['topic'] : 0;
@@ -186,7 +184,18 @@ class Block
         }
         
         foreach ($articles as &$article) {
-            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['subject'] = mb_substr(
+                $article['subject'],
+                0,
+                $options['max_subject_length'],
+                'UTF-8'
+            );
+            $article['summary'] = mb_substr(
+                $article['summary'],
+                0,
+                $config['max_summary_length'],
+                'UTF-8'
+            );
             $article['image']   = $article['image'] ?: $image;
         }
         
@@ -195,6 +204,7 @@ class Block
             'target'    => $options['target'],
             'style'     => $options['block-style'],
             'config'    => $config,
+            'column'    => $options['column-number'],
         );
     }
     
@@ -214,8 +224,6 @@ class Block
         $config   = Pi::service('module')->config('', $module);
         $image    = $config['default_feature_thumb'];
         $image    = Pi::service('asset')->getModuleAsset($image, $module);
-        $length   = isset($options['max_subject_length']) 
-            ? intval($options['max_subject_length']) : 15;
         
         $columns  = array('subject', 'summary', 'time_publish', 'image');
         $ids      = explode(',', $options['articles']);
@@ -233,14 +241,26 @@ class Block
         );
         
         foreach ($articles as &$article) {
-            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
-            $article['image']   = $article['image'] ?: $image;
+            $article['subject'] = mb_substr(
+                $article['subject'],
+                0,
+                $options['max_subject_length'],
+                'UTF-8'
+            );
+            $article['summary'] = mb_substr(
+                $article['summary'],
+                0,
+                $options['max_summary_length'],
+                'UTF-8'
+            );
+            $article['image'] = $article['image'] ?: $image;
         }
         
         return array(
             'articles'  => $articles,
             'target'    => $options['target'],
             'style'     => $options['block-style'],
+            'column'    => $options['column-number'],
             'config'    => $config,
         );
     }
@@ -337,13 +357,12 @@ class Block
             return false;
         }
         
-        $limit  = isset($options['list-count']) ? (int) $options['list-count'] : 10;
+        $limit  = isset($options['list-count']) 
+            ? (int) $options['list-count'] : 10;
         $target = isset($options['target']) ?: '_blank';
         $config = Pi::service('module')->config('', $module);
         $image  = $config['default_feature_thumb'];
         $image  = Pi::service('asset')->getModuleAsset($image, $module);
-        $length = isset($options['max_subject_length']) 
-            ? intval($options['max_subject_length']) : 15;
         $day    = $options['day-range'] ? intval($options['day-range']) : 7;
 
         if ($options['is-topic']) {
@@ -352,13 +371,30 @@ class Block
                 $params['topic'] = Pi::model('topic', $module)
                     ->slugToId($params['topic']);
             }
-            $articles = Topic::getVisitsRecently($day, $limit, null, $params['topic'], $module);
+            $articles = Topic::getVisitsRecently(
+                $day,
+                $limit,
+                null,
+                $params['topic'],
+                $module
+            );
         } else {
             $articles = Entity::getVisitsRecently($day, $limit, null, $module);
         }
         
         foreach ($articles as &$article) {
-            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
+            $article['subject'] = mb_substr(
+                $article['subject'],
+                0,
+                $options['max_subject_length'],
+                'UTF-8'
+            );
+            $article['summary'] = mb_substr(
+                $article['summary'],
+                0,
+                $options['max_summary_length'],
+                'UTF-8'
+            );
             $article['image']   = $article['image'] ?: $image;
         }
 
@@ -366,6 +402,7 @@ class Block
             'articles'  => $articles,
             'target'    => $target,
             'style'     => $options['block-style'],
+            'column'    => $options['column-number'],
             'config'    => $config,
         );
     }

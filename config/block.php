@@ -84,6 +84,21 @@ return array(
                 'filter'       => 'string',
                 'value'        => 0,
             ),
+            'column-number'    => array(
+                'title'        => _t('List Column Number'),
+                'description'  => _t('Whether to display only one column or two columns'),
+                'edit'         => array(
+                    'type'        => 'radio',
+                    'attributes'  => array(
+                        'options'    => array(
+                            'single'    => _t('Single column'),
+                            'double'    => _t('Double columns'),
+                        ),
+                    ),
+                ),
+                'filter'       => 'string',
+                'value'        => 'single',
+            ),
             'block-style'      => array(
                 'title'        => _t('Template Style'),
                 'description'  => _t('The template style of list'),
@@ -91,15 +106,18 @@ return array(
                     'type'        => 'radio',
                     'attributes'  => array(
                         'options'    => array(
-                            'common'    => _t('Common'),
-                            'summary'   => _t('With summary'),
-                            'feature'   => _t('With feature'),
-                            'double'    => _t('Double columns'),
+                            'basic'        => _t('basic'),
+                            'common'       => _t('Common'),
+                            'summary'      => _t('With summary'),
+                            'feature'      => _t('With feature'),
+                            'all-featured' => _t('All with feature'),
+                            'all-summary'  => _t('All with summary'),
+                            'rank'         => _t('With rank number'),
                         ),
                     ),
                 ),
                 'filter'       => 'string',
-                'value'        => 'common',
+                'value'        => 'basic',
             ),
             'target'           => array(
                 'title'        => _t('Target'),
@@ -125,10 +143,18 @@ return array(
                 'filter'        => 'number_int',
                 'value'         => 80,
             ),
+            'max_summary_length' => array(
+                'title'         => _t('Summary length'),
+                'description'   => _t('Maximum length of summary'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 255,
+            ),
         ),
     ),
     'recommended-slideshow'    => array(
         'title'       => _t('Recommended Articles With Slideshow'),
+        'title_hidden' => 1,
         'description' => _t('Listing a slideshow and recommended articles'),
         'render'      => 'block::recommendedSlideshow',
         'template'    => 'recommended-slideshow',
@@ -147,9 +173,9 @@ return array(
                     'type'        => 'radio',
                     'attributes'  => array(
                         'options'    => array(
+                            'basic'     => _t('Basic'),
                             'common'    => _t('Common'),
                             'summary'   => _t('With summary'),
-                            'feature'   => _t('With feature'),
                         ),
                     ),
                 ),
@@ -194,6 +220,13 @@ return array(
                 'filter'        => 'number_int',
                 'value'         => 80,
             ),
+            'max_summary_length' => array(
+                'title'         => _t('Summary length'),
+                'description'   => _t('Maximum length of summary'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 255,
+            ),
         ),
     ),
     'custom-article-list'      => array(
@@ -209,6 +242,21 @@ return array(
                 'filter'       => 'string',
                 'value'        => 0,
             ),
+            'column-number'    => array(
+                'title'        => _t('List Column Number'),
+                'description'  => _t('Whether to display only one column or two columns'),
+                'edit'         => array(
+                    'type'        => 'radio',
+                    'attributes'  => array(
+                        'options'    => array(
+                            'single'    => _t('Single column'),
+                            'double'    => _t('Double columns'),
+                        ),
+                    ),
+                ),
+                'filter'       => 'string',
+                'value'        => 'single',
+            ),
             'block-style'      => array(
                 'title'        => _t('Template Style'),
                 'description'  => _t('The template style of list'),
@@ -216,10 +264,13 @@ return array(
                     'type'        => 'radio',
                     'attributes'  => array(
                         'options'    => array(
-                            'common'    => _t('Common'),
-                            'summary'   => _t('With summary'),
-                            'feature'   => _t('With feature'),
-                            'double'    => _t('Double columns'),
+                            'basic'        => _t('basic'),
+                            'common'       => _t('Common'),
+                            'summary'      => _t('With summary'),
+                            'feature'      => _t('With feature'),
+                            'all-featured' => _t('All with feature'),
+                            'all-summary'  => _t('All with summary'),
+                            'rank'         => _t('With rank number'),
                         ),
                     ),
                 ),
@@ -249,6 +300,13 @@ return array(
                 'edit'          => 'text',
                 'filter'        => 'number_int',
                 'value'         => 80,
+            ),
+            'max_summary_length' => array(
+                'title'         => _t('Summary length'),
+                'description'   => _t('Maximum length of summary'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 255,
             ),
         ),
     ),
@@ -313,6 +371,21 @@ return array(
                 'filter'       => 'number_int',
                 'value'        => 7,
             ),
+            'column-number'    => array(
+                'title'        => _t('List Column Number'),
+                'description'  => _t('Whether to display only one column or two columns'),
+                'edit'         => array(
+                    'type'        => 'radio',
+                    'attributes'  => array(
+                        'options'    => array(
+                            'single'    => _t('Single column'),
+                            'double'    => _t('Double columns'),
+                        ),
+                    ),
+                ),
+                'filter'       => 'string',
+                'value'        => 'single',
+            ),
             'block-style'      => array(
                 'title'        => _t('Template Style'),
                 'description'  => _t('The template style of list'),
@@ -320,11 +393,13 @@ return array(
                     'type'        => 'radio',
                     'attributes'  => array(
                         'options'    => array(
-                            'common'    => _t('Common'),
-                            'summary'   => _t('With summary'),
-                            'feature'   => _t('With feature'),
-                            'double'    => _t('Double columns'),
-                            'rank'      => _t('With rank number'),
+                            'basic'        => _t('basic'),
+                            'common'       => _t('Common'),
+                            'summary'      => _t('With summary'),
+                            'feature'      => _t('With feature'),
+                            'all-featured' => _t('All with feature'),
+                            'all-summary'  => _t('All with summary'),
+                            'rank'         => _t('With rank number'),
                         ),
                     ),
                 ),
@@ -355,12 +430,21 @@ return array(
                 'filter'        => 'number_int',
                 'value'         => 80,
             ),
+            'max_summary_length' => array(
+                'title'         => _t('Summary length'),
+                'description'   => _t('Maximum length of summary'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 255,
+            ),
         ),
     ),
     'simple-search'             => array(
         'title'       => _t('Simple Search'),
+        'title_hidden'  => 1,
         'description' => _t('Search form for searching articles by article title'),
         'render'      => 'block::simpleSearch',
         'template'    => 'simple-search',
+        'class'       => 'block-noborder',
     ),
 );

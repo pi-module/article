@@ -12,7 +12,7 @@ $topArticleTwo = array_shift($articles);
                     </a>
                 </strong>
             </h4>
-            <div class="muted"><?php echo $this->escape(mb_substr($topArticleOne['summary'], 0, 30, 'UTF-8')) ?></div>
+            <div class="muted"><?php echo $topArticleOne['summary'] ?></div>
         </div>
         <div style="margin-top: 15px">
             <ul style="margin-left: 15px">
@@ -38,7 +38,7 @@ $topArticleTwo = array_shift($articles);
                     </a>
                 </strong>
             </h4>
-            <div class="muted"><?php echo $this->escape(mb_substr($topArticleTwo['summary'], 0, 30, 'UTF-8')) ?></div>
+            <div class="muted"><?php echo $topArticleTwo['summary'] ?></div>
         </div>
         <div style="margin-top: 15px">
             <ul style="margin-left: 15px">
