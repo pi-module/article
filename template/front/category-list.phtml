@@ -22,7 +22,7 @@ $this->bootstrap('js/bootstrap.min.js');
             <span style="margin-right: 10px">
                 <a href="<?php echo $this->url($route, array(
                     'action'   => 'list',
-                    'category' => $categories[$id]['slug'],
+                    'category' => $categories[$id]['slug'] ?: $categories[$id]['id'],
                 )) ?>" style="font-size: 15px; font-weight: bold; color: #333333">
                     <?php echo $this->escape($categories[$id]['title']) ?>
                 </a>

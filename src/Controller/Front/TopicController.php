@@ -107,10 +107,12 @@ class TopicController extends ActionController
         
         // Get topics
         $resultsetTopic = TopicService::getTopics($where, $page, $limit);
+        $topicIds = array_keys($resultsetTopic) ?: array(0);
         
         // Get topic article counts
         $model  = $this->getModel('article_topic');
         $select = $model->select()
+                        ->where(array('topic' => $topicIds))
                         ->columns(array(
                             'count' => new Expression('count(id)'), 'topic'))
                         ->group(array('topic'));
@@ -118,6 +120,22 @@ class TopicController extends ActionController
         $articleCount  = array();
         foreach ($rowRelation as $row) {
             $articleCount[$row->topic] = $row->count;
+        }
+        
+        // Get last added article
+        $lastAdded = array();
+        $select = $model->select()
+            ->where(array('topic' => $topicIds))
+            ->columns(array('id' => new Expression('max(id)')))
+            ->group(array('topic'));
+        $rowset = $model->selectWith($select);
+        $ids    = array(0);
+        foreach ($rowset as $row) {
+            $ids[] = $row['id'];
+        }
+        $rowAdded = $model->select(array('id' => $ids));
+        foreach ($rowAdded as $row) {
+            $lastAdded[$row['topic']] = $row['time'];
         }
 
         // Total count
@@ -142,6 +160,9 @@ class TopicController extends ActionController
             'topics'        => $resultsetTopic,
             'paginator'     => $paginator,
             'count'         => $articleCount,
+            'config'        => $config,
+            'route'         => $route,
+            'lastAdded'     => $lastAdded,
         ));
     }
     
@@ -181,7 +202,7 @@ class TopicController extends ActionController
         // Getting relations
         $modelRelation = $this->getModel('article_topic');
         $rowRelation   = $modelRelation->select(array('topic' => $topicId));
-        $articleIds    = array();
+        $articleIds    = array(0);
         $lastAdded     = 0;
         foreach ($rowRelation as $row) {
             $articleIds[] = $row['article'];
