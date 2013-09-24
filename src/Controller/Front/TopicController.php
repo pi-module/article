@@ -63,26 +63,60 @@ class TopicController extends ActionController
             );
         }
         
+        $module = $this->getModule();
+        
         // Get topic articles
-        $rowRelations = $this->getModel('article_topic')
-                             ->select(array('topic' => $row->id));
+        $modelRelation = $this->getModel('article_topic');
+        $select = $modelRelation->select()
+            ->where(array('topic' => $row->id))
+            ->order('time DESC');
+        $rowRelations = $modelRelation->selectWith($select);
         $articleIds   = array();
+        $pullTime     = array();
         foreach ($rowRelations as $relation) {
             $articleIds[] = $relation->article;
+            $pullTime[$relation->article] = $relation->time;
         }
         $articleIds   = array_filter($articleIds);
         if (!empty($articleIds)) {
             $where    = array(
-                'id'  => $articleIds,
+                'id'                => $articleIds,
+                'time_publish <= ?' => time(),
+                'status'            => Article::FIELD_STATUS_PUBLISHED,
+                'active'            => 1,
             );
-            $articles = Entity::getAvailableArticlePage($where, null, null);
+            $articles = Entity::getAvailableArticlePage(
+                $where,
+                1,
+                $this->config('page_limit_topic'),
+                null,
+                '',
+                $module
+            );
         }
+        
+        // Get count
+        $modelArticle   = $this->getModel('article');
+        $totalCount     = $modelArticle->getSearchRowsCount($where);
+        
+        // Get list page url
+        $url = $this->url(
+            $module . '-' . Service::getRouteName(),
+            array(
+                'topic' => $row->slug ?: $row->id,
+                'list'  => 'all'
+            )
+        );
         
         $this->view()->assign(array(
             'content'   => $row->content,
             'title'     => $row->title,
             'image'     => Pi::url($row->image),
             'articles'  => $articles,
+            'topic'     => $row->toArray(),
+            'count'     => $totalCount,
+            'pullTime'  => $pullTime,
+            'url'       => $url,
         ));
         
         $template = ('default' == $row->template)
