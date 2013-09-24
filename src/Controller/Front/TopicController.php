@@ -63,26 +63,60 @@ class TopicController extends ActionController
             );
         }
         
+        $module = $this->getModule();
+        
         // Get topic articles
-        $rowRelations = $this->getModel('article_topic')
-                             ->select(array('topic' => $row->id));
+        $modelRelation = $this->getModel('article_topic');
+        $select = $modelRelation->select()
+            ->where(array('topic' => $row->id))
+            ->order('time DESC');
+        $rowRelations = $modelRelation->selectWith($select);
         $articleIds   = array();
+        $pullTime     = array();
         foreach ($rowRelations as $relation) {
             $articleIds[] = $relation->article;
+            $pullTime[$relation->article] = $relation->time;
         }
         $articleIds   = array_filter($articleIds);
         if (!empty($articleIds)) {
             $where    = array(
-                'id'  => $articleIds,
+                'id'                => $articleIds,
+                'time_publish <= ?' => time(),
+                'status'            => Article::FIELD_STATUS_PUBLISHED,
+                'active'            => 1,
             );
-            $articles = Entity::getAvailableArticlePage($where, null, null);
+            $articles = Entity::getAvailableArticlePage(
+                $where,
+                1,
+                $this->config('page_limit_topic'),
+                null,
+                '',
+                $module
+            );
         }
+        
+        // Get count
+        $modelArticle   = $this->getModel('article');
+        $totalCount     = $modelArticle->getSearchRowsCount($where);
+        
+        // Get list page url
+        $url = $this->url(
+            $module . '-' . Service::getRouteName(),
+            array(
+                'topic' => $row->slug ?: $row->id,
+                'list'  => 'all'
+            )
+        );
         
         $this->view()->assign(array(
             'content'   => $row->content,
             'title'     => $row->title,
             'image'     => Pi::url($row->image),
             'articles'  => $articles,
+            'topic'     => $row->toArray(),
+            'count'     => $totalCount,
+            'pullTime'  => $pullTime,
+            'url'       => $url,
         ));
         
         $template = ('default' == $row->template)
@@ -107,10 +141,12 @@ class TopicController extends ActionController
         
         // Get topics
         $resultsetTopic = TopicService::getTopics($where, $page, $limit);
+        $topicIds = array_keys($resultsetTopic) ?: array(0);
         
         // Get topic article counts
         $model  = $this->getModel('article_topic');
         $select = $model->select()
+                        ->where(array('topic' => $topicIds))
                         ->columns(array(
                             'count' => new Expression('count(id)'), 'topic'))
                         ->group(array('topic'));
@@ -118,6 +154,22 @@ class TopicController extends ActionController
         $articleCount  = array();
         foreach ($rowRelation as $row) {
             $articleCount[$row->topic] = $row->count;
+        }
+        
+        // Get last added article
+        $lastAdded = array();
+        $select = $model->select()
+            ->where(array('topic' => $topicIds))
+            ->columns(array('id' => new Expression('max(id)')))
+            ->group(array('topic'));
+        $rowset = $model->selectWith($select);
+        $ids    = array(0);
+        foreach ($rowset as $row) {
+            $ids[] = $row['id'];
+        }
+        $rowAdded = $model->select(array('id' => $ids));
+        foreach ($rowAdded as $row) {
+            $lastAdded[$row['topic']] = $row['time'];
         }
 
         // Total count
@@ -142,6 +194,9 @@ class TopicController extends ActionController
             'topics'        => $resultsetTopic,
             'paginator'     => $paginator,
             'count'         => $articleCount,
+            'config'        => $config,
+            'route'         => $route,
+            'lastAdded'     => $lastAdded,
         ));
     }
     
@@ -168,6 +223,8 @@ class TopicController extends ActionController
             );
         }
         
+        $this->view()->assign('topic', $row->toArray());
+        
         $topicId    = $row->id;
         $page       = Service::getParam($this, 'p', 1);
         $page       = $page > 0 ? $page : 1;
@@ -179,9 +236,13 @@ class TopicController extends ActionController
         // Getting relations
         $modelRelation = $this->getModel('article_topic');
         $rowRelation   = $modelRelation->select(array('topic' => $topicId));
-        $articleIds    = array();
+        $articleIds    = array(0);
+        $lastAdded     = 0;
         foreach ($rowRelation as $row) {
             $articleIds[] = $row['article'];
+            if ($row['time'] > $lastAdded) {
+                $lastAdded = $row['time'];
+            }
         }
         
         $where = array(
@@ -222,6 +283,8 @@ class TopicController extends ActionController
             'title'         => empty($topic) ? __('All') : $title,
             'articles'      => $resultsetArticle,
             'paginator'     => $paginator,
+            'lastAdded'     => $lastAdded,
+            'count'         => $totalCount,
         ));
     }
 }

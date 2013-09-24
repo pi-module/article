@@ -69,6 +69,18 @@ class CategoryController extends ActionController
         }
         $where['category'] = $categoryIds;
         $categoryInfo      = $categories[$categoryId];
+        
+        // Get subcategories article count
+        $modelArticle = $this->getModel('article');
+        $select       = $modelArticle->select()
+            ->where(array('category' => $categoryIds))
+            ->columns(array('category', 'count' => new Expression('count(*)')))
+            ->group(array('category'));
+        $resultCount  = $modelArticle->selectWith($select);
+        $counts       = array();
+        foreach ($resultCount as $row) {
+            $counts[$row['category']] = $row['count'];
+        }
 
         // Get articles
         $columns           = array('id', 'subject', 'time_publish', 'category');
@@ -111,6 +123,10 @@ class CategoryController extends ActionController
             'category'      => $category,
             'p'             => $page,
             'config'        => $config,
+            'counts'        => $counts,
+            'categoryId'    => array_shift($categoryIds),
+            'subCategoryId' => $categoryIds,
+            'route'         => $route,
             //'seo'           => $this->setupSeo($categoryId),
         ));
 

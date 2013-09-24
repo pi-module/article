@@ -516,6 +516,7 @@ class TopicController extends ActionController
             }
             
             $data = $form->getData();
+            $data['time_create'] = time();
             $id   = $this->saveTopic($data);
             if (!$id) {
                 return Service::renderForm(

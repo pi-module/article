@@ -49,7 +49,7 @@ return array(
             'category'    => 'general',
             'title'       => _t('Topic Article List Page Limit'),
             'description' => _t('Maximum count of topic articles in a front page.'),
-            'value'       => 40,
+            'value'       => 5,
             'filter'      => 'number_int',
         ),
         'page_limit_management' => array(
@@ -125,6 +125,12 @@ return array(
             'title'       => _t('Default Topic Template Screenshot'),
             'description' => _t(''),
             'value'       => 'image/default-topic-template.png',
+        ),
+        'max_sub_category' => array(
+            'category'    => 'general',
+            'title'       => _t('Max Sub-category'),
+            'description' => _t('Max sub-category number in category article list page'),
+            'value'       => 2,
         ),
 
         // Autosave

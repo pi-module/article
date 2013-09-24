@@ -149,6 +149,7 @@ CREATE TABLE `{topic}` (
   `template`        varchar(64)           NOT NULL DEFAULT '',
   `description`     varchar(255)          NOT NULL DEFAULT '',
   `active`          tinyint(1)            NOT NULL DEFAULT 1,
+  `time_create`     int(10) UNSIGNED      NOT NULL DEFAULT 0,
 
   PRIMARY KEY           (`id`),
   UNIQUE KEY `name`     (`name`),

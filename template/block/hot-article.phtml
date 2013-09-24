@@ -1,9 +1,10 @@
 <?php
-$style    = $block['style'];
-$target   = $block['target'];
-$articles = $block['articles'];
+    $style    = $block['style'];
+    $column   = $block['column'];
+    $target   = $block['target'];
+    $articles = $block['articles'];
 
-$template = 'list-' . $style . '.phtml';
+    $template = sprintf('list-%s-%s.phtml', $column, $style);
 ?>
 
 <style>
@@ -12,7 +13,7 @@ $template = 'list-' . $style . '.phtml';
         margin: 0;
     }
     .article-block-hot-article {
-        padding: 5px 15px 5px 15px;
+        padding: 10px 15px 10px 15px;
     }
 </style>
 

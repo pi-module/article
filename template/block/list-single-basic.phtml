@@ -1,0 +1,11 @@
+<div>
+    <ul style="margin: 10px 15px 10px 15px">
+        <?php foreach ($articles as $article) { ?>
+        <li class="muted" style="padding: 2px">
+            <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C">
+        <?php echo $this->escape($article['subject']) ?>
+    </a>
+        </li>
+        <?php } ?>
+    </ul>
+</div>

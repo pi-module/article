@@ -1,21 +1,16 @@
 <?php
 $topArticle = array_shift($articles);
 ?>
-<div class="row-fluid">
+<div>
     <div>
-        <h4>
+        <h4 style="padding-top: 5px; text-align: center">
             <strong>
                 <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($topArticle['url']) ?>">
                     <?php echo $this->escape($topArticle['subject']) ?>
                 </a>
             </strong>
         </h4>
-        <div>
-            <img src="<?php echo Pi::url($topArticle['image']) ?>" style="width: <?php echo $this->escape($block['config']['feature_thumb_width']) ?>px; height: <?php echo $this->escape($block['config']['feature_thumb_height']) ?>px" />
-            <div class="muted" style="width: 55%; float: right;">
-                <?php echo $this->escape(mb_substr($topArticle['summary'], 0, 30, 'UTF-8')) ?>
-            </div>
-        </div>
+        <div class="muted"><?php echo $topArticle['summary'] ?></div>
     </div>
     <div style="margin-top: 15px">
         <ul style="margin-left: 15px">
