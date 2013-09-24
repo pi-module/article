@@ -78,7 +78,7 @@ class TagController extends ActionController
             });
         }
 
-        $route = $this->getModule() . '.' . Service::getRouteName();
+        $route = $this->getModule() . '-' . Service::getRouteName();
         // Pagination
         $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit)
@@ -92,12 +92,13 @@ class TagController extends ActionController
             ));
 
         $this->view()->assign(array(
-            'title'     => __('Article List with Tag'),
+            'title'     => __('Articles on Tag '),
             'articles'  => $articles,
             'paginator' => $paginator,
             'p'         => $page,
             'tag'       => $tag,
             'config'    => $config,
+            'count'     => $totalCount,
         ));
 
         $this->view()->viewModel()->getRoot()->setVariables(array(

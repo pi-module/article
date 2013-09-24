@@ -15,6 +15,7 @@ use Pi\Paginator\Paginator;
 use Module\Article\Model\Article;
 use Module\Article\Service;
 use Module\Article\Entity;
+use Module\Article\Form\SimpleSearchForm;
 
 /**
  * Search controller
@@ -77,13 +78,19 @@ class SearchController extends ActionController
                 'keyword'       => $keyword,
             )),
         ));
+        
+        // Prepare search form
+        $form = new SimpleSearchForm;
+        $form->setData($this->params()->fromQuery());
 
         $this->view()->assign(array(
-            'title'        => __('Search result about '),
+            'title'        => __('Search result of '),
             'articles'     => $articleResultset,
             'keyword'      => $keyword,
             'p'            => $page,
             'paginator'    => $paginator,
+            'count'        => $totalCount,
+            'form'         => $form,
         ));
     }
 }

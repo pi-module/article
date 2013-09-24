@@ -172,6 +172,11 @@
 .topic-list-title,
 .article-list-title {
     color: #333333;
+    font-size: 14px;
+    font-weight: bold;
+}
+.article-list-desc {
+    font-size: 14px;
 }
 .dashed {
     height: 20px;
