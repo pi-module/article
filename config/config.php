@@ -126,6 +126,12 @@ return array(
             'description' => _t(''),
             'value'       => 'image/default-topic-template.png',
         ),
+        'max_sub_category' => array(
+            'category'    => 'general',
+            'title'       => _t('Max Sub-category'),
+            'description' => _t('Max sub-category number in category article list page'),
+            'value'       => 2,
+        ),
 
         // Autosave
         'autosave_interval' => array(
