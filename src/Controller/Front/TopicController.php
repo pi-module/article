@@ -168,6 +168,8 @@ class TopicController extends ActionController
             );
         }
         
+        $this->view()->assign('topic', $row->toArray());
+        
         $topicId    = $row->id;
         $page       = Service::getParam($this, 'p', 1);
         $page       = $page > 0 ? $page : 1;
@@ -180,8 +182,12 @@ class TopicController extends ActionController
         $modelRelation = $this->getModel('article_topic');
         $rowRelation   = $modelRelation->select(array('topic' => $topicId));
         $articleIds    = array();
+        $lastAdded     = 0;
         foreach ($rowRelation as $row) {
             $articleIds[] = $row['article'];
+            if ($row['time'] > $lastAdded) {
+                $lastAdded = $row['time'];
+            }
         }
         
         $where = array(
@@ -222,6 +228,8 @@ class TopicController extends ActionController
             'title'         => empty($topic) ? __('All') : $title,
             'articles'      => $resultsetArticle,
             'paginator'     => $paginator,
+            'lastAdded'     => $lastAdded,
+            'count'         => $totalCount,
         ));
     }
 }
