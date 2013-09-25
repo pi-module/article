@@ -36,89 +36,28 @@ class Block
             return false;
         }
         
-        $count       = $options['top-category'];
-        $maxTopCount = ($count > 8 or $count <= 0) ? 6 : $count;
-        $maxSubCount = $options['sub-category'] > 5 ? 5 : $options['sub-category'];
-        $maxSubCount = $maxSubCount <= 0 ? 3 : $maxSubCount;
+        $maxTopCount = $options['top-category'];
+        $maxSubCount = $options['sub-category'];
         $route       = $module . '-' . Service::getRouteName();
-        $defaultUrl  = Pi::engine()->application()
-            ->getRouter()
-            ->assemble(
-                array(
-                    'list'  => 'all',
-                ), 
-                array(
-                    'name' => $route
-                )
-            );
         
         $categories  = Service::getCategoryList(array('is-tree' => true));
         
-        $allItems    = array();
-        $topCount    = 0;
-        foreach ($categories['child'] as $category) {
-            if ($topCount > $maxTopCount) {
-                break;
+        $allItems = self::canonizeCategories(
+            $categories['child'],
+            array('route' => $route)
+        );
+        
+        $i = 0;
+        foreach ($allItems as $id => &$item) {
+            if (++$i > $maxTopCount) {
+                unset($allItems[$id]);
             }
-            $id = $category['id'];
-            $allItems[$id] = array(
-                'title'     => $category['title'],
-                'url'       => Pi::engine()->application()
-                    ->getRouter()
-                    ->assemble(
-                        array(
-                            'category'  => $category['slug'] ?: $category['id'],
-                        ), 
-                        array(
-                            'name' => $route
-                        )
-                    ),
-            );
-            $topCount++;
-            
-            // Fetching sub-category
-            $subCount    = 0;
-            $child = isset($category['child']) ? $category['child'] : array();
-            foreach ($child as $item) {
-                if ($subCount > $maxSubCount) {
-                    break;
+            $j = 0;
+            foreach (array_keys($item['child']) as $subId) {
+                if (++$j > $maxSubCount) {
+                    unset($item['child'][$subId]);
                 }
-                $allItems[$id]['child'][$item['id']] = array(
-                    'title'    => $item['title'],
-                    'url'      => Pi::engine()->application()
-                        ->getRouter()
-                        ->assemble(
-                            array(
-                                'category'  => $item['slug'] ?: $item['id'],
-                            ), 
-                            array(
-                                'name' => $route
-                            )
-                        ),
-                );
-                $subCount++;
             }
-            for ($i = $subCount; $i < $maxSubCount; $i++) {
-                $allItems[$id]['child'][] = array(
-                    'title' => $options['default-category'] ?: __('None'),
-                    'url'   => $defaultUrl,
-                );
-            }
-        }
-        for ($j = count($allItems); $j < $maxTopCount; $j++) {
-            $child = array();
-            for ($i = 0; $i < $maxSubCount; $i++) {
-                $child[] = array(
-                    'title' => $options['default-category'] ?: __('None'),
-                    'url'   => $defaultUrl,
-                );
-            }
-            $allItems[] = array(
-                'title' => $options['default-category'] ?: __('None'),
-                'url'   => $defaultUrl,
-                'child' => $child,
-            );
-            
         }
         
         return $allItems;
@@ -563,5 +502,47 @@ class Block
             'images'    => $images,
             'config'    => Pi::service('module')->config('', $module),
         );
+    }
+    
+    /**
+     * Added all sub-categories as children array of top category.
+     * 
+     * @param array  $categories
+     * @param array  $options
+     * @return array 
+     */
+    protected static function canonizeCategories(
+        $categories,
+        $options = array()
+    ) {
+        $result = array();
+        foreach ($categories as $category) {
+            $result[$category['id']] = array(
+                'title' => $category['title'],
+                'depth' => $category['depth'],
+                'url'   => Pi::engine()
+                    ->application()
+                    ->getRouter()
+                    ->assemble(
+                        array(
+                            'category'  => $category['slug'] ?: $category['id'],
+                        ), 
+                        array('name' => $options['route'])
+                    ),
+            );
+            if (isset($category['child'])) {
+                $children = self::canonizeCategories(
+                    $category['child'],
+                    $options
+                );
+                if ($category['depth'] > 1) {
+                    $result = $result + $children;
+                } else {
+                    $result[$category['id']]['child'] = $children;
+                }
+            }
+        }
+        
+        return $result;
     }
 }
