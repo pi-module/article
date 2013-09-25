@@ -14,6 +14,7 @@ use Module\Article\Service;
 use Module\Article\Topic;
 use Module\Article\Statistics;
 use Module\Article\Entity;
+use Zend\Db\Sql\Expression;
 
 /**
  * Block class for providing article blocks
@@ -121,6 +122,68 @@ class Block
         }
         
         return $allItems;
+    }
+    
+    /**
+     * List hot categories
+     * 
+     * @param array   $options  Block parameters
+     * @param string  $module   Module name
+     * @return boolean 
+     */
+    public static function hotCategories($options = array(), $module = null)
+    {
+        if (empty($module)) {
+            return false;
+        }
+        
+        $limit = (int) $options['list-count'];
+        $limit = $limit < 0 ? 0 : $limit;
+        $day = (int) $options['day-range'];
+        $endDay   = time();
+        $startDay = $endDay - $day * 3600 * 24;
+        
+        // Get category IDs
+        $where = array(
+            'time_publish > ?'  => $startDay,
+            'time_publish <= ?' => $endDay,
+        );
+        
+        $modelArticle = Pi::model('article', $module);
+        $select = $modelArticle->select()
+            ->where($where)
+            ->columns(array('category', 'count' => new Expression('count(*)')))
+            ->group(array('category'))
+            ->offset(0)
+            ->limit($limit)
+            ->order('count DESC');
+        $rowArticle = $modelArticle->selectWith($select);
+        $categoryIds = array(0);
+        foreach ($rowArticle as $row) {
+            $categoryIds[] = $row['category'];
+        }
+        
+        // Get category Info
+        $route = $module . '-' . Service::getRouteName();
+        $where = array('id' => $categoryIds);
+        $rowCategory = Pi::model('category', $module)->select($where);
+        $categories = array();
+        foreach ($rowCategory as $row) {
+            $categories[$row->id]['title'] = $row->title;
+            $categories[$row->id]['url']   = Pi::engine()
+                ->application()
+                ->getRouter()
+                ->assemble(
+                    array(
+                        'category' => $row->slug ?: $row->id,
+                    ),
+                    array('name' => $route)
+                );
+        }
+        
+        return array(
+            'categories' => $categories,
+        );
     }
     
     /**
