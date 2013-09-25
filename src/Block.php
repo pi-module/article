@@ -14,6 +14,7 @@ use Module\Article\Service;
 use Module\Article\Topic;
 use Module\Article\Statistics;
 use Module\Article\Entity;
+use Zend\Db\Sql\Expression;
 
 /**
  * Block class for providing article blocks
@@ -35,92 +36,93 @@ class Block
             return false;
         }
         
-        $count       = $options['top-category'];
-        $maxTopCount = ($count > 8 or $count <= 0) ? 6 : $count;
-        $maxSubCount = $options['sub-category'] > 5 ? 5 : $options['sub-category'];
-        $maxSubCount = $maxSubCount <= 0 ? 3 : $maxSubCount;
+        $maxTopCount = $options['top-category'];
+        $maxSubCount = $options['sub-category'];
         $route       = $module . '-' . Service::getRouteName();
-        $defaultUrl  = Pi::engine()->application()
-            ->getRouter()
-            ->assemble(
-                array(
-                    'list'  => 'all',
-                ), 
-                array(
-                    'name' => $route
-                )
-            );
         
         $categories  = Service::getCategoryList(array('is-tree' => true));
         
-        $allItems    = array();
-        $topCount    = 0;
-        foreach ($categories['child'] as $category) {
-            if ($topCount > $maxTopCount) {
-                break;
+        $allItems = self::canonizeCategories(
+            $categories['child'],
+            array('route' => $route)
+        );
+        
+        $i = 0;
+        foreach ($allItems as $id => &$item) {
+            if (++$i > $maxTopCount) {
+                unset($allItems[$id]);
             }
-            $id = $category['id'];
-            $allItems[$id] = array(
-                'title'     => $category['title'],
-                'url'       => Pi::engine()->application()
-                    ->getRouter()
-                    ->assemble(
-                        array(
-                            'category'  => $category['slug'] ?: $category['id'],
-                        ), 
-                        array(
-                            'name' => $route
-                        )
-                    ),
-            );
-            $topCount++;
-            
-            // Fetching sub-category
-            $subCount    = 0;
-            $child = isset($category['child']) ? $category['child'] : array();
-            foreach ($child as $item) {
-                if ($subCount > $maxSubCount) {
-                    break;
+            $j = 0;
+            foreach (array_keys($item['child']) as $subId) {
+                if (++$j > $maxSubCount) {
+                    unset($item['child'][$subId]);
                 }
-                $allItems[$id]['child'][$item['id']] = array(
-                    'title'    => $item['title'],
-                    'url'      => Pi::engine()->application()
-                        ->getRouter()
-                        ->assemble(
-                            array(
-                                'category'  => $item['slug'] ?: $item['id'],
-                            ), 
-                            array(
-                                'name' => $route
-                            )
-                        ),
-                );
-                $subCount++;
             }
-            for ($i = $subCount; $i < $maxSubCount; $i++) {
-                $allItems[$id]['child'][] = array(
-                    'title' => $options['default-category'] ?: __('None'),
-                    'url'   => $defaultUrl,
-                );
-            }
-        }
-        for ($j = count($allItems); $j < $maxTopCount; $j++) {
-            $child = array();
-            for ($i = 0; $i < $maxSubCount; $i++) {
-                $child[] = array(
-                    'title' => $options['default-category'] ?: __('None'),
-                    'url'   => $defaultUrl,
-                );
-            }
-            $allItems[] = array(
-                'title' => $options['default-category'] ?: __('None'),
-                'url'   => $defaultUrl,
-                'child' => $child,
-            );
-            
         }
         
         return $allItems;
+    }
+    
+    /**
+     * List hot categories
+     * 
+     * @param array   $options  Block parameters
+     * @param string  $module   Module name
+     * @return boolean 
+     */
+    public static function hotCategories($options = array(), $module = null)
+    {
+        if (empty($module)) {
+            return false;
+        }
+        
+        $limit = (int) $options['list-count'];
+        $limit = $limit < 0 ? 0 : $limit;
+        $day = (int) $options['day-range'];
+        $endDay   = time();
+        $startDay = $endDay - $day * 3600 * 24;
+        
+        // Get category IDs
+        $where = array(
+            'time_publish > ?'  => $startDay,
+            'time_publish <= ?' => $endDay,
+        );
+        
+        $modelArticle = Pi::model('article', $module);
+        $select = $modelArticle->select()
+            ->where($where)
+            ->columns(array('category', 'count' => new Expression('count(*)')))
+            ->group(array('category'))
+            ->offset(0)
+            ->limit($limit)
+            ->order('count DESC');
+        $rowArticle = $modelArticle->selectWith($select);
+        $categoryIds = array(0);
+        foreach ($rowArticle as $row) {
+            $categoryIds[] = $row['category'];
+        }
+        
+        // Get category Info
+        $route = $module . '-' . Service::getRouteName();
+        $where = array('id' => $categoryIds);
+        $rowCategory = Pi::model('category', $module)->select($where);
+        $categories = array();
+        foreach ($rowCategory as $row) {
+            $categories[$row->id]['title'] = $row->title;
+            $categories[$row->id]['url']   = Pi::engine()
+                ->application()
+                ->getRouter()
+                ->assemble(
+                    array(
+                        'category' => $row->slug ?: $row->id,
+                    ),
+                    array('name' => $route)
+                );
+        }
+        
+        return array(
+            'categories' => $categories,
+        );
     }
     
     /**
@@ -193,10 +195,11 @@ class Block
             $article['summary'] = mb_substr(
                 $article['summary'],
                 0,
-                $config['max_summary_length'],
+                $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image']   = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         return array(
@@ -253,7 +256,8 @@ class Block
                 $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image'] = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         return array(
@@ -395,7 +399,8 @@ class Block
                 $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image']   = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
 
         return array(
@@ -432,11 +437,21 @@ class Block
         $config   = Pi::service('module')->config('', $module);
         $image    = $config['default_feature_thumb'];
         $image    = Pi::service('asset')->getModuleAsset($image, $module);
-        $length   = isset($options['max_subject_length']) 
-            ? intval($options['max_subject_length']) : 15;
         foreach ($articles as &$article) {
-            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
-            $article['image']   = $article['image'] ?: $image;
+            $article['subject'] = mb_substr(
+                $article['subject'],
+                0,
+                $options['max_subject_length'],
+                'UTF-8'
+            );
+            $article['summary'] = mb_substr(
+                $article['summary'],
+                0,
+                $options['max_summary_length'],
+                'UTF-8'
+            );
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         // Getting image link url
@@ -487,5 +502,47 @@ class Block
             'images'    => $images,
             'config'    => Pi::service('module')->config('', $module),
         );
+    }
+    
+    /**
+     * Added all sub-categories as children array of top category.
+     * 
+     * @param array  $categories
+     * @param array  $options
+     * @return array 
+     */
+    protected static function canonizeCategories(
+        $categories,
+        $options = array()
+    ) {
+        $result = array();
+        foreach ($categories as $category) {
+            $result[$category['id']] = array(
+                'title' => $category['title'],
+                'depth' => $category['depth'],
+                'url'   => Pi::engine()
+                    ->application()
+                    ->getRouter()
+                    ->assemble(
+                        array(
+                            'category'  => $category['slug'] ?: $category['id'],
+                        ), 
+                        array('name' => $options['route'])
+                    ),
+            );
+            if (isset($category['child'])) {
+                $children = self::canonizeCategories(
+                    $category['child'],
+                    $options
+                );
+                if ($category['depth'] > 1) {
+                    $result = $result + $children;
+                } else {
+                    $result[$category['id']]['child'] = $children;
+                }
+            }
+        }
+        
+        return $result;
     }
 }

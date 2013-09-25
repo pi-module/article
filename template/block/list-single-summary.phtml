@@ -3,7 +3,7 @@ $topArticle = array_shift($articles);
 ?>
 <div>
     <div>
-        <h4 style="padding-top: 5px; text-align: center">
+        <h4 style="margin-top: 0">
             <strong>
                 <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($topArticle['url']) ?>">
                     <?php echo $this->escape($topArticle['subject']) ?>
@@ -13,7 +13,7 @@ $topArticle = array_shift($articles);
         <div class="muted"><?php echo $topArticle['summary'] ?></div>
     </div>
     <div style="margin-top: 15px">
-        <ul style="margin-left: 15px">
+        <ul style="margin: 0 0 0 15px">
             <?php foreach ($articles as $article) { ?>
             <li class="muted" style="padding: 2px">
                 <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C">
