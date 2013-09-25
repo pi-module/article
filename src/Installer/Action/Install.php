@@ -31,7 +31,16 @@ class Install extends BasicInstall
     {
         $events = $this->events;
         $events->attach('install.post', array($this, 'initCategory'), 1);
-        $events->attach('install.post', array($this, 'initDraftEditPageForm'), -90);
+        $events->attach(
+            'install.post',
+            array($this, 'initDraftEditPageForm'),
+            -90
+        );
+        $events->attach(
+            'install.post',
+            array($this, 'initDefaultTopicTemplateScreenshot'),
+            -90
+        );
         parent::attachDefaultListeners();
         return $this;
     }
@@ -82,6 +91,50 @@ return array(
 EOD;
         $filename = Service::getModuleConfigPath('draft-edit-form', $module);
         $result   = File::addContent($filename, $content);
+        
+        $e->setParam('result', $result);
+    }
+    
+    /**
+     * Add a folder in static folder and copy the default topic template
+     * screenshot into this folder.
+     * 
+     * @param Event $e 
+     */
+    public function initDefaultTopicTemplateScreenshot(Event $e)
+    {
+        $module = $this->event->getParam('module');
+        
+        // Create folder in static folder
+        $destFilename = sprintf(
+            '%s/%s/topic-template',
+            Pi::path('static'),
+            $module
+        );
+        
+        $result = true;
+        if (!file_exists($destFilename)) {
+            $result = File::mkdir($destFilename);
+        }
+        
+        // Copy screenshot into target folder
+        if ($result) {
+            chmod($destFilename, 0777);
+            $config = Pi::service('module')->config('', $module);
+            $basename = $config['default_topic_template_image'];
+            $srcFilename = sprintf(
+                '%s/article/asset/%s',
+                Pi::path('module'),
+                $basename
+            );
+            
+            if (file_exists($srcFilename)) {
+                $result = copy(
+                    $srcFilename,
+                    $destFilename . '/' . basename($basename)
+                );
+            }
+        }
         
         $e->setParam('result', $result);
     }
