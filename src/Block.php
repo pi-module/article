@@ -193,10 +193,11 @@ class Block
             $article['summary'] = mb_substr(
                 $article['summary'],
                 0,
-                $config['max_summary_length'],
+                $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image']   = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         return array(
@@ -253,7 +254,8 @@ class Block
                 $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image'] = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         return array(
@@ -395,7 +397,8 @@ class Block
                 $options['max_summary_length'],
                 'UTF-8'
             );
-            $article['image']   = $article['image'] ?: $image;
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
 
         return array(
@@ -432,11 +435,21 @@ class Block
         $config   = Pi::service('module')->config('', $module);
         $image    = $config['default_feature_thumb'];
         $image    = Pi::service('asset')->getModuleAsset($image, $module);
-        $length   = isset($options['max_subject_length']) 
-            ? intval($options['max_subject_length']) : 15;
         foreach ($articles as &$article) {
-            $article['subject'] = mb_substr($article['subject'], 0, $length, 'UTF-8');
-            $article['image']   = $article['image'] ?: $image;
+            $article['subject'] = mb_substr(
+                $article['subject'],
+                0,
+                $options['max_subject_length'],
+                'UTF-8'
+            );
+            $article['summary'] = mb_substr(
+                $article['summary'],
+                0,
+                $options['max_summary_length'],
+                'UTF-8'
+            );
+            $article['image'] = $article['image'] 
+                ? Service::getThumbFromOriginal($article['image']) : $image;
         }
         
         // Getting image link url
