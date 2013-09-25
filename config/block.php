@@ -42,6 +42,26 @@ return array(
             ),
         ),
     ),
+    'hot-categories'           => array(
+        'title'       => _t('Hot Categories'),
+        'description' => _t('Listing hot categories according to their articles'),
+        'render'      => 'block::hotCategories',
+        'template'    => 'hot-categories',
+        'config'      => array(
+            'list-count'       => array(
+                'title'        => _t('List Count'),
+                'description'  => _t('The max categories to display'),
+                'filter'       => 'number_int',
+                'value'        => 18,
+            ),
+            'day-range'        => array(
+                'title'        => _t('Day Range'),
+                'description'  => _t('Day range'),
+                'filter'       => 'number_int',
+                'value'        => 7,
+            ),
+        ),
+    ),
     'newest-published-article' => array(
         'title'       => _t('Newest Published Articles'),
         'description' => _t('Listing the newest published articles of topic or non-topic'),
