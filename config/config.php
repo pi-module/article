@@ -339,6 +339,26 @@ return array(
             'value'       => 240,
             'filter'      => 'number_int',
         ),
+        'topic_thumb_width' => array(
+            'category'    => 'media',
+            'title'       => _t('Topic thumb width'),
+            'description' => '',
+            'value'       => 80,
+            'filter'      => 'number_int',
+        ),
+        'topic_thumb_height' => array(
+            'category'    => 'media',
+            'title'       => _t('Topic thumb height'),
+            'description' => '',
+            'value'       => 60,
+            'filter'      => 'number_int',
+        ),
+        'default_topic_thumb' => array(
+            'category'    => 'media',
+            'title'       => _t('Default topic thumb'),
+            'description' => _t('Path to default topic thumb.'),
+            'value'       => 'image/default-topic-thumb.png',
+        ),
         'default_topic_image' => array(
             'category'    => 'media',
             'title'       => _t('Default Topic Image'),
@@ -369,14 +389,14 @@ return array(
             'category'    => 'media',
             'title'       => _t('Feature thumb width'),
             'description' => '',
-            'value'       => 110,
+            'value'       => 80,
             'filter'      => 'number_int',
         ),
         'feature_thumb_height' => array(
             'category'    => 'media',
             'title'       => _t('Feature thumb height'),
             'description' => '',
-            'value'       => 75,
+            'value'       => 60,
             'filter'      => 'number_int',
         ),
         'default_feature_thumb' => array(

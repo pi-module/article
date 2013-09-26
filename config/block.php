@@ -40,6 +40,23 @@ return array(
                 'filter'       => 'string',
                 'value'        => _t('None'),
             ),
+            'target'           => array(
+                'title'        => _t('Target'),
+                'description'  => _t('Open url in which window'),
+                'edit'         => array(
+                    'type'        => 'select',
+                    'attributes'  => array(
+                        'options'    => array(
+                            '_blank'    => 'Blank',
+                            '_parent'   => 'Parent',
+                            '_self'     => 'Self',
+                            '_top'      => 'Top',
+                        ),
+                    ),
+                ),
+                'filter'        => 'string',
+                'value'         => '_blank',
+            ),
         ),
     ),
     'hot-categories'           => array(
@@ -59,6 +76,23 @@ return array(
                 'description'  => _t('Day range'),
                 'filter'       => 'number_int',
                 'value'        => 7,
+            ),
+            'target'           => array(
+                'title'        => _t('Target'),
+                'description'  => _t('Open url in which window'),
+                'edit'         => array(
+                    'type'        => 'select',
+                    'attributes'  => array(
+                        'options'    => array(
+                            '_blank'    => 'Blank',
+                            '_parent'   => 'Parent',
+                            '_self'     => 'Self',
+                            '_top'      => 'Top',
+                        ),
+                    ),
+                ),
+                'filter'        => 'string',
+                'value'         => '_blank',
             ),
         ),
     ),
@@ -357,6 +391,37 @@ return array(
                 'edit'         => 'text',
                 'filter'       => 'number_int',
                 'value'        => 10,
+            ),
+            'target'           => array(
+                'title'        => _t('Target'),
+                'description'  => _t('Open url in which window'),
+                'edit'         => array(
+                    'type'        => 'select',
+                    'attributes'  => array(
+                        'options'    => array(
+                            '_blank'    => 'Blank',
+                            '_parent'   => 'Parent',
+                            '_self'     => 'Self',
+                            '_top'      => 'Top',
+                        ),
+                    ),
+                ),
+                'filter'        => 'string',
+                'value'         => '_blank',
+            ),
+            'max_title_length'  => array(
+                'title'         => _t('Title length'),
+                'description'   => _t('Maximum length of title'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 80,
+            ),
+            'max_description_length' => array(
+                'title'         => _t('Description length'),
+                'description'   => _t('Maximum length of description'),
+                'edit'          => 'text',
+                'filter'        => 'number_int',
+                'value'         => 255,
             ),
         ),
     ),

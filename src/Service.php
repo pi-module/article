@@ -170,10 +170,11 @@ class Service
             }
 
             if (!empty($userIds)) {
-                $resultsetUser = Pi::user()->get($userIds);
+                $resultsetUser = Pi::user()
+                    ->get($userIds, array('id', 'identity'));
                 foreach ($resultsetUser as $row) {
-                    $users[$row->id] = array(
-                        'name' => $row->identity,
+                    $users[$row['id']] = array(
+                        'name' => $row['identity'],
                     );
                 }
                 unset($resultsetUser);

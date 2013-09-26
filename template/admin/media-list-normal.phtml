@@ -12,8 +12,8 @@
     <div class="normal-list" style="max-width: 100%">
         <?php 
             $i = 0;
+            $j = 0;
             foreach ($medias as $media) { 
-                $j = 0;
                 if ($i++ % 6 == 0) {
         ?>
         <div class="list-one-line">
@@ -32,7 +32,9 @@
                     </a>
                 </div>
             </div>
-            <?php if (++$j == 6 or $i == count($medias)) { ?>
+            <?php if (++$j == 6 or $i == count($medias)) { 
+                $j = 0;
+            ?>
         </div>
             <?php } ?>
         <?php } ?>

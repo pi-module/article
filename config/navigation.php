@@ -132,7 +132,7 @@ return array(
                 'controller'    => 'draft',
                 'action'        => 'list',
                 'params'        => array(
-                    'status'       => 1,
+                    'status'       => 11,
                 ),
             ),
         ),

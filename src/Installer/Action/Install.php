@@ -156,6 +156,12 @@ EOD;
         $e->setParam('result', $result);
     }
     
+    /**
+     * Initize module data
+     * 
+     * @param Event $e
+     * @return boolean 
+     */
     public function initModuleData(Event $e)
     {
         $result = true;

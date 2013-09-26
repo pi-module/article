@@ -389,7 +389,8 @@ class Entity
             if (!empty($userIds) 
                 && (empty($columns) || in_array('uid', $columns))
             ) {
-                $resultsetUser = Pi::user()->get($userIds);
+                $resultsetUser = Pi::user()
+                    ->get($userIds, array('id', 'identity'));
                 foreach ($resultsetUser as $row) {
                     $users[$row['id']] = array(
                         'name' => $row['identity'],

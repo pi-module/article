@@ -11,7 +11,7 @@
         <tbody>
             <tr>
                 <th><?php _e('Image') ?></th>
-                <th><?php _e('Title') ?></th>
+                <th style="width: 250px"><?php _e('Title') ?></th>
                 <th><?php _e('Article Number') ?></th>
                 <th><?php _e('Template') ?></th>
                 <th><?php _e('Description') ?></th>
@@ -31,7 +31,7 @@
             <?php
                 } ?>
                 </td>
-                <td><a href="<?php echo $this->url($route, array(
+                <td><a target="_blank" href="<?php echo $this->url($route, array(
                     'controller' => 'topic',
                     'action'     => 'index',
                     'topic'      => $topic['slug'] ?: $topic['id']))
