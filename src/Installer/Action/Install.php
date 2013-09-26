@@ -23,6 +23,11 @@ use Module\Article\File;
 class Install extends BasicInstall
 {
     /**
+     * Sql file for initilizing data 
+     */
+    const INIT_FILE_NAME = 'article/sql/data.sql';
+    
+    /**
      * Attach method to listener
      * 
      * @return \Module\Article\Installer\Action\Install 
@@ -41,6 +46,11 @@ class Install extends BasicInstall
             array($this, 'initDefaultTopicTemplateScreenshot'),
             -90
         );
+        $events->attach(
+            'install.post',
+            array($this, 'initModuleData'),
+            -100
+        );
         parent::attachDefaultListeners();
         return $this;
     }
@@ -52,6 +62,13 @@ class Install extends BasicInstall
      */
     public function initCategory(Event $e)
     {
+        // Skip if the initial data is exists
+        $sqlPath = sprintf('%s/%s', Pi::path('module'), self::INIT_FILE_NAME);
+        if (file_exists($sqlPath)) {
+            return $e->setParam('result', true);
+        }
+        
+        // Add a root category and its child category
         $module = $this->event->getParam('module');
         $model  = Pi::model('category', $module);
         $data   = array(
@@ -134,6 +151,39 @@ EOD;
                     $destFilename . '/' . basename($basename)
                 );
             }
+        }
+        
+        $e->setParam('result', $result);
+    }
+    
+    public function initModuleData(Event $e)
+    {
+        $result = true;
+        
+        // Skip if the initial data is not exists
+        $sqlPath = sprintf('%s/%s', Pi::path('module'), self::INIT_FILE_NAME);
+        if (!file_exists($sqlPath)) {
+            return $e->setParam('result', $result);
+        }
+        
+        // Get module name and prefix of table
+        $module = $this->event->getParam('module');
+        $prefix = Pi::db()->getTablePrefix();
+        
+        // Fetch data and insert into database
+        $file = fopen($sqlPath, 'r');
+        if ($file) {
+            $sql = fread($file, filesize($sqlPath));
+            $sql = preg_replace('/{prefix}/', $prefix, $sql);
+            $sql = preg_replace('/{module}/', $module, $sql);
+
+            try {
+                Pi::db()->getAdapter()->query($sql, 'execute');
+            } catch (\Exception $exception) {
+                return false;
+            }
+        } else {
+            $result = false;
         }
         
         $e->setParam('result', $result);
