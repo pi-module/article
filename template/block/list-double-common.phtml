@@ -18,7 +18,7 @@
                     <?php if ($i++ % 2 == 0) { ?>
                 <li class="muted" style="padding: 2px">
                     <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C">
-                        <?php echo $this->escape($article['subject']) ?>
+                        <strong><?php echo $this->escape($article['subject']) ?></strong>
                     </a>
                 </li>
                     <?php } ?>
@@ -41,7 +41,7 @@
                     <?php if ($j++ % 2 == 1) { ?>
                 <li class="muted" style="padding: 2px">
                     <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C">
-                        <?php echo $this->escape($article['subject']) ?>
+                        <strong><?php echo $this->escape($article['subject']) ?></strong>
                     </a>
                 </li>
                     <?php } ?>

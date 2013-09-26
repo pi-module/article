@@ -783,7 +783,7 @@ class DraftController extends ActionController
         $from   = Service::getParam($this, 'from', 'my');
         $where  = Service::getParam($this, 'where', '');
         $where  = json_decode(urldecode($where), true);
-        $where  = array_filter($where);
+        $where  = is_array($where) ? array_filter($where) : array();
         if (!in_array($from, array('my', 'all'))) {
             throw new \Exception(__('Invalid source'));
         }
@@ -985,8 +985,9 @@ class DraftController extends ActionController
         }
 
         // Get submitter info
+        $columns = array('id', 'identity');
         if ($data['uid']) {
-            $user = Pi::user()->get($data['uid']);
+            $user = Pi::user()->get($data['uid'], $columns);
             if ($user) {
                 $this->view()->assign('user', array(
                     'id'   => $user['id'],
@@ -997,7 +998,7 @@ class DraftController extends ActionController
         
         // Get update user info
         if ($data['user_update']) {
-            $userUpdate = Pi::user()->get($data['user_update']);
+            $userUpdate = Pi::user()->get($data['user_update'], $columns);
             if ($userUpdate) {
                 $this->view()->assign('userUpdate', array(
                     'id'   => $userUpdate['id'],

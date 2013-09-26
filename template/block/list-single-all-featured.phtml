@@ -2,7 +2,7 @@
     <?php foreach ($articles as $article) { ?>
     <div class="media">
         <img class="pull-left" src="<?php echo $this->escape($article['image']) ?>">
-        <div class="media-body">
+        <div class="media-body" style="font-size: 12px">
             <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" style="color: #48484C; font-weight: bold">
                 <?php echo $this->escape($article['subject']) ?>
             </a>

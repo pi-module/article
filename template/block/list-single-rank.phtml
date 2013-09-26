@@ -20,7 +20,7 @@
         <li class="article-list-rank" style="padding: 2px">
             <span <?php if ($i <= 2) echo 'class="emphasize"' ?>><?php if ($i < 9) echo 0 ?><?php echo ++$i ?></span>
             <a target="_blank" href="<?php echo $this->escape($article['url']) ?>" title="<?php echo $this->escape($article['subject']) ?>">
-                <?php echo $this->escape($article['subject']) ?>
+                <strong><?php echo $this->escape($article['subject']) ?></strong>
             </a>
         </li>
     <?php } ?>

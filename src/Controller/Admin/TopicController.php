@@ -226,7 +226,7 @@ class TopicController extends ActionController
         );
         
         // Get users
-        $users = Pi::user()->get($userIds);
+        $users = Pi::user()->get($userIds, array('id', 'identity'));
         
         // Get topic details
         $rowTopicSet   = $modelTopic->select(array());
@@ -659,9 +659,9 @@ class TopicController extends ActionController
         // Get total topic count
         $select = $model->select()
             ->columns(array('count' => new Expression('count(*)')));
-        $count  = (int) $model->selectWith($select)->current()->count;
+        $totalCount = (int) $model->selectWith($select)->current()->count;
         
-        $paginator = Paginator::factory($count);
+        $paginator = Paginator::factory($totalCount);
         $paginator->setItemCountPerPage($limit);
         $paginator->setCurrentPageNumber($page);
         $paginator->setUrlOptions(array(
@@ -796,6 +796,8 @@ class TopicController extends ActionController
         $uploadInfo['tmp_name'] = $fileName;
         $uploadInfo['w']        = $this->config('topic_width');
         $uploadInfo['h']        = $this->config('topic_height');
+        $uploadInfo['thumb_w']  = $this->config('topic_thumb_width');
+        $uploadInfo['thumb_h']  = $this->config('topic_thumb_height');
 
         Service::saveImage($uploadInfo);
 
