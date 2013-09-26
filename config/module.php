@@ -21,7 +21,7 @@ return array(
         'license'       => 'New BSD',
         'logo'          => 'image/logo.png',
         'readme'        => 'README.md',
-        'clonable'      => false,
+        'clonable'      => true,
     ),
     // Author information
     'author'        => array(
@@ -64,7 +64,7 @@ return array(
             'block'         => 'block.php',
             'config'        => 'config.php',
             'route'         => 'route.php',
-            'acl'           => 'acl.php',
+            //'acl'           => 'acl.php',
             'page'          => 'page.php',
         ),
     ),
