@@ -1,7 +1,10 @@
 <?php
-$this->css($this->assetModule('script/article-front.css'));
-$this->jQuery();
-$this->bootstrap('js/bootstrap.min.js');
+    $this->css(array(
+        $this->assetModule('script/article-front.css'),
+        $this->assetModule('script/block.css'),
+    ));
+    $this->jQuery();
+    $this->bootstrap('js/bootstrap.min.js');
 ?>
 
 <div class="pi-block">

@@ -3,16 +3,6 @@
     $target     = $block['target'];
 ?>
 
-<style>
-    .block-nopadding {
-        padding: 0;
-        margin: 0;
-    }
-    .article-block-hot-category {
-        padding: 10px 15px 10px 15px;
-    }
-</style>
-
 <div class="article-block-hot-category">
     <div class="row-fluid">
         <div class="span6">
@@ -21,8 +11,8 @@
                 <?php if ($i++ % 2 == 0) { ?>
             <div class="muted">
                 <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($category['url']) ?>" style="color: #48484C">
-            <?php echo $this->escape($category['title']) ?>
-        </a>
+                    <?php echo $this->escape($category['title']) ?>
+                </a>
             </div>
                 <?php } ?>
             <?php } ?>
@@ -33,8 +23,8 @@
                 <?php if ($j++ % 2 == 1) { ?>
             <div class="muted">
                 <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($category['url']) ?>" style="color: #48484C">
-            <?php echo $this->escape($category['title']) ?>
-        </a>
+                    <?php echo $this->escape($category['title']) ?>
+                </a>
             </div>
                 <?php } ?>
             <?php } ?>

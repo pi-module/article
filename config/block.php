@@ -421,7 +421,7 @@ return array(
                 'description'   => _t('Maximum length of description'),
                 'edit'          => 'text',
                 'filter'        => 'number_int',
-                'value'         => 255,
+                'value'         => 80,
             ),
         ),
     ),
