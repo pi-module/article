@@ -53,6 +53,9 @@ class Block
                 unset($allItems[$id]);
             }
             $j = 0;
+            if (!isset($item['child'])) {
+                continue;
+            }
             foreach (array_keys($item['child']) as $subId) {
                 if (++$j > $maxSubCount) {
                     unset($item['child'][$subId]);
@@ -60,7 +63,10 @@ class Block
             }
         }
         
-        return $allItems;
+        return array(
+            'items'     => $allItems,
+            'target'    => $options['target'],
+        );
     }
     
     /**
@@ -122,6 +128,7 @@ class Block
         
         return array(
             'categories' => $categories,
+            'target'     => $options['target'],
         );
     }
     
@@ -160,6 +167,8 @@ class Block
         $columns  = array('subject', 'summary', 'time_publish', 'image');
         $where    = array();
         if (!empty($category)) {
+            $category = Pi::model('category', $module)
+                ->getDescendantIds($category);
             $where['category'] = $category;
         }
         if (!empty($options['is-topic'])) {
@@ -344,8 +353,32 @@ class Block
         $limit  = ($options['list-count'] <= 0) ? 10 : $options['list-count'];
         $order  = 'id DESC';
         $topics = Topic::getTopics(array(), 1, $limit, null, $order, $module);
+        $config = Pi::service('module')->config('', $module);
+        $image  = Pi::service('asset')
+            ->getModuleAsset($config['default_topic_thumb'], $module);
         
-        return $topics;
+        foreach ($topics as &$topic) {
+            $topic['title'] = mb_substr(
+                $topic['title'],
+                0,
+                $options['max_title_length'],
+                'UTF-8'
+            );
+            $topic['description'] = mb_substr(
+                $topic['description'],
+                0,
+                $options['max_description_length'],
+                'UTF-8'
+            );
+            $topic['image'] = $topic['image'] 
+                ? Service::getThumbFromOriginal($topic['image']) : $image;
+        }
+        
+        return array(
+            'items'     => $topics,
+            'target'    => $options['target'],
+            'config'    => $config,
+        );
     }
 
     /**
@@ -363,7 +396,6 @@ class Block
         
         $limit  = isset($options['list-count']) 
             ? (int) $options['list-count'] : 10;
-        $target = isset($options['target']) ?: '_blank';
         $config = Pi::service('module')->config('', $module);
         $image  = $config['default_feature_thumb'];
         $image  = Pi::service('asset')->getModuleAsset($image, $module);
@@ -379,7 +411,7 @@ class Block
                 $day,
                 $limit,
                 null,
-                $params['topic'],
+                isset($params['topic']) ? $params['topic'] : null,
                 $module
             );
         } else {
@@ -405,7 +437,7 @@ class Block
 
         return array(
             'articles'  => $articles,
-            'target'    => $target,
+            'target'    => $options['target'],
             'style'     => $options['block-style'],
             'column'    => $options['column-number'],
             'config'    => $config,
@@ -419,8 +451,10 @@ class Block
      * @param string  $module
      * @return boolean 
      */
-    public static function recommendedSlideshow($options = array(), $module = null)
-    {
+    public static function recommendedSlideshow(
+        $options = array(),
+        $module = null
+    ) {
         if (!$module) {
             return false;
         }
@@ -432,7 +466,14 @@ class Block
             $id = trim($id);
         }
         $where    = array('id' => $ids);
-        $articles = Entity::getAvailableArticlePage($where, 1, 10, $columns, null, $module);
+        $articles = Entity::getAvailableArticlePage(
+            $where,
+            1,
+            10,
+            $columns,
+            null,
+            $module
+        );
         
         $config   = Pi::service('module')->config('', $module);
         $image    = $config['default_feature_thumb'];

@@ -42,7 +42,7 @@ class Account extends Select
             }
 
             // Getting active account
-            $rowset = Pi::user()->get($ids);
+            $rowset = Pi::user()->get($ids, array('id', 'name'));
             $account = array();
             foreach ($rowset as $row) {
                 $account[$row['id']] = $row['name'];

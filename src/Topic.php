@@ -166,8 +166,11 @@ class Topic
             'active'   => 1,
             'status'   => Article::FIELD_STATUS_PUBLISHED,
         );
-        $where['time >= ?'] = $dateFrom;
-        $where['time < ?']  = $dateTo;
+        
+        $modelVisit    = Pi::model('visit', $module);
+        $tableVisit    = $modelVisit->getTable();
+        $where[$tableVisit . '.time >= ?'] = $dateFrom;
+        $where[$tableVisit . '.time < ?']  = $dateTo;
         
         $modelCategory  = Pi::model('category', $module);
         if ($category && $category > 1) {
@@ -182,19 +185,24 @@ class Topic
             $where['r.topic'] = $topic;
         }
         
-        $modelVisit    = Pi::model('visit', $module);
         $modelArticle  = Pi::model('article', $module);
         $modelRelation = Pi::model('article_topic', $module);
-        $tableVisit    = $modelVisit->getTable();
+        
         $tableArticle  = $modelArticle->getTable();
         $tableRelation = $modelRelation->getTable();
         $select = $modelVisit->select()
-            ->columns(array('article', 'total' => new Expression('count(*)')))
+            ->columns(array(
+                'article',
+                'total'      => new Expression('count(*)'),
+            ))
             ->join(
                 array('a' => $tableArticle),
                 sprintf('%s.article = a.id', $tableVisit)
             )
-            ->join(array('r' => $tableRelation), 'a.id = r.article')
+            ->join(
+                array('r' => $tableRelation),
+                'a.id = r.article'
+            )
             ->where($where)
             ->offset(0)
             ->group(array(sprintf('%s.article', $tableVisit)))

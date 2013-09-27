@@ -71,7 +71,7 @@ class TopicController extends ActionController
             ->where(array('topic' => $row->id))
             ->order('time DESC');
         $rowRelations = $modelRelation->selectWith($select);
-        $articleIds   = array();
+        $articleIds   = array(0);
         $pullTime     = array();
         foreach ($rowRelations as $relation) {
             $articleIds[] = $relation->article;
@@ -93,12 +93,12 @@ class TopicController extends ActionController
                 '',
                 $module
             );
+            
+            // Get count
+            $modelArticle   = $this->getModel('article');
+            $totalCount     = $modelArticle->getSearchRowsCount($where);
         }
-        
-        // Get count
-        $modelArticle   = $this->getModel('article');
-        $totalCount     = $modelArticle->getSearchRowsCount($where);
-        
+
         // Get list page url
         $url = $this->url(
             $module . '-' . Service::getRouteName(),
@@ -114,7 +114,7 @@ class TopicController extends ActionController
             'image'     => Pi::url($row->image),
             'articles'  => $articles,
             'topic'     => $row->toArray(),
-            'count'     => $totalCount,
+            'count'     => isset($totalCount) ? $totalCount : 0,
             'pullTime'  => $pullTime,
             'url'       => $url,
         ));
@@ -141,6 +141,12 @@ class TopicController extends ActionController
         
         // Get topics
         $resultsetTopic = TopicService::getTopics($where, $page, $limit);
+        foreach ($resultsetTopic as &$topic) {
+            $topic['image'] = $topic['image']
+                ? Service::getThumbFromOriginal($topic['image'])
+                : Pi::service('asset')
+                    ->getModuleAsset($config['default_topic_image']);
+        }
         $topicIds = array_keys($resultsetTopic) ?: array(0);
         
         // Get topic article counts
