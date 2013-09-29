@@ -24,7 +24,16 @@
                 </td>
                 <td>
                     <?php if ($draft['subject']) {
+                        if ($status == $flags['published']) {
+                    ?>
+                    <a target="_blank" href="<?php echo $this->escape($draft['url']) ?>">
+                    <?php
+                        }
                         echo $this->escape($draft['subject']);
+                        if ($status == $flags['published']) { ?>
+                    </a>
+                    <?php 
+                        }
                     } else {
                     ?>
                     <strong class="muted"><?php _e('No Title') ?></strong>

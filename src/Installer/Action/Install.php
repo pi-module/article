@@ -196,6 +196,7 @@ EOD;
             $sql = fread($file, filesize($sqlPath));
             $sql = preg_replace('|{prefix}|', $prefix, $sql);
             $sql = preg_replace('|{module}|', $module, $sql);
+            $sql = preg_replace('|{upload-url}|', Pi::url('upload/' . $module), $sql);
             $sql = preg_replace('|upload\/article|', 'upload\/' . $module, $sql);
 
             try {

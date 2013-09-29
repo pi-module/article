@@ -133,7 +133,7 @@ class TopicController extends ActionController
         $page       = $page > 0 ? $page : 1;
 
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_topic_front'] ?: 20;
+        $limit  = (int) $config['page_limit_all'];
         
         $where = array(
             'active' => 1,
@@ -237,7 +237,7 @@ class TopicController extends ActionController
 
         $module = $this->getModule();
         $config = Pi::service('module')->config('', $module);
-        $limit  = (int) $config['page_topic_front'] ?: 20;
+        $limit  = (int) $config['page_limit_all'];
         
         // Getting relations
         $modelRelation = $this->getModel('article_topic');
