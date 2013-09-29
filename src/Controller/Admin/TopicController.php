@@ -680,7 +680,7 @@ class TopicController extends ActionController
             'title'   => __('Topic List'),
             'topics'  => $rowset,
             'action'  => 'list-topic',
-            'route'   => $module . '-' . Service::getRouteName(),
+            'route'   => Service::getRouteName($module),
             'count'   => $count,
         ));
     }

@@ -38,7 +38,7 @@ class Block
         
         $maxTopCount = $options['top-category'];
         $maxSubCount = $options['sub-category'];
-        $route       = $module . '-' . Service::getRouteName();
+        $route       = Service::getRouteName($module);
         
         $categories  = Service::getCategoryList(array('is-tree' => true));
         
@@ -109,7 +109,7 @@ class Block
         }
         
         // Get category Info
-        $route = $module . '-' . Service::getRouteName();
+        $route = Service::getRouteName($module);
         $where = array('id' => $categoryIds);
         $rowCategory = Pi::model('category', $module)->select($where);
         $categories = array();
