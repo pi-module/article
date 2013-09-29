@@ -3,7 +3,6 @@
         $this->assetModule('script/article-front.css'),
         $this->assetModule('script/block.css'),
     ));
-    $this->bootstrap('js/bootstrap.min.js');
 ?>
 
 <div class="">
@@ -21,7 +20,7 @@
             </span>
         </div>
     </div>
-    <div class="" style="padding: 10px 10px 20px; border-bottom: 1px inset #000">
+    <div class="topic-article-list" style="padding: 10px 10px 10px; border-bottom: 1px inset #000">
         <ul class="list list14" style="margin-left: 5px;">
             <?php $index = 0 ?>
             <?php foreach ($articles as $row) { ?>
@@ -50,5 +49,5 @@
     </div>
 </div>
 <script>
-    $("#jsList").find(".dashed:last").css("marginBottom", "0");
+    $(".topic-article-list").find(".dashed:last").css("height", "0");
 </script>
