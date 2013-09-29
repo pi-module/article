@@ -1,5 +1,8 @@
 <?php
-    $this->css($this->assetModule('script/article-front.css'));
+    $this->css(array(
+        $this->assetModule('script/article-front.css'),
+        $this->assetModule('script/block.css'),
+    ));
     $this->bootstrap('js/bootstrap.min.js');
 ?>
 
@@ -19,14 +22,16 @@
         </div>
     </div>
     <div class="" style="padding: 10px 10px 20px; border-bottom: 1px inset #000">
-        <ul class="list list14" style="margin-left: 2px;">
+        <ul class="list list14" style="margin-left: 5px;">
             <?php $index = 0 ?>
             <?php foreach ($articles as $row) { ?>
                 <li class="muted">
                     <div class="list-hover">
-                        <span class="pull-right"><?php echo date('Y/m/d H:i', $row['time_publish']) ?></span>
+                        <span class="pull-right article-size12">
+                            <?php echo date('Y/m/d H:i', $row['time_publish']) ?>
+                        </span>
                         <a class="article-list-title" target="_blank" href="<?php echo $this->escape($row['url']) ?>" 
-                           title="<?php echo $this->escape($row['subject']) ?>" style="color: #333333">
+                           title="<?php echo $this->escape($row['subject']) ?>">
                                <?php echo $this->escape($row['subject']) ?>
                         </a>
                     </div>

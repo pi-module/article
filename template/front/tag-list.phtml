@@ -1,5 +1,8 @@
 <?php
-    $this->css($this->assetModule('script/article-front.css'));
+    $this->css(array(
+        $this->assetModule('script/article-front.css'),
+        $this->assetModule('script/block.css'),
+    ));
     $this->jQuery();
 ?>
 <div class="pi-block">
@@ -19,7 +22,9 @@
             <?php foreach ($articles as $article) { $index++ ?>
                 <li class="muted">
                     <div class="list-hover">
-                        <span class="pull-right"><?php echo date('Y-m-d', $article['time_publish']); ?></span>
+                        <span class="pull-right article-list-desc">
+                            <?php echo date('Y-m-d', $article['time_publish']); ?>
+                        </span>
                         <a class="article-list-title" target="_blank" href="<?php echo $article['url']; ?>" title="<?php echo $this->escape($article['subject']); ?>">
                             <?php echo $this->escape($article['subject']); ?>
                         </a>

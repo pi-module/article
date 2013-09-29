@@ -208,7 +208,8 @@ class Block
                 'UTF-8'
             );
             $article['image'] = $article['image'] 
-                ? Service::getThumbFromOriginal($article['image']) : $image;
+                ? Service::getThumbFromOriginal(Pi::url($article['image']))
+                : $image;
         }
         
         return array(
@@ -266,7 +267,8 @@ class Block
                 'UTF-8'
             );
             $article['image'] = $article['image'] 
-                ? Service::getThumbFromOriginal($article['image']) : $image;
+                ? Service::getThumbFromOriginal(Pi::url($article['image']))
+                : $image;
         }
         
         return array(
@@ -371,7 +373,8 @@ class Block
                 'UTF-8'
             );
             $topic['image'] = $topic['image'] 
-                ? Service::getThumbFromOriginal($topic['image']) : $image;
+                ? Service::getThumbFromOriginal(Pi::url($topic['image']))
+                : $image;
         }
         
         return array(
@@ -432,7 +435,8 @@ class Block
                 'UTF-8'
             );
             $article['image'] = $article['image'] 
-                ? Service::getThumbFromOriginal($article['image']) : $image;
+                ? Service::getThumbFromOriginal(Pi::url($article['image']))
+                : $image;
         }
 
         return array(
@@ -492,7 +496,8 @@ class Block
                 'UTF-8'
             );
             $article['image'] = $article['image'] 
-                ? Service::getThumbFromOriginal($article['image']) : $image;
+                ? Service::getThumbFromOriginal(Pi::url($article['image']))
+                : $image;
         }
         
         // Getting image link url

@@ -31,10 +31,10 @@ return array(
             'my-draft'          => array(
                 'label'         => _t('My Draft'),
                 'route'         => 'default',
-                'controller'    => 'draft',
-                'action'        => 'list',
+                'controller'    => 'article',
+                'action'        => 'published',
                 'params'        => array(
-                    'status'        => 1,
+                    'from'          => 'my',
                 ),
             ),
         ),
@@ -129,10 +129,10 @@ return array(
             'draft'             => array(
                 'label'         => _t('My Article'),
                 'route'         => 'default',
-                'controller'    => 'draft',
-                'action'        => 'list',
+                'controller'    => 'article',
+                'action'        => 'article',
                 'params'        => array(
-                    'status'       => 11,
+                    'from'         => 'my',
                 ),
             ),
         ),
