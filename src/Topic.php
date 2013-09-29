@@ -123,7 +123,7 @@ class Topic
         }
         $rowset = $modelTopic->selectWith($select);
         $topics = array();
-        $route  = $module . '-' . Service::getRouteName();
+        $route  = Service::getRouteName();
         foreach ($rowset as $row) {
             $id   = $row->id;
             $topics[$id] = $row->toArray();

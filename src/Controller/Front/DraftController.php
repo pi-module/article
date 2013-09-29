@@ -752,7 +752,7 @@ class DraftController extends ActionController
         $result['status']   = self::RESULT_TRUE;
         $result['data']     = array('id' => $id);
 
-        $route = $this->getModule() . '-' . Service::getRouteName();
+        $route = Service::getRouteName();
         $result['data']['preview_url'] = $this->url(
             $route,
             array(
@@ -1397,7 +1397,7 @@ class DraftController extends ActionController
             );
         }
         
-        $route = $this->getModule() . '-' . Service::getRouteName();
+        $route = Service::getRouteName();
         foreach ($details['content'] as &$value) {
             $value['url'] = $this->url($route, array_merge(array(
                 'time'       => date('Ymd', $time),

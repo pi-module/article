@@ -19,6 +19,7 @@ use Module\Article\Model\Draft;
 use Module\Article\Compiled;
 use Module\Article\Controller\Admin\PermissionController as Perm;
 use Module\Article\Media;
+use Module\Article\Installer\Resource\Route;
 
 /**
  * Common service API
@@ -586,14 +587,18 @@ class Service
      * 
      * @return string 
      */
-    public static function getRouteName()
+    public static function getRouteName($module = null)
     {
-        $module      = Pi::service('module')->current();
-        $resBasename = \Module\Article\Installer\Resource\Route::RESOURCE_CONFIG_NAME;
-        $resFilename = sprintf('var/%s/config/%s', $module, $resBasename);
+        $module      = $module ?: Pi::service('module')->current();
+        $defaultRoute = $module . '-article';
+        $resFilename = sprintf(
+            'var/%s/config/%s',
+            $module,
+            Route::RESOURCE_CONFIG_NAME
+        );
         $resPath     = Pi::path($resFilename);
         if (!file_exists($resPath)) {
-            return 'article';
+            return $defaultRoute;
         }
         
         $configs = include $resPath;
@@ -606,17 +611,17 @@ class Service
         }
         
         if (!class_exists($class)) {
-            return 'article';
+            return $defaultRoute;
         }
         
         // Check if the route is already in database
         $routeName = $module . '-' . $name;
-        $row = Pi::model('route')->find($routeName, 'name');
-        if (empty($row)) {
-            return 'article';
+        $cacheName = Pi::service('registry')->handler('route', $module)->read();
+        if ($routeName != $cacheName) {
+            return $defaultRoute;
         }
         
-        return $name;
+        return $cacheName;
     }
     
     /**
