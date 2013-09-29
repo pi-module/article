@@ -4,13 +4,12 @@
     foreach ($articles as $article) { ?>
     <div style="<?php echo ++$index == count($articles) ? '' : 'margin-bottom: 20px' ?>">
         <div>
-            <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" 
-                style="color: #48484C; font-size: 14px; font-weight: bold">
+            <a target="<?php echo $this->escape($target) ?>" href="<?php echo $this->escape($article['url']) ?>" class="article-front-title article-size14">
                     <?php echo $this->escape($article['subject']) ?>
             </a>
             <span class="muted pull-right"><?php echo date('Y/m/d H:i', $article['time_publish']) ?></span>
         </div>
-        <div style="color: #555555; margin-top: 5px; font-size: 12px"><?php echo $article['summary'] ?></div>
+        <div class="article-size12" style="color: #555555; margin-top: 5px"><?php echo $article['summary'] ?></div>
     </div>
     <?php } ?>
 </div>

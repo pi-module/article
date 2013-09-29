@@ -409,14 +409,14 @@ return array(
             'category'    => 'media',
             'title'       => _t('Content thumb width'),
             'description' => '',
-            'value'       => 500,
+            'value'       => 640,
             'filter'      => 'number_int',
         ),
         'content_thumb_height' => array(
             'category'    => 'media',
             'title'       => _t('Content thumb height'),
             'description' => '',
-            'value'       => 400,
+            'value'       => 360,
             'filter'      => 'number_int',
         ),
 

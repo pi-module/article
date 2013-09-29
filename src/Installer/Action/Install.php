@@ -14,6 +14,7 @@ use Pi\Application\Installer\Action\Install as BasicInstall;
 use Zend\EventManager\Event;
 use Module\Article\Service;
 use Module\Article\File;
+use ZipArchive;
 
 /**
  * Custom install class
@@ -23,9 +24,12 @@ use Module\Article\File;
 class Install extends BasicInstall
 {
     /**
-     * Sql file for initilizing data 
+     * Sql file and static data for initilizing data 
      */
-    const INIT_FILE_NAME = 'article/sql/data.sql';
+    const INIT_FILE_NAME   = 'article/data/data.sql';
+    const INIT_STATIC_NAME = 'article/data/article.zip';
+    const INIT_BLOCK_NAME  = 'article/data/blocks.sql';
+    const PAGE_BLOCK_NAME  = 'article/data/page_block.sql';
     
     /**
      * Attach method to listener
@@ -50,6 +54,16 @@ class Install extends BasicInstall
             'install.post',
             array($this, 'initModuleData'),
             -100
+        );
+        $events->attach(
+            'install.post',
+            array($this, 'initCloneBlocks'),
+            -100
+        );
+        $events->attach(
+            'install.post',
+            array($this, 'dressupBlocks'),
+            -110
         );
         parent::attachDefaultListeners();
         return $this;
@@ -180,16 +194,174 @@ EOD;
         $file = fopen($sqlPath, 'r');
         if ($file) {
             $sql = fread($file, filesize($sqlPath));
-            $sql = preg_replace('/{prefix}/', $prefix, $sql);
-            $sql = preg_replace('/{module}/', $module, $sql);
+            $sql = preg_replace('|{prefix}|', $prefix, $sql);
+            $sql = preg_replace('|{module}|', $module, $sql);
+            $sql = preg_replace('|{upload-url}|', Pi::url('upload/' . $module), $sql);
+            $sql = preg_replace('|upload\/article|', 'upload\/' . $module, $sql);
 
             try {
-                Pi::db()->getAdapter()->query($sql, 'execute');
+                $isInsert = Pi::db()->getAdapter()->query($sql, 'execute');
             } catch (\Exception $exception) {
                 return false;
             }
+            
+            // Copy uploaded data
+            $staticFilename = sprintf(
+                '%s/%s',
+                Pi::path('module'),
+                self::INIT_STATIC_NAME
+            );
+
+            if (file_exists($staticFilename)) {
+                $targetFilename = sprintf(
+                    '%s/%s/%s',
+                    Pi::path('upload'),
+                    $module,
+                    basename($staticFilename)
+                );
+                // Create folder
+                $targetPath = dirname($targetFilename);
+                if (!is_dir($targetPath)) {
+                    if (File::mkdir($targetPath)) {
+                        chmod($targetPath, 0777);
+                    }
+                }
+                
+                // Copy data and decompression
+                $isCorrect = copy(
+                    $staticFilename,
+                    $targetFilename
+                );
+                if ($isCorrect) {
+                    $zip = new ZipArchive;
+                    if ($zip->open($targetFilename) === TRUE) {
+                        $zip->extractTo(dirname($targetFilename));
+                        $zip->close();
+                        @unlink($targetFilename);
+                    }
+                }
+            }
         } else {
             $result = false;
+        }
+        
+        $e->setParam('result', $result);
+    }
+    
+    /**
+     * Init clone blocks
+     * 
+     * @param Event $e 
+     * @return boolean
+     */
+    public function initCloneBlocks(Event $e)
+    {
+        $result = true;
+        $module = $this->event->getParam('module');
+        
+        $filename = sprintf('%s/%s', Pi::path('module'), self::INIT_BLOCK_NAME);
+        if (file_exists($filename)) {
+            $file = fopen($filename, 'r');
+            if ($file) {
+                $prefix = Pi::db()->getTablePrefix();
+                
+                $sql = fread($file, filesize($filename));
+                $sql = preg_replace('|{prefix}|', $prefix, $sql);
+                $sql = preg_replace('|{module}|', $module, $sql);
+                
+                // Get root block name
+                preg_match_all('|{{{{([a-zA-Z_-]+)}}}}|', $sql, $matches);
+                
+                // Get root block ID
+                $rowBlock = Pi::model('block_root')->select(array(
+                    'module'    => 'article',
+                    'name'      => $matches[1],
+                ));
+                foreach ($rowBlock as $row) {
+                    $sql = preg_replace(
+                        '|{{{{' . $row->name . '}}}}|', 
+                        $row->id,
+                        $sql
+                    );
+                }
+                
+                // Insert data
+                try {
+                    Pi::db()->getAdapter()->query($sql, 'execute');
+                } catch (\Exception $exception) {
+                    return false;
+                }
+            }
+        }
+        
+        $e->setParam('result', $result);
+    }
+    
+    /**
+     * Dress up blocks
+     * 
+     * @param Events $e
+     * @return boolean 
+     */
+    public function dressupBlocks(Event $e)
+    {
+        $result = true;
+        $module = $this->event->getParam('module');
+        
+        $filename = sprintf('%s/%s', Pi::path('module'), self::PAGE_BLOCK_NAME);
+        if (file_exists($filename)) {
+            $file = fopen($filename, 'r');
+            if ($file) {
+                $prefix = Pi::db()->getTablePrefix();
+                
+                $sql = fread($file, filesize($filename));
+                $sql = preg_replace('|{prefix}|', $prefix, $sql);
+                $sql = preg_replace('|{module}|', $module, $sql);
+                
+                // Get page controller & action
+                preg_match_all('|####([a-zA-Z_-]+)####|', $sql, $pages);
+                $pageName = array_unique($pages[1]);
+                
+                // Get page ID
+                $rowPage = Pi::model('page')->select(array(
+                    'section'   => 'front',
+                    'module'    => $module,
+                ));
+                foreach ($rowPage as $row) {
+                    $name = $row->controller . '-' . $row->action;
+                    if (in_array($name, $pageName)) {
+                        $sql = preg_replace(
+                            '|####' . $name . '####|',
+                            $row->id,
+                            $sql
+                        );
+                    }
+                }
+                
+                // Get root block name
+                preg_match_all('|{{{{([a-zA-Z_-]+)}}}}|', $sql, $matches);
+                $blockName = $matches[1];
+                
+                // Get block ID
+                $rowBlock = Pi::model('block')->select(array(
+                    'module'    => $module,
+                    'name'      => $blockName,
+                ));
+                foreach ($rowBlock as $row) {
+                    $sql = preg_replace(
+                        '|{{{{' . $row->name . '}}}}|', 
+                        $row->id,
+                        $sql
+                    );
+                }
+                
+                // Insert data
+                try {
+                    Pi::db()->getAdapter()->query($sql, 'execute');
+                } catch (\Exception $exception) {
+                    return false;
+                }
+            }
         }
         
         $e->setParam('result', $result);
