@@ -45,7 +45,7 @@ class ListController extends ActionController
         $select = $model->select()->where($where);
         $select->order('time_publish DESC')->offset($offset)->limit($limit);
 
-        $route  = $this->getModule() . '-' . Service::getRouteName();
+        $route  = Service::getRouteName();
         $resultset = $model->selectWith($select);
         $items     = array();
         foreach ($resultset as $row) {

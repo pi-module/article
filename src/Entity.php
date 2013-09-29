@@ -442,7 +442,7 @@ class Entity
                 }
 
                 if (empty($columns) || in_array('subject', $columns)) {
-                    $route      = $module . '-' . Service::getRouteName();
+                    $route      = Service::getRouteName($module);
                     $row['url'] = Pi::engine()->application()
                         ->getRouter()
                         ->assemble(array(

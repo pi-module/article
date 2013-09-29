@@ -589,9 +589,16 @@ EOD;
             @unlink($filename);
         }
         
+        // Clear cache
+        Pi::service('registry')->handler('route', $module)->clear($module);
+        
         return $this->redirect()->toRoute('', array('action' => 'route'));
     }
     
+    /**
+     * Setup custom route or default route by AJAX
+     *  
+     */
     public function setupRouteAction()
     {
         Pi::service('log')->active(false);
@@ -613,6 +620,7 @@ EOD;
             exit;
         }
         
+        // Get route configuration
         if ($route) {
             $optionsFile = sprintf(
                 '%s/%s/config/%s',
@@ -651,6 +659,9 @@ EOD;
         $resourceHandler = new $resourceClass($options);
         $resourceHandler->setEvent($event);
         $ret = $resourceHandler->$methodAction();
+        
+        // Clear cache
+        Pi::service('registry')->handler('route', $module)->clear($module);
         
         $return['status'] = $ret;
         $return['message'] = $ret ? __('Success!') : __('Setup failed!');

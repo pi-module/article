@@ -73,7 +73,7 @@ class ArticleController extends ActionController
                 503
             );
         }
-        $route = $this->getModule() . '-' . Service::getRouteName();
+        $route = Service::getRouteName();
         if (strval($slug) != $details['slug']) {
             $routeParams = array(
                 'time'       => date('Ymd', $details['time_publish']),

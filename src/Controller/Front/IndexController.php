@@ -25,9 +25,8 @@ class IndexController extends ActionController
      */
     public function indexAction()
     {
-        $route = $this->getModule() . '-' . Service::getRouteName();
         return $this->redirect()->toRoute(
-            $route, 
+            Service::getRouteName(), 
             array(
                 'controller' => 'article', 
                 'action'     => 'index'
