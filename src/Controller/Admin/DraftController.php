@@ -178,6 +178,10 @@ class DraftController extends FrontDraft
         $this->view()->setTemplate($template);
     }
     
+    /**
+     * Edit draft
+     * 
+     */
     public function editAction()
     {
         parent::editAction();

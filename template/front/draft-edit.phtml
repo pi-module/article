@@ -1253,7 +1253,8 @@ var AttachmentListView = Backbone.View.extend({
             'action'     => 'search',
             'type'       => $attachmentExtension,
         )); ?>' + 'title-' + title, function(result) {
-            var lists = $.parseJSON(result);
+            result = $.parseJSON(result);
+            var lists = result.data;
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
@@ -1545,7 +1546,8 @@ var FeatureView = Backbone.View.extend({
                 'title'      => '',
             )
         ); ?>' + title, function(result) {
-            var lists = $.parseJSON(result);
+            result = $.parseJSON(result);
+            var lists = result.data;
             for (i in lists) {
                 $('#media-lists')
                 .find('tbody')
@@ -1715,7 +1717,8 @@ var GalleryListView = Backbone.View.extend({
             'type'       => 'image',
             'title'      => '',
         )); ?>' + title, function(result) {
-            var lists = $.parseJSON(result);
+            result = $.parseJSON(result);
+            var lists = result.data;
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
