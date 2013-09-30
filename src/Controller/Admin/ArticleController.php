@@ -297,7 +297,7 @@ class ArticleController extends ActionController
 
         // Redirect to edit draft
         if ($draftId) {
-            return $this->redirect()->toRoute('default', array(
+            return $this->redirect()->toRoute('admin', array(
                 'action'     => 'edit',
                 'controller' => 'draft',
                 'id'         => $draftId,

@@ -767,7 +767,7 @@ var BasicInputView = Backbone.View.extend({
         this.leftWord(this.$("[name=summary]"));
         this.typeahead(
             this.$(".author"),
-            "<?php echo $this->url('', array(
+            "<?php echo $this->url('default', array(
                 'controller' => 'ajax',
                 'action'     => 'get.fuzzy.author',
                 'name'       => ''
@@ -776,7 +776,7 @@ var BasicInputView = Backbone.View.extend({
         );
         this.typeahead(
             this.$(".submitter"),
-            "<?php echo $this->url('',array(
+            "<?php echo $this->url('default',array(
                 'controller' => 'ajax',
                 'action'     => 'get.fuzzy.user',
                 'name'       => ''
@@ -846,7 +846,7 @@ var BasicInputView = Backbone.View.extend({
     checkSubject: function(e) {
         var tar = $(e.currentTarget).removeClass("error");
         $.getJSON("<?php echo $this->url(
-            '',
+            'default',
             array('controller' => 'article', 'action' => 'check.article.exists')
         ); ?>", {
             subject : $.trim(tar.val()),
@@ -892,7 +892,7 @@ var ReleaseProcess = Backbone.View.extend({
         if (val) {
             btn.attr("disabled","disabled");  
             $.getJSON(
-                "<?php echo $this->url('',array('action' => 'reject')); ?>",
+                "<?php echo $this->url('', array('action' => 'reject')); ?>",
                 {
                     id      : page.id,
                     memo    : val   
@@ -922,7 +922,7 @@ var ReleaseProcess = Backbone.View.extend({
             obj  = btn.clone();
         btn.attr("disabled","disabled");
         page.submit({
-            url : "<?php echo $this->url('',array('action' => 'publish')); ?>",
+            url : "<?php echo $this->url('', array('action' => 'publish')); ?>",
             fn  : function(resp) {
                 response      = resp;
                 currentStatus = 2;
@@ -1225,7 +1225,7 @@ var AttachmentListView = Backbone.View.extend({
             var downloadUrl = el.data('download');
             $(page.editor.document.getBody().$).find("a[href='" + downloadUrl + "']")
                                                .remove();
-            var url = '<?php echo $this->url('', array(
+            var url = '<?php echo $this->url('default', array(
                 'controller' => 'draft',
                 'action'     => 'remove-asset',
             )) ?>' + 'id-' + id;
@@ -1253,7 +1253,8 @@ var AttachmentListView = Backbone.View.extend({
             'action'     => 'search',
             'type'       => $attachmentExtension,
         )); ?>' + 'title-' + title, function(result) {
-            var lists = $.parseJSON(result);
+            result = $.parseJSON(result);
+            var lists = result.data;
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
@@ -1303,7 +1304,8 @@ var AttachmentListView = Backbone.View.extend({
                 var url = '<?php echo $this->url('admin', array(
                     'controller' => 'media',
                     'action'     => 'remove',
-                    )) ?>' + 'fake_id/' + id;
+                    'fake_id'    => '',
+                    )) ?>' + id;
                 $.get(url, function(result) {
                     result = $.parseJSON(result);
                     if (result.status) {
@@ -1327,7 +1329,8 @@ var AttachmentListView = Backbone.View.extend({
                         'controller' => 'media',
                         'action'     => 'save',
                         'source'     => 'attachment',
-                    )) ?>/' + 'fake_id/' + id;
+                        'fake_id'    => '',
+                    )) ?>' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {
@@ -1351,11 +1354,12 @@ var AttachmentListView = Backbone.View.extend({
         var id      = el.find('input.select-media-id').val();
         var source  = el.find('input.select-media-source').val();
         if ('media' == source) {
-            var url = '<?php echo $this->url('', array(
+            var url = '<?php echo $this->url('default', array(
                 'controller' => 'draft',
                 'action'     => 'save-asset',
                 'type'       => 'attachment',
-            )) ?>' + '/media-' + id + '/' + page.ajaxId();
+                'media'      => '',
+            )) ?>' + id + '/' + page.ajaxId();
             $.get(url, function(result) {
                 result = $.parseJSON(result);
                 if (result.status) {
@@ -1408,7 +1412,8 @@ var FeatureView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'upload',
             'type'       => 'image',
-        )); ?>/fake_id/' + page.mediaFakeId;
+            'fake_id'    => '',
+        )); ?>' + page.mediaFakeId;
         this.input.fileupload({
             formData    : function() {
                 return [];
@@ -1430,7 +1435,8 @@ var FeatureView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'upload',
                 'type'       => 'image',
-            )); ?>/fake_id/' + page.mediaFakeId;
+                'fake_id'    => '',
+            )); ?>' + page.mediaFakeId;
         });  
     },
     removeUpload    : function(clearData) {
@@ -1444,9 +1450,10 @@ var FeatureView = Backbone.View.extend({
             'admin',
             array(
                 'controller' => 'media',
-                'action'     => 'remove'
+                'action'     => 'remove',
+                'fake_id'    => '',
             )
-        ); ?>fake_id/'+ page.mediaFakeId).done(function() {
+        ); ?>'+ page.mediaFakeId).done(function() {
             $("#media-image").html('');
             if (clearData == true) {
                 self.clearMediaData();
@@ -1489,7 +1496,7 @@ var FeatureView = Backbone.View.extend({
         var self    = this;
         var mediaId = $('input[name="image-id"]').val();
         $.get('<?php echo $this->url(
-            '',
+            'default',
             array(
                 'controller' => 'draft',
                 'action'     => 'save-image',
@@ -1536,9 +1543,11 @@ var FeatureView = Backbone.View.extend({
                 'controller' => 'media',
                 'action'     => 'search',
                 'type'       => 'image',
+                'title'      => '',
             )
-        ); ?>/' + 'title-' + title, function(result) {
-            var lists = $.parseJSON(result);
+        ); ?>' + title, function(result) {
+            result = $.parseJSON(result);
+            var lists = result.data;
             for (i in lists) {
                 $('#media-lists')
                 .find('tbody')
@@ -1678,7 +1687,7 @@ var GalleryListView = Backbone.View.extend({
             var previewUrl = el.data('preview');
             $(page.editor.document.getBody().$).find("img[src='" + previewUrl + "']")
                                                .remove();
-            var url = '<?php echo $this->url('', array(
+            var url = '<?php echo $this->url('default', array(
                 'controller' => 'draft',
                 'action'     => 'remove-asset',
             )) ?>' + 'id-' + id;
@@ -1706,8 +1715,10 @@ var GalleryListView = Backbone.View.extend({
             'controller' => 'media',
             'action'     => 'search',
             'type'       => 'image',
-        )); ?>/' + 'title-' + title, function(result) {
-            var lists = $.parseJSON(result);
+            'title'      => '',
+        )); ?>' + title, function(result) {
+            result = $.parseJSON(result);
+            var lists = result.data;
             var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
@@ -1761,7 +1772,8 @@ var GalleryListView = Backbone.View.extend({
                 var url = '<?php echo $this->url('admin', array(
                     'controller' => 'media',
                     'action'     => 'remove',
-                    )) ?>' + 'fake_id/' + id;
+                    'fake_id'    => '',
+                    )) ?>' + id;
                 $.get(url, function(result) {
                     result = $.parseJSON(result);
                     if (result.status) {
@@ -1786,7 +1798,8 @@ var GalleryListView = Backbone.View.extend({
                         'controller' => 'media',
                         'action'     => 'save',
                         'source'     => 'gallery',
-                    )) ?>/' + 'fake_id/' + id;
+                        'fake_id'    => '',
+                    )) ?>' + id;
                     $.get(url, function(result) {
                         result = $.parseJSON(result);
                         if (result.status) {
@@ -1810,11 +1823,12 @@ var GalleryListView = Backbone.View.extend({
         var id      = el.find('input.select-media-id').val();
         var source  = el.find('input.select-media-source').val();
         if ('media' == source) {
-            var url = '<?php echo $this->url('', array(
+            var url = '<?php echo $this->url('default', array(
                 'controller' => 'draft',
                 'action'     => 'save-asset',
                 'type'       => 'image',
-            )) ?>' + '/media-' + id + '/' + page.ajaxId();
+                'media'      => '',
+            )) ?>' + id + '/' + page.ajaxId();
             $.get(url, function(result) {
                 result = $.parseJSON(result);
                 if (result.status) {
@@ -2105,7 +2119,7 @@ var RelatedView       = Backbone.View.extend({
             this.page++;
             this.locked = true;   
             if (ky) {
-                $.getJSON("<?php echo $this->url('', array(
+                $.getJSON("<?php echo $this->url('default', array(
                     'controller' => 'article',
                     'action'     => 'get.fuzzy.article'
                 )); ?>", {

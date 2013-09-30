@@ -21,6 +21,7 @@ use Module\Article\Compiled;
 use Module\Article\Entity;
 use Pi\File\Transfer\Upload as UploadHandler;
 use Module\Article\Media;
+use Module\Article\Controller\Front\DraftController as FrontDraft;
 
 /**
  * Draft controller
@@ -31,7 +32,7 @@ use Module\Article\Media;
  * 
  * @author Zongshu Lin <lin40553024@163.com>
  */
-class DraftController extends ActionController
+class DraftController extends FrontDraft
 {
     /**
      * Get articles by condition
@@ -108,6 +109,17 @@ class DraftController extends ActionController
             throw new \Exception(__('Invalid source'));
         }
         
+        if (Draft::FIELD_STATUS_DRAFT == $status) {
+            return $this->redirect()->toRoute(
+                'default',
+                array(
+                    'controller' => 'draft',
+                    'action'     => 'list',
+                    'status'     => $status,
+                )
+            );
+        }
+        
         // Getting permission
         $rules      = Service::getPermission('my' == $from ? true : false);
         $categories = array_keys($rules);
@@ -148,5 +160,37 @@ class DraftController extends ActionController
             $template = sprintf('%s-%s', 'article', $name);
             $this->view()->setTemplate($template);
         }
+    }
+    
+    /**
+     * Add draft
+     *  
+     */
+    public function addAction()
+    {
+        parent::addAction();
+        $template = sprintf(
+            '%s/%s/template/front/draft-edit.phtml',
+            Pi::path('module'),
+            $this->getModule()
+        );
+        
+        $this->view()->setTemplate($template);
+    }
+    
+    /**
+     * Edit draft
+     * 
+     */
+    public function editAction()
+    {
+        parent::editAction();
+        $template = sprintf(
+            '%s/%s/template/front/draft-edit.phtml',
+            Pi::path('module'),
+            $this->getModule()
+        );
+        
+        $this->view()->setTemplate($template);
     }
 }
