@@ -59,7 +59,9 @@ var UploadView = Backbone.View.extend({
         "click .media-remove.close"     : "removeMedia",
         "click #media-close"            : "cancel",
         "click #media-cancel"           : "cancel",
-        "click #media-process"          : "processImage"
+        "click #media-process"          : "processImage",
+        "click .prev-page"              : "searchMedia",
+        "click .next-page"              : "searchMedia"
     },
     initialize      : function() {
         page.$("[name=placeholder]")
@@ -198,20 +200,49 @@ var UploadView = Backbone.View.extend({
         this.$("#category-image").html(this.template(obj));
     },
     // Fetching image from media
-    searchMedia     : function() {
-        var title = $('input[name="media-title"]').val();
-        $.get('<?php echo $this->url('', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => 'image',
-        )); ?>/' + 'title-' + title, function(result) {
-            var lists = $.parseJSON(result);
-            for (i in lists) {
-                $('#media-lists')
-                .find('tbody')
-                .append(_.template($('#media-searched-item').html(), lists[i]));
-            }
-        });
+    searchMedia     : function(e) {
+        var el   = $(e.target);
+        var from = el.data('from');
+        var url  = '';
+        if ('search' == from) {
+            var title = $('input[name="media-title"]').val();
+            url = '<?php echo $this->url(
+                'admin', 
+                array(
+                    'controller' => 'media',
+                    'action'     => 'search',
+                    'type'       => 'image',
+                    'title'      => '',
+                )
+            ); ?>' + title;
+        } else {
+            url = el.attr('data-url');
+        }
+        if (url.length) {
+            $.get(url, function(result) {
+                $('#media-lists').find('tbody').html('');
+                var result = $.parseJSON(result);
+                var lists  = result.data;
+                for (i in lists) {
+                    $('#media-lists')
+                    .find('tbody')
+                    .append(_.template($('#media-searched-item').html(), lists[i]));
+                }
+                if (result.prev_url.length || result.next_url.length) {
+                    $('.media-page').removeClass('hide');
+                    $('.prev-page').removeClass('disabled');
+                    $('.next-page').removeClass('disabled');
+                    if (0 == result.prev_url.length) {
+                        $('.prev-page').addClass('disabled');
+                    }
+                    if (0 == result.next_url.length) {
+                        $('.next-page').addClass('disabled');
+                    }
+                    $('.prev-page').attr('data-url', result.prev_url);
+                    $('.next-page').attr('data-url', result.next_url);
+                }
+            });
+        }
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');

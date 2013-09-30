@@ -868,9 +868,9 @@ class MediaController extends ActionController
         foreach ($extensions as &$ext) {
             $ext = trim($ext);
         }
-        $type = array_filter($extensions);
-        if (!empty($type)) {
-            $where['type'] = $type;
+        $types = array_filter($extensions);
+        if (!empty($types)) {
+            $where['type'] = $types;
         }
         
         // Resolving ID
@@ -891,7 +891,38 @@ class MediaController extends ActionController
         
         $rowset = Media::getList($where, $page, $limit);
         
-        echo json_encode($rowset);
+        // Get count
+        $model  = $this->getModel('media');
+        $select = $model->select()
+            ->where($where)
+            ->columns(array('count' => new Expression('count(*)')));
+        $count  = $model->selectWith($select)->current()->count;
+        
+        // Get previous and next button URL
+        $prevUrl = '';
+        $nextUrl = '';
+        $params  = array(
+            'action'    => 'search',
+            'type'      => $type ?: 0,
+            'id'        => $id ?: 0,
+            'title'     => $title ?: 0,
+            'limit'     => $limit ?: 0,
+        );
+        $params = array_filter($params);
+        if ($count > $page * $limit) {
+            $params['page'] = $page + 1;
+            $nextUrl = $this->url('', $params);
+        }
+        if ($page > 1) {
+            $params['page'] = $page - 1;
+            $prevUrl = $this->url('', $params);
+        }
+        
+        echo json_encode(array(
+            'data'      => $rowset,
+            'prev_url'  => $prevUrl,
+            'next_url'  => $nextUrl,
+        ));
         exit();
     }
     

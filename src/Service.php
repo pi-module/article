@@ -530,7 +530,7 @@ class Service
                             'name'       => $media->id,
                         ),
                         array(
-                            'name'       => 'default',
+                            'name'       => 'admin',
                         )
                     ),
             );
