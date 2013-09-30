@@ -1063,7 +1063,7 @@ class DraftController extends ActionController
                         )
                     ),
                     'downloadUrl' => $this->url(
-                        '',
+                        'admin',
                         array(
                             'controller' => 'media',
                             'action'     => 'download',
@@ -1170,7 +1170,7 @@ class DraftController extends ActionController
             return $this->redirect()->toRoute('', array(
                 'action'        => 'list',
                 'controller'    => 'draft',
-                'status'        => 'draft',
+                'status'        => Draft::FIELD_STATUS_DRAFT,
             ));
         }
     }
@@ -1704,7 +1704,7 @@ class DraftController extends ActionController
             'id'          => $row->id,
             'title'       => $rowMedia->title,
             'size'        => $rowMedia->size,
-            'downloadUrl' => $this->url('', array(
+            'downloadUrl' => $this->url('admin', array(
                 'controller' => 'media',
                 'action'     => 'download',
                 'id'         => $mediaId,
