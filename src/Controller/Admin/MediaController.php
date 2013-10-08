@@ -887,7 +887,7 @@ class MediaController extends ActionController
         }
         
         $page   = (int) Service::getParam($this, 'page', 1);
-        $limit  = (int) Service::getParam($this, 'limit', 10);
+        $limit  = (int) Service::getParam($this, 'limit', 5);
         
         $rowset = Media::getList($where, $page, $limit);
         

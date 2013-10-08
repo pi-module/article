@@ -1185,7 +1185,9 @@ var AttachmentListView = Backbone.View.extend({
         "click #attachment-process" : "processMedia",
         "click #attachment-cancel"  : "cancelMedia",
         "click .delete"             : "removeFile",
-        "click .insert"             : "insertEditor"
+        "click .insert"             : "insertEditor",
+        "click .prev-page"          : "searchMedia",
+        "click .next-page"          : "searchMedia"
     },
     initialize: function () {
         this.attachmentList = this.$("#attachment-upload-list");
@@ -1246,22 +1248,36 @@ var AttachmentListView = Backbone.View.extend({
         var html = '<a href="' + downloadUrl + '">' + title + '</a>';
         page.editor.insertHtml(html);
     },
-    searchMedia     : function() {
-        var title = $('input[name="attachment-title"]').val();
-        $.get('<?php echo $this->url('admin', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => $attachmentExtension,
-        )); ?>' + 'title-' + title, function(result) {
-            result = $.parseJSON(result);
-            var lists = result.data;
-            var content = '<table class="table table-bordered">'
+    searchMedia     : function(e) {
+        var el   = $(e.target);
+        var from = el.data('from');
+        var url  = '';
+        var self = this;
+        if ('search' == from) {
+            var title = self.$('input[name="attachment-title"]').val();
+            url = '<?php echo $this->url(
+                'admin', 
+                array(
+                    'controller' => 'media',
+                    'action'     => 'search',
+                    'type'       => $attachmentExtension,
+                    'title'      => '',
+                )
+            ); ?>' + title;
+        } else {
+            url = el.attr('data-url');
+        }
+        if (url.length) {
+            $.get(url, function(result) {
+                var result = $.parseJSON(result);
+                var lists = result.data;
+                var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
-                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
-            for (i in lists) {
-                content += '<tr>'
+                            + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>';
+                for (i in lists) {
+                    content += '<tr>'
                             + '<td>' + lists[i].title + '</td>'
                             + '<td>' + lists[i].size + '</td>'
                             + '<td><a class="media-insert" href="#"'
@@ -1271,10 +1287,25 @@ var AttachmentListView = Backbone.View.extend({
                                 + '>' 
                                 + '<?php _e('Insert') ?>' + '</a></td>'
                             + '</tr>';
-            }
-            content += '</tbody></table>';
-            $('#attachment-search-result').html(content);
-        });
+                }
+                content += '</tbody></table>';
+                self.$('#attachment-search-result').html(content);
+                
+                if (result.prev_url.length || result.next_url.length) {
+                    self.$('.media-page').removeClass('hide');
+                    self.$('.prev-page').removeClass('disabled');
+                    self.$('.next-page').removeClass('disabled');
+                    if (0 == result.prev_url.length) {
+                        self.$('.prev-page').addClass('disabled');
+                    }
+                    if (0 == result.next_url.length) {
+                        self.$('.next-page').addClass('disabled');
+                    }
+                    self.$('.prev-page').attr('data-url', result.prev_url);
+                    self.$('.next-page').attr('data-url', result.next_url);
+                }
+            });
+        }
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');
@@ -1393,7 +1424,9 @@ var FeatureView = Backbone.View.extend({
         "click .media-remove.close"     : "removeMedia",
         "click #media-close"            : "cancel",
         "click #media-cancel"           : "cancel",
-        "click #media-process"          : "processImage"
+        "click #media-process"          : "processImage",
+        "click .prev-page"              : "searchMedia",
+        "click .next-page"              : "searchMedia"
     },
     initialize      : function() {
         if (page.featureImg) {
@@ -1535,25 +1568,50 @@ var FeatureView = Backbone.View.extend({
         $('#jsUpload').find(".upload-image-wrap").html(this.template(obj));
     },
     // Fetching image from media
-    searchMedia     : function() {
-        var title = $('input[name="media-title"]').val();
-        $.get('<?php echo $this->url(
-            'admin',
-            array(
-                'controller' => 'media',
-                'action'     => 'search',
-                'type'       => 'image',
-                'title'      => '',
-            )
-        ); ?>' + title, function(result) {
-            result = $.parseJSON(result);
-            var lists = result.data;
-            for (i in lists) {
-                $('#media-lists')
-                .find('tbody')
-                .append(_.template($('#media-searched-item').html(), lists[i]));
-            }
-        });
+    searchMedia     : function(e) {
+        var el   = $(e.target);
+        var from = el.data('from');
+        var url  = '';
+        var self = this;
+        if ('search' == from) {
+            var title = self.$('input[name="media-title"]').val();
+            url = '<?php echo $this->url(
+                'admin',
+                array(
+                    'controller' => 'media',
+                    'action'     => 'search',
+                    'type'       => 'image',
+                    'title'      => '',
+                )
+            ); ?>' + title;
+        } else {
+            url = el.attr('data-url');
+        }
+        if (url.length) {
+            $.get(url, function(result) {
+                $('#media-lists').find('tbody').html('');
+                var result = $.parseJSON(result);
+                var lists = result.data;
+                for (i in lists) {
+                    $('#media-lists')
+                    .find('tbody')
+                    .append(_.template($('#media-searched-item').html(), lists[i]));
+                }
+                if (result.prev_url.length || result.next_url.length) {
+                    self.$('.media-page').removeClass('hide');
+                    self.$('.prev-page').removeClass('disabled');
+                    self.$('.next-page').removeClass('disabled');
+                    if (0 == result.prev_url.length) {
+                        self.$('.prev-page').addClass('disabled');
+                    }
+                    if (0 == result.next_url.length) {
+                        self.$('.next-page').addClass('disabled');
+                    }
+                    self.$('.prev-page').attr('data-url', result.prev_url);
+                    self.$('.next-page').attr('data-url', result.next_url);
+                }
+            });
+        }
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');
@@ -1642,7 +1700,9 @@ var GalleryListView = Backbone.View.extend({
         "click #gallery-process"    : "processMedia",
         "click #gallery-cancel"     : "cancelMedia",
         "click .icon-remove"        : "removeFile",
-        "click img"                 : "insertEditor"
+        "click img"                 : "insertEditor",
+        "click .prev-page"          : "searchMedia",
+        "click .next-page"          : "searchMedia"
     },
     initialize: function () {
         this.galleryList = this.$(".gallery-list");
@@ -1709,24 +1769,37 @@ var GalleryListView = Backbone.View.extend({
         page.editor.insertHtml(html);
         page.editor.focus();
     },
-    searchMedia     : function() {
-        var title = $('input[name="gallery-title"]').val();
-        $.get('<?php echo $this->url('admin', array(
-            'controller' => 'media',
-            'action'     => 'search',
-            'type'       => 'image',
-            'title'      => '',
-        )); ?>' + title, function(result) {
-            result = $.parseJSON(result);
-            var lists = result.data;
-            var content = '<table class="table table-bordered">'
+    searchMedia     : function(e) {
+        var el   = $(e.target);
+        var from = el.data('from');
+        var url  = '';
+        var self = this;
+        if ('search' == from) {
+            var title = self.$('input[name="gallery-title"]').val();
+            url = '<?php echo $this->url(
+                'admin',
+                array(
+                    'controller' => 'media',
+                    'action'     => 'search',
+                    'type'       => 'image',
+                    'title'      => '',
+                )
+            ); ?>' + title;
+        } else {
+            url = el.attr('data-url');
+        }
+        if (url.length) {
+            $.get(url, function(result) {
+                var result = $.parseJSON(result);
+                var lists = result.data;
+                var content = '<table class="table table-bordered">'
                             + '<tbody><tr>'
                             + '<th>' + '<?php echo _e('Image') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Title') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Size') ?>' + '</th>'
                             + '<th>' + '<?php echo _e('Select') ?>' + '</th></tr>'
-            for (i in lists) {
-                content += '<tr>'
+                for (i in lists) {
+                    content += '<tr>'
                             + '<td><img style="width: 40px; height: 40px" src="' + lists[i].url + '" /></td>'
                             + '<td>' + lists[i].title + '</td>'
                             + '<td>' + lists[i].size + '</td>'
@@ -1737,10 +1810,25 @@ var GalleryListView = Backbone.View.extend({
                                 + '>' 
                                 + '<?php _e('Insert') ?>' + '</a></td>'
                             + '</tr>';
-            }
-            content += '</tbody></table>';
-            $('#gallery-search-result').html(content);
-        });
+                }
+                content += '</tbody></table>';
+                $('#gallery-search-result').html(content);
+                
+                if (result.prev_url.length || result.next_url.length) {
+                    self.$('.media-page').removeClass('hide');
+                    self.$('.prev-page').removeClass('disabled');
+                    self.$('.next-page').removeClass('disabled');
+                    if (0 == result.prev_url.length) {
+                        self.$('.prev-page').addClass('disabled');
+                    }
+                    if (0 == result.next_url.length) {
+                        self.$('.next-page').addClass('disabled');
+                    }
+                    self.$('.prev-page').attr('data-url', result.prev_url);
+                    self.$('.next-page').attr('data-url', result.next_url);
+                }
+            });
+        }
     },
     insertMedia : function(e) {
         var id    = $(e.target).attr('data-id');

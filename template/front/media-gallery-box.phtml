@@ -19,7 +19,7 @@
                     <div class="pull-right form-search">
                         <div class="input-append">
                             <input type="text" value="" placeholder="<?php _e('Title') ?>" class="input-medium search-query" name="gallery-title">
-                            <button class="btn media-search"><?php _e('Search') ?></button>
+                            <button class="btn media-search" data-from="search"><?php _e('Search') ?></button>
                         </div>
                     </div>
                 </div>
@@ -27,6 +27,18 @@
             <!-- Displaying search results -->
             <div class="span6 pull-left" style="margin-left: 0px">
                 <div id="gallery-search-result"></div>
+                <div class="media-page hide" style="text-align: center">
+                    <div class="btn-toolbar">
+                        <div class="btn-group">
+                            <a class="btn btn-small disabled prev-page" data-from="prev" data-url="" href="javascript:void(0)">
+                                &lt;&lt;&nbsp;<?php _e('Prev') ?>
+                            </a>
+                            <a class="btn btn-small next-page" data-from="next" data-url="" href="javascript:void(0)">
+                                <?php _e('Next') ?>&nbsp;&gt;&gt;
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div id="gallery-upload-list"></div>
             </div>
             <!-- Displaying results want to add -->
