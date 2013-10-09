@@ -210,7 +210,7 @@ class Topic
             ->order('total DESC');
         $rowset = $modelVisit->selectWith($select);
         
-        $articleIds = array();
+        $articleIds = array(0);
         foreach ($rowset as $row) {
             $articleIds[] = $row['article'];
         }
