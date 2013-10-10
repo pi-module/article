@@ -63,4 +63,39 @@ return array(
             'block'      => 1,
         ),
     ),
+    
+    'admin'   => array(
+        array(
+            'controller'   => 'article',
+            'permission'   => 'article',
+        ),
+        array(
+            'controller'   => 'topic',
+            'permission'   => 'topic',
+        ),
+        array(
+            'controller'   => 'media',
+            'permission'   => 'media',
+        ),
+        array(
+            'controller'   => 'category',
+            'permission'   => 'category',
+        ),
+        array(
+            'controller'   => 'author',
+            'permission'   => 'author',
+        ),
+        array(
+            'controller'   => 'setup',
+            'permission'   => 'setup',
+        ),
+        array(
+            'controller'   => 'permission',
+            'permission'   => 'permission',
+        ),
+        array(
+            'controller'   => 'statistics',
+            'permission'   => 'statistics',
+        ),
+    ),
 );
