@@ -124,6 +124,14 @@ class ArticleController extends ActionController
             'controller'  => 'article',
             'action'      => 'detail',
         ), $params));
+        
+        // Get comment count
+        $condition = array(
+            'category'  => $module,
+            'item'      => $id,
+        );
+        $details['comments'] = Pi::service('api')
+            ->comment->getCount($condition);
 
         $config = Pi::service('module')->config('', $this->getModule());
         $this->view()->assign(array(
