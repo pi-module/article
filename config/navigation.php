@@ -23,7 +23,7 @@ return array(
         // Default front navigation
         'front'   => array(
             'article-homepage'  => array(
-                'label'         => _t('Article Homepage'),
+                'label'         => _t('Homepage'),
                 'route'         => 'default',
                 'controller'    => 'index',
                 'action'        => 'index',
@@ -46,46 +46,70 @@ return array(
                 'route'         => 'admin',
                 'controller'    => 'article',
                 'action'        => 'published',
+                'permission'     => array(
+                    'resource'  => 'article',
+                ),
             ),
             'topic'             => array(
                 'label'         => _t('Topic'),
                 'route'         => 'admin',
                 'controller'    => 'topic',
                 'action'        => 'list-topic',
+                'permission'     => array(
+                    'resource'  => 'topic',
+                ),
             ),
             'media'             => array(
                 'label'         => _t('Media'),
                 'route'         => 'admin',
                 'controller'    => 'media',
                 'action'        => 'list',
+                'permission'     => array(
+                    'resource'  => 'media',
+                ),
             ),
             'category'          => array(
                 'label'         => _t('Category'),
                 'route'         => 'admin',
                 'controller'    => 'category',
                 'action'        => 'list',
+                'permission'     => array(
+                    'resource'  => 'category',
+                ),
             ),
             'author'            => array(
                 'label'         => _t('Author'),
                 'route'         => 'admin',
                 'controller'    => 'author',
                 'action'        => 'list',
+                'permission'     => array(
+                    'resource'  => 'author',
+                ),
             ),
             'setup'             => array(
                 'label'         => _t('Setup'),
                 'route'         => 'admin',
                 'controller'    => 'setup',
                 'action'        => 'form',
+                'permission'     => array(
+                    'resource'  => 'setup',
+                ),
             ),
             'permission'        => array(
                 'label'         => _t('Permission'),
                 'route'         => 'admin',
                 'controller'    => 'permission',
+                'permission'     => array(
+                    'resource'  => 'permission',
+                ),
             ),
             'analysis'          => array(
                 'label'         => _t('Statistics'),
                 'route'         => 'admin',
                 'controller'    => 'statistics',
+                'permission'     => array(
+                    'resource'  => 'statistics',
+                ),
             ),
         ),
         
