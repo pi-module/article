@@ -144,7 +144,7 @@ EOD;
         // Create folder in static folder
         $destFilename = sprintf(
             '%s/%s/topic-template',
-            Pi::path('static'),
+            Pi::path('upload'),
             $module
         );
         
